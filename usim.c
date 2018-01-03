@@ -44,7 +44,7 @@ usage(void)
 	fprintf(stderr, "  -S             save state\n");
 	fprintf(stderr, "  -s             halt after prom runs\n");
 	fprintf(stderr, "  -w             warm boot\n");
-	fprintf(stderr, "  -l             lashup\n");
+	fprintf(stderr, "  -l[FILE]       lashup\n");
 	fprintf(stderr, "  -h             help message\n");
 }
 
@@ -57,7 +57,7 @@ main(int argc, char *argv[])
 
 	printf("CADR emulator v0.9\n");
 
-	while ((c = getopt(argc, argv, "i:Sswl")) != -1) {
+	while ((c = getopt(argc, argv, "i:Sswl::")) != -1) {
 		switch (c) {
 		case 'i':
 			disk_filename = strdup(optarg);
@@ -73,6 +73,8 @@ main(int argc, char *argv[])
 			break;
 		case 'l':
 			lashup_flag = 1;
+			if (optarg != NULL)
+				lashup_port = strdup(optarg);
 			break;
 		case 'h':
 			usage();
@@ -89,7 +91,7 @@ main(int argc, char *argv[])
 		usage();
 		exit(1);
 	}
-	
+
 	if (lashup_flag)
 		lashup_init(lashup_port);
 
