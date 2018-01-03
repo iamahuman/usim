@@ -126,15 +126,15 @@ read_mem(int vaddr, unsigned int *pv)
 	int pn;
 	int offset;
 	struct page_s *page;
-	
+
 	access_fault_bit = 0;
 	write_fault_bit = 0;
 	page_fault_flag = 0;
-	
+
 	// 14 bit page number.
 	map = map_vtop(vaddr, (int *) 0, &offset);
 	pn = map & 037777;
-	
+
 	if ((map & (1 << 23)) == 0) {
 		// No access permission.
 		access_fault_bit = 1;
@@ -144,19 +144,19 @@ read_mem(int vaddr, unsigned int *pv)
 		tracef("read_mem(vaddr=%o) access fault\n", vaddr);
 		return -1;
 	}
-	
+
 	page = phy_pages[pn];
 	if (pn < 020000 && page) {
 		*pv = page->w[offset];
 		return 0;
 	}
-	
+
 	// Simulate fixed number of RAM pages (< 2MW?).
 	if (pn >= phys_ram_pages && pn <= 035777) {
 		*pv = 0xffffffff;
 		return 0;
 	}
-	
+
 	if (pn == 036000) {
 		// Inhibit color probe.
 		if ((vaddr & 077700000) == 077200000) {
@@ -167,14 +167,14 @@ read_mem(int vaddr, unsigned int *pv)
 		tv_read(offset, pv);
 		return 0;
 	}
-	
+
 	// Extra xbus devices.
 	if (pn == 037764) {
 		offset <<= 1;
 		iob_unibus_read(offset, (int *) pv);
 		return 0;
 	}
-	
+
 	// Unibus.
 	if (pn == 037766) {
 		switch (offset) {
@@ -241,7 +241,7 @@ read_mem(int vaddr, unsigned int *pv)
 			traceio("unibus: read ST<31-16>\n");
 			*pv = 0;
 			return 0;
-			
+
 		case 040:
 			traceio("unibus: read interrupt status\n");
 			*pv = 0;
@@ -260,7 +260,7 @@ read_mem(int vaddr, unsigned int *pv)
 			return 0;
 		}
 	}
-	
+
 	// Disk & TV controller on XBUS.
 	if (pn == 036777) {
 		if (offset >= 0370) {	// Disk.
@@ -281,18 +281,18 @@ read_mem(int vaddr, unsigned int *pv)
 		ether_xbus_reg_read(offset, pv);
 		return 0;
 	}
-	
+
 	if (pn == 036775) {
 		ether_xbus_desc_read(offset, pv);
 		return 0;
 	}
-	
+
 	// UART.
 	if (pn == 036776) {
 		uart_xbus_read(offset, pv);
 		return 0;
 	}
-	
+
 	// Page fault.
 	page = phy_pages[pn];
 	if (page == 0) {
@@ -302,7 +302,7 @@ read_mem(int vaddr, unsigned int *pv)
 		*pv = 0;
 		return -1;
 	}
-	
+
 	*pv = page->w[offset];
 	return 0;
 }
@@ -315,15 +315,15 @@ write_mem(int vaddr, unsigned int v)
 	int pn;
 	int offset;
 	struct page_s *page;
-	
+
 	write_fault_bit = 0;
 	access_fault_bit = 0;
 	page_fault_flag = 0;
-	
+
 	// 14 bit page number.
 	map = map_vtop(vaddr, (int *) 0, &offset);
 	pn = map & 037777;
-	
+
 	if ((map & (1 << 23)) == 0) {
 		// No access permission.
 		access_fault_bit = 1;
@@ -332,7 +332,7 @@ write_mem(int vaddr, unsigned int v)
 		tracef("write_mem(vaddr=%o) access fault\n", vaddr);
 		return -1;
 	}
-	
+
 	if ((map & (1 << 22)) == 0) {
 		// No write permission.
 		write_fault_bit = 1;
@@ -341,13 +341,13 @@ write_mem(int vaddr, unsigned int v)
 		tracef("write_mem(vaddr=%o) write fault\n", vaddr);
 		return -1;
 	}
-	
+
 	page = phy_pages[pn];
 	if (pn < 020000 && page) {
 		page->w[offset] = v;
 		return 0;
 	}
-	
+
 	if (pn == 036000) {
 		// Inhibit color probe.
 		if ((vaddr & 077700000) == 077200000) {
@@ -357,12 +357,12 @@ write_mem(int vaddr, unsigned int v)
 		tv_write(offset, v);
 		return 0;
 	}
-	
+
 	if (pn == 037760) {
 		printf("tv: reg write %o, offset %o, v %o\n", vaddr, offset, v);
 		return 0;
 	}
-	
+
 	if (pn == 037764) {
 		offset <<= 1;
 		traceio("unibus: iob v %o, offset %o\n", vaddr, offset);
@@ -381,13 +381,13 @@ write_mem(int vaddr, unsigned int v)
 		case 002:
 			traceio("unibus: write DEBUG-IR<31-16>\n", v);
 			return 0;
-		case 004: 
+		case 004:
 			traceio("unibus: write DEBUG-IR<47-32>\n", v);
 			return 0;
 		case 006:
 			traceio("unibus: write clock control register.\n", v);
 			return 0;
-		case 010: 				
+		case 010:
 			traceio("unibus: write OPC control register\n", v);
 			return 0;
 		case 012:
@@ -434,7 +434,7 @@ write_mem(int vaddr, unsigned int v)
 			traceio("unibus: write? v %o, offset %o\n", vaddr, offset);
 		}
 	}
-	
+
 	if (pn == 036777) {
 		if (offset >= 0370) {
 			disk_xbus_write(offset, v);
@@ -445,29 +445,29 @@ write_mem(int vaddr, unsigned int v)
 			return 0;
 		}
 	}
-	
+
 	// Ethernet.
 	if (pn == 036774) {
 		ether_xbus_reg_write(offset, v);
 		return 0;
 	}
-	
+
 	if (pn == 036775) {
 		ether_xbus_desc_write(offset, v);
 		return 0;
 	}
-	
+
 	// UART.
 	if (pn == 036776) {
 		uart_xbus_write(offset, v);
 		return 0;
 	}
-	
+
 	// Catch questionable accesses.
 	if (pn >= 036000) {
 		printf("??: reg write vaddr %o, pn %o, offset %o, v %o; u_pc %o\n", vaddr, pn, offset, v, u_pc);
 	}
-	
+
 	page = phy_pages[pn];
 	if (page == 0) {
 		// Page fault.
@@ -475,7 +475,7 @@ write_mem(int vaddr, unsigned int v)
 		opc = pn;
 		return -1;
 	}
-	
+
 	page->w[offset] = v;
 	return 0;
 }
@@ -498,7 +498,7 @@ read_m_mem(int loc)
 	if (loc > 32) {
 		printf("read m-memory address > 32! (%o)\n", loc);
 	}
-	
+
 	return m_memory[loc];
 }
 
@@ -538,7 +538,7 @@ rotate_left(unsigned int value, int bitstorotate)
 {
 	unsigned int tmp;
 	int mask;
-	
+
 	// Determine which bits will be impacted by the rotate.
 	if (bitstorotate == 0)
 		mask = 0;
