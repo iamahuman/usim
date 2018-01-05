@@ -31,6 +31,7 @@ clean:
 	rm -f xx
 	rm -f usim lod readmcr diskmaker lmfs cc
 
+.PHONY: TAGS
 TAGS:
 	find . -type f -iname "*.[ch]" | etags -
 
