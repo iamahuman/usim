@@ -7,48 +7,13 @@
 #include <unistd.h>
 
 #include "ucode.h"
+#include "misc.h"
 
 int showmcr;
 int debug;
 int needswap;
 
 ucw_t ucode[16 * 1024];
-
-unsigned int
-read16(int fd)
-{
-	unsigned char b[2];
-	int ret;
-
-	ret = read(fd, b, 2);
-	if (ret < 2) {
-		printf("eof!\n");
-		exit(1);
-	}
-
-	if (needswap)
-		return (b[1] << 8) | b[0];
-
-	return (b[0] << 8) | b[1];
-}
-
-unsigned int
-read32(int fd)
-{
-	unsigned char b[4];
-	int ret;
-
-	ret = read(fd, b, 4);
-	if (ret < 4) {
-		printf("eof!\n");
-		exit(1);
-	}
-
-	if (needswap)
-		return (b[1] << 24) | (b[0] << 16) | (b[3] << 8) | b[2];
-
-	return (b[3] << 24) | (b[2] << 16) | (b[1] << 8) | b[0];
-}
 
 int
 dump_i_mem(int fd, int start, int size)
