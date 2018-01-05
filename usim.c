@@ -95,10 +95,10 @@ main(int argc, char *argv[])
 	read_prom_files();
 
 	tv_init();
+	disk_init(disk_filename);
 	iob_init();
 	if (lashup_flag)
 		lashup_init(lashup_port);
-	disk_init(disk_filename);
 	chaos_init();
 	ether_init();
 
