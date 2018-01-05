@@ -84,8 +84,11 @@ uint8_t eaddr[6];
 uint32_t hash0;
 uint32_t hash1;
 uint32_t txctrl;
+
 uint32_t packet[375];
-int enabled;
+
+bool enabled;
+int fd;
 
 int
 ether_init(void)
@@ -100,59 +103,101 @@ ether_init(void)
 	collconf = 0x000f003f;
 	tx_bd_num = 0x00000040;
 	miimoder = 0x64;
-	enabled = 0;
-	
+
+	enabled = false;
+
+	fd = open("/dev/null", O_RDWR);
+
 	return 0;
+}
+
+void
+ether_tx(void)
+{
+	for (uint32_t i = 0; i < tx_bd_num; i++) {
+		int status;
+
+		status = descs.desc_structs[i].status;
+
+		if (status & ETHER_DESC_TX_READY) {
+			size_t len;
+			uint32_t ptr;
+			int words;
+			int ret;
+
+			len = (size_t) descs.desc_structs[i].len;
+			ptr = descs.desc_structs[i].ptr;
+			words = (int)((len + 3) >> 2);
+
+			for (int j = 0; j < words; j++)
+				read_phy_mem(ptr + j, &packet[j]);
+
+			if (status & ETHER_DESC_TX_PAD)
+				len = MAX(len, 60);
+
+			ret = write(fd, packet, len);
+			if (ret != len)
+				perror("write");
+
+			status &= ~ETHER_DESC_TX_READY;
+			descs.desc_structs[i].status = status;
+
+			if (status & ETHER_DESC_TX_IRQ)
+				int_source |= ETHER_INT_TXB;
+		}
+
+		if (status & ETHER_DESC_TX_WRAP)
+			break;
+	}
+}
+
+void
+ether_rx(void)
+{
+	for (uint32_t i = tx_bd_num; i < 0x80; i++) {
+		int status;
+
+		status = descs.desc_structs[i].status;
+
+		if (status & ETHER_DESC_RX_EMPTY) {
+			size_t len;
+			uint32_t ptr;
+			int words;
+
+			len = read(fd, packet, sizeof(packet));
+			if (len == -1)
+				break;
+
+			ptr = descs.desc_structs[i].ptr;
+			descs.desc_structs[i].len = (uint16_t) len;
+			words = (int)((len + 3) >> 2);
+
+			for (int j = 0; j < words; j++)
+				write_phy_mem(ptr + j, packet[j]);
+
+			status &= ~ETHER_DESC_RX_EMPTY;
+			descs.desc_structs[i].status = status;
+
+			if (status & ETHER_DESC_RX_IRQ)
+				int_source |= ETHER_INT_RXB;
+		}
+
+		if (status & ETHER_DESC_RX_WRAP)
+			break;
+	}
 }
 
 void
 ether_poll(void)
 {
-	uint16_t status;
-	
 	if (!enabled)
 		return;
 	
-	if (moder & ETHER_MODE_TXEN) {
-		for (uint32_t i = 0; i < tx_bd_num; i++) {
-			status = descs.desc_structs[i].status;
-			if (status & ETHER_DESC_TX_READY) {
-				size_t len;
-				uint32_t ptr;
-				int words;
-				
-				len = (size_t) descs.desc_structs[i].len;
-				ptr = descs.desc_structs[i].ptr;
-				words = (int)((len + 3) >> 2);
-				
-				for (int j = 0; j < words; j++)
-					read_phy_mem(ptr + j, &packet[j]);
-				
-				if (status & ETHER_DESC_TX_PAD)
-					len = MAX(len, 60);
-				
-				status &= ~ETHER_DESC_TX_READY;
-				descs.desc_structs[i].status = status;
-				
-				if (status & ETHER_DESC_TX_IRQ)
-					int_source |= ETHER_INT_TXB;
-			}
-			
-			if (status & ETHER_DESC_TX_WRAP) break;
-		}
-	}
+	if (moder & ETHER_MODE_TXEN)
+		ether_tx();
 	
-	if (moder & ETHER_MODE_RXEN) {
-		for (uint32_t i = tx_bd_num; i < 0x80; i++) {
-			status = descs.desc_structs[i].status;
-			
-			if (status & ETHER_DESC_RX_EMPTY)
-				break;
-			
-			if (status & ETHER_DESC_RX_WRAP)
-				break;
-		}
-	}
+	if (moder & ETHER_MODE_RXEN)
+		ether_rx();
 }
 
 void
