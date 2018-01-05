@@ -480,5 +480,7 @@ disk_init(char *filename)
 		mcrsym_filename = strdup(fn);
 	}
 
+	read_mcrsym_file();
+
 	return 0;
 }

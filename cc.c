@@ -1252,3 +1252,9 @@ read_mem(int vaddr, unsigned int *pv)
 	// Dummy.
 	return 0;
 }
+
+void
+read_promsym_file(void)
+{
+	// Dummy.
+}

@@ -190,11 +190,15 @@ _sym_sort(struct symtab_s *tab)
 }
 
 void
-read_sym_files(void)
+read_promsym_file(void)
 {
 	_sym_read_file(&sym_prom, promsym_filename);
 	_sym_sort(&sym_prom);
+}
 
+void
+read_mcrsym_file(void)
+{
 	_sym_read_file(&sym_mcr, mcrsym_filename);
 	_sym_sort(&sym_mcr);
 }

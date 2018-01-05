@@ -92,18 +92,13 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if (lashup_flag)
-		lashup_init(lashup_port);
+	read_prom_files();
 
 	tv_init();
-	tv_poll();
-
-	disk_init(disk_filename);
-
-	read_prom_files();
-	read_sym_files();
-
 	iob_init();
+	if (lashup_flag)
+		lashup_init(lashup_port);
+	disk_init(disk_filename);
 	chaos_init();
 	ether_init();
 
@@ -111,7 +106,7 @@ main(int argc, char *argv[])
 		kbd_warm_boot_key();
 
 	while (run())
-		tv_poll();
+		;
 
 	exit(0);
 }

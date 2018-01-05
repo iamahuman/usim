@@ -85,6 +85,9 @@ read_prom_files(void)
 
 		loc++;
 	}
+
+	read_promsym_file();
+	
 	return 0;
 }
 
