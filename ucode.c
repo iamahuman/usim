@@ -119,6 +119,108 @@ deassert_xbus_interrupt(void)
 
 // ---!!! read_mem, write_mem: Document each address.
 
+void
+unibus_read(int offset, unsigned int *pv)
+{
+	switch (offset) {
+	case 000:
+		traceio("unibus: read IR<15-0>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 002:
+		traceio("unibus: read IR<31-16>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 004:
+		traceio("unibus: read IR<47-32>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 006: // Not used.
+		*pv = 0;
+		break;
+	case 010:
+		traceio("unibus: read OPC\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 012:
+		traceio("unibus: read PC\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 014:
+		traceio("unibus: read OB<15-0>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 016:
+		traceio("unibus: read OB<31-16>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 020:
+		traceio("unibus: read Flag Register 1\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 022:
+		traceio("unibus: read Flag Register 2\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 024:
+		traceio("unibus: read M<15-0>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 026:
+		traceio("unibus: read M<31-16>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 030:
+		traceio("unibus: read A<15-0>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 032:
+		traceio("unibus: read A<31-16>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 034:
+		traceio("unibus: read ST<15-0>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+	case 036:
+		traceio("unibus: read ST<31-16>\n");
+		spy_unibus_read(offset, pv);
+		*pv = 0;
+		break;
+		
+	case 040:
+		traceio("unibus: read interrupt status\n");
+		*pv = 0;
+		break;
+	case 044:
+		traceio("unibus: read error status\n");
+		*pv = 0;
+		break;
+	case 0100:
+	case 0104:
+	case 0110:
+	case 0114:
+		traceio("unibus: cadr debugee read (%o)\n", offset, pv);
+		lashup_unibus_read(offset, pv);
+		*pv = 0;
+		return 0;
+	}
+}
+
 // Read virtual memory, returns -1 on fault and 0 if OK.
 int
 read_mem(int vaddr, unsigned int *pv)
@@ -158,7 +260,8 @@ read_mem(int vaddr, unsigned int *pv)
 		return 0;
 	}
 
-	if (pn == 036000) {
+	switch (pn) {
+	case 036000:
 		// Inhibit color probe.
 		if ((vaddr & 077700000) == 077200000) {
 			*pv = 0x0;
@@ -167,118 +270,14 @@ read_mem(int vaddr, unsigned int *pv)
 		offset = vaddr & 077777;
 		tv_read(offset, pv);
 		return 0;
-	}
-
-	// Extra xbus devices.
-	if (pn == 037764) {
+	case 037764:		// Extra xbus devices.
 		offset <<= 1;
 		iob_unibus_read(offset, (int *) pv);
 		return 0;
-	}
-
-	// Unibus.
-	if (pn == 037766) {
-		switch (offset) {
-		case 000:
-			traceio("unibus: read IR<15-0>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 002:
-			traceio("unibus: read IR<31-16>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 004:
-			traceio("unibus: read IR<47-32>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 006: // Not used.
-			*pv = 0;
-			return 0;
-		case 010:
-			traceio("unibus: read OPC\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 012:
-			traceio("unibus: read PC\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 014:
-			traceio("unibus: read OB<15-0>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 016:
-			traceio("unibus: read OB<31-16>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 020:
-			traceio("unibus: read Flag Register 1\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 022:
-			traceio("unibus: read Flag Register 2\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 024:
-			traceio("unibus: read M<15-0>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 026:
-			traceio("unibus: read M<31-16>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 030:
-			traceio("unibus: read A<15-0>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 032:
-			traceio("unibus: read A<31-16>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 034:
-			traceio("unibus: read ST<15-0>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		case 036:
-			traceio("unibus: read ST<31-16>\n");
-			spy_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-
-		case 040:
-			traceio("unibus: read interrupt status\n");
-			*pv = 0;
-			return 0;
-		case 044:
-			traceio("unibus: read error status\n");
-			*pv = 0;
-			return 0;
-		case 0100:
-		case 0104:
-		case 0110:
-		case 0114:
-			traceio("unibus: cadr debugee read (%o)\n", offset, pv);
-			lashup_unibus_read(offset, pv);
-			*pv = 0;
-			return 0;
-		}
-	}
-
-	// Disk & TV controller on XBUS.
-	if (pn == 036777) {
+	case 037766:		// Unibus.
+		unibus_read(offset, pv);
+		return 0;
+	case 036777:		// Disk & TV controller on XBUS.
 		if (offset >= 0370) {	// Disk.
 			disk_xbus_read(offset, pv);
 			return 0;
@@ -290,25 +289,17 @@ read_mem(int vaddr, unsigned int *pv)
 		printf("xbus read %o %o\n", offset, vaddr);
 		*pv = 0;
 		return 0;
-	}
-
-	// Ethernet.
-	if (pn == 036774) {
+	case 036774:	// Ethernet.
 		ether_xbus_reg_read(offset, pv);
 		return 0;
-	}
-
-	if (pn == 036775) {
+	case 036775:	// Ethernet.
 		ether_xbus_desc_read(offset, pv);
 		return 0;
-	}
-
-	// UART.
-	if (pn == 036776) {
+	case 036776:	// UART.
 		uart_xbus_read(offset, pv);
 		return 0;
 	}
-
+	
 	// Page fault.
 	page = phy_pages[pn];
 	if (page == 0) {
@@ -321,6 +312,76 @@ read_mem(int vaddr, unsigned int *pv)
 
 	*pv = page->w[offset];
 	return 0;
+}
+
+void
+unibus_write(int offset, unsigned int v)
+{
+	switch (offset) {
+	case 000:
+		traceio("unibus: write DEBUG-IR<15-0> %o\n",v);
+		spy_unibus_write(offset, v);
+		break;
+	case 002:
+		traceio("unibus: write DEBUG-IR<31-16>\n", v);
+		spy_unibus_write(offset, v);
+		break;
+	case 004:
+		traceio("unibus: write DEBUG-IR<47-32>\n", v);
+		spy_unibus_write(offset, v);
+		break;
+	case 006:
+		traceio("unibus: write clock control register.\n", v);
+		spy_unibus_write(offset, v);
+		break;
+	case 010:
+		traceio("unibus: write OPC control register\n", v);
+		spy_unibus_write(offset, v);
+		break;
+	case 012:
+		traceio("unibus: write mode register %o\n", v);
+		spy_unibus_write(offset, v);
+		if ((v & 044) == 044) {
+			traceio("unibus: disabling prom enable flag\n");
+			prom_enabled_flag = 0;
+
+			if (warm_boot_flag) {
+				restore_state();
+			}
+		}
+
+		if (v & 2) {
+			traceio("unibus: normal speed\n");
+		}
+		break;
+	case 014: // Not used.
+	case 016:
+		break;
+	case 040:
+		traceio("unibus: write interrupt status %o\n", v);
+		set_interrupt_status_reg((interrupt_status_reg & ~0036001) | (v & 0036001));
+		break;
+	case 042:
+		traceio("unibus: write interrupt stim %o\n", v);
+		set_interrupt_status_reg((interrupt_status_reg & ~0101774) | (v & 0101774));
+		break;
+	case 044:
+		traceio("unibus: clear bus error %o\n", v);
+		break;
+	case 0100:
+	case 0104:
+	case 0110:
+	case 0114:
+		printf("unibus: cadr debugee write (%o) v %o\n", offset, v);
+		lashup_unibus_write(offset, v);
+		break;
+	default:
+		if (offset >= 0140 && offset <= 0176) {
+			traceio("unibus: mapping reg %o\n", offset);
+			break;
+		}
+		traceio("unibus: write? v %o, offset %o\n", vaddr, offset);
+	}
 }
 
 // Write virtual memory.
@@ -364,7 +425,8 @@ write_mem(int vaddr, unsigned int v)
 		return 0;
 	}
 
-	if (pn == 036000) {
+	switch (pn) {
+	case 036000:
 		// Inhibit color probe.
 		if ((vaddr & 077700000) == 077200000) {
 			return 0;
@@ -372,92 +434,19 @@ write_mem(int vaddr, unsigned int v)
 		offset = vaddr & 077777;
 		tv_write(offset, v);
 		return 0;
-	}
-
-	if (pn == 037760) {
+	case 037760:
 		printf("tv: reg write %o, offset %o, v %o\n", vaddr, offset, v);
 		return 0;
-	}
-
-	if (pn == 037764) {
+	case 037764:		// Extra xbus devices.
 		offset <<= 1;
 		traceio("unibus: iob v %o, offset %o\n", vaddr, offset);
 		iob_unibus_write(offset, v);
 		return 0;
-	}
-
-	// Unibus.
-	if (pn == 037766) {
+	case 037766:	// Unibus.
 		offset <<= 1;
-
-		switch (offset) {
-		case 000:
-			traceio("unibus: write DEBUG-IR<15-0> %o\n",v);
-			spy_unibus_write(offset, v);
-			return 0;
-		case 002:
-			traceio("unibus: write DEBUG-IR<31-16>\n", v);
-			spy_unibus_write(offset, v);
-			return 0;
-		case 004:
-			traceio("unibus: write DEBUG-IR<47-32>\n", v);
-			spy_unibus_write(offset, v);
-			return 0;
-		case 006:
-			traceio("unibus: write clock control register.\n", v);
-			spy_unibus_write(offset, v);
-			return 0;
-		case 010:
-			traceio("unibus: write OPC control register\n", v);
-			spy_unibus_write(offset, v);
-			return 0;
-		case 012:
-			traceio("unibus: write mode register %o\n", v);
-			spy_unibus_write(offset, v);
-			if ((v & 044) == 044) {
-				traceio("unibus: disabling prom enable flag\n");
-				prom_enabled_flag = 0;
-
-				if (warm_boot_flag) {
-					restore_state();
-				}
-			}
-
-			if (v & 2) {
-				traceio("unibus: normal speed\n");
-			}
-			return 0;
-		case 014: // Not used.
-		case 016:
-			return 0;
-		case 040:
-			traceio("unibus: write interrupt status %o\n", v);
-			set_interrupt_status_reg((interrupt_status_reg & ~0036001) | (v & 0036001));
-			return 0;
-		case 042:
-			traceio("unibus: write interrupt stim %o\n", v);
-			set_interrupt_status_reg((interrupt_status_reg & ~0101774) | (v & 0101774));
-			return 0;
-		case 044:
-			traceio("unibus: clear bus error %o\n", v);
-			return 0;
-		case 0100:
-		case 0104:
-		case 0110:
-		case 0114:
-			printf("unibus: cadr debugee write (%o) v %o\n", offset, v);
-			lashup_unibus_write(offset, v);
-			return 0;
-		default:
-			if (offset >= 0140 && offset <= 0176) {
-				traceio("unibus: mapping reg %o\n", offset);
-				return 0;
-			}
-			traceio("unibus: write? v %o, offset %o\n", vaddr, offset);
-		}
-	}
-
-	if (pn == 036777) {
+		unibus_write(offset, v);
+		return 0;
+	case 036777:	// Disk & TV controller on XBUS.
 		if (offset >= 0370) {
 			disk_xbus_write(offset, v);
 			return 0;
@@ -466,21 +455,13 @@ write_mem(int vaddr, unsigned int v)
 			tv_xbus_write(offset, v);
 			return 0;
 		}
-	}
-
-	// Ethernet.
-	if (pn == 036774) {
+	case 036774:	// Ethernet.
 		ether_xbus_reg_write(offset, v);
 		return 0;
-	}
-
-	if (pn == 036775) {
+	case 036775:	// Ethernet.
 		ether_xbus_desc_write(offset, v);
 		return 0;
-	}
-
-	// UART.
-	if (pn == 036776) {
+	case 036776:	// UART.
 		uart_xbus_write(offset, v);
 		return 0;
 	}
