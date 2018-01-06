@@ -20,6 +20,7 @@
 #include "ether.h"
 #include "disk.h"
 #include "lashup.h"
+#include "spy.h"
 
 ucw_t prom_ucode[512];
 
@@ -180,14 +181,17 @@ read_mem(int vaddr, unsigned int *pv)
 		switch (offset) {
 		case 000:
 			traceio("unibus: read IR<15-0>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 002:
 			traceio("unibus: read IR<31-16>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 004:
 			traceio("unibus: read IR<47-32>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 006: // Not used.
@@ -195,50 +199,62 @@ read_mem(int vaddr, unsigned int *pv)
 			return 0;
 		case 010:
 			traceio("unibus: read OPC\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 012:
 			traceio("unibus: read PC\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 014:
 			traceio("unibus: read OB<15-0>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 016:
 			traceio("unibus: read OB<31-16>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 020:
 			traceio("unibus: read Flag Register 1\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 022:
 			traceio("unibus: read Flag Register 2\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 024:
 			traceio("unibus: read M<15-0>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 026:
 			traceio("unibus: read M<31-16>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 030:
 			traceio("unibus: read A<15-0>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 032:
 			traceio("unibus: read A<31-16>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 034:
 			traceio("unibus: read ST<15-0>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 		case 036:
 			traceio("unibus: read ST<31-16>\n");
+			spy_unibus_read(offset, pv);
 			*pv = 0;
 			return 0;
 
@@ -377,21 +393,27 @@ write_mem(int vaddr, unsigned int v)
 		switch (offset) {
 		case 000:
 			traceio("unibus: write DEBUG-IR<15-0> %o\n",v);
+			spy_unibus_write(offset, v);
 			return 0;
 		case 002:
 			traceio("unibus: write DEBUG-IR<31-16>\n", v);
+			spy_unibus_write(offset, v);
 			return 0;
 		case 004:
 			traceio("unibus: write DEBUG-IR<47-32>\n", v);
+			spy_unibus_write(offset, v);
 			return 0;
 		case 006:
 			traceio("unibus: write clock control register.\n", v);
+			spy_unibus_write(offset, v);
 			return 0;
 		case 010:
 			traceio("unibus: write OPC control register\n", v);
+			spy_unibus_write(offset, v);
 			return 0;
 		case 012:
 			traceio("unibus: write mode register %o\n", v);
+			spy_unibus_write(offset, v);
 			if ((v & 044) == 044) {
 				traceio("unibus: disabling prom enable flag\n");
 				prom_enabled_flag = 0;
