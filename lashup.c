@@ -21,30 +21,6 @@ lashup_init(char *port)
 		perror(port);
 		exit (1);
 	}
-
-	// Get current port settings.
-	err = tcgetattr(fd, &oldtio);
-	if (err) {
-		perror("tcgetattr");
-		exit(1);
-	}
-
-	newtio = oldtio;
-	cfmakeraw(&newtio);
-
-	// Set new port settings for canonical input processing.
-	cfsetspeed(&newtio, B115200);
-	newtio.c_cflag |= CS8 | CLOCAL | CREAD;
-	newtio.c_iflag |= IGNPAR;
-	newtio.c_cc[VMIN] = 1;
-	newtio.c_cc[VTIME] = 0;
-	tcflush(fd, TCIFLUSH);
-
-	err = tcsetattr(fd, TCSANOW, &newtio);
-	if (err) {
-		perror("tcsetattr");
-		exit(1);
-	}
 }
 
 void

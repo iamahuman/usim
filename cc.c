@@ -1013,26 +1013,6 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	// Get current port settings.
-	ret = tcgetattr(fd, &oldtio);
-	if (ret)
-		perror("tcgetattr");
-
-	newtio = oldtio;
-	cfmakeraw(&newtio);
-
-	// Set new port settings for canonical input processing.
-	cfsetspeed(&newtio, B115200);
-	newtio.c_cflag |= CS8 | CLOCAL | CREAD;
-	newtio.c_iflag |= IGNPAR;
-	newtio.c_cc[VMIN] = 1;
-	newtio.c_cc[VTIME] = 0;
-	tcflush(fd, TCIFLUSH);
-
-	ret = tcsetattr(fd, TCSANOW, &newtio);
-	if (ret)
-		perror("tcsetattr");
-
 	printf("ready\n");
 
 	done = 0;
