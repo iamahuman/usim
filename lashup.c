@@ -40,7 +40,7 @@ lashup_unibus_read(int offset, unsigned int *pv)
 		printf("lashup: bus cycle)\n");
 		break;
 	default:
-		printf("lashup: read: unknown offset\n");
+		printf("lashup: read: unknown offset: %o\n", offset);
 		break;
 	}
 }
@@ -79,7 +79,7 @@ lashup_unibus_write(int offset, unsigned int v)
 		printf("lashup: writing to read-only address (bus cycle)\n");
 		break;
 	default:
-		printf("lashup: write: unknown offset\n");
+		printf("lashup: write: unknown offset: %o; v %o\n", offset, v);
 		break;
 	}
 }
