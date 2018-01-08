@@ -1,3 +1,5 @@
+// usim --- MIT CADR simulator
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -24,15 +26,14 @@
 char *disk_filename = "disk.img";
 char *mcrsym_filename = "../bands/ucadr.sym.841";
 char *promsym_filename = "../bands/promh.sym.9";
+char *lashup_port = "/dev/ttyUSB0";
 
 bool run_ucode_flag = true;
 bool save_state_flag = false;
 bool warm_boot_flag = false;
 bool stop_after_prom_flag = false;
 bool prom_enabled_flag = true;
-
 bool lashup_flag = false;
-char *lashup_port = "/dev/ttyUSB0";
 
 void
 usage(void)
@@ -48,8 +49,6 @@ usage(void)
 	fprintf(stderr, "  -h             help message\n");
 }
 
-extern char *optarg;
-
 int
 main(int argc, char *argv[])
 {
@@ -63,16 +62,16 @@ main(int argc, char *argv[])
 			disk_filename = strdup(optarg);
 			break;
 		case 'S':
-			save_state_flag = 1;
+			save_state_flag = true;
 			break;
 		case 's':
-			stop_after_prom_flag = 1;
+			stop_after_prom_flag = true;
 			break;
 		case 'w':
-			warm_boot_flag = 1;
+			warm_boot_flag = true;
 			break;
 		case 'l':
-			lashup_flag = 1;
+			lashup_flag = true;
 			if (optarg != NULL)
 				lashup_port = strdup(optarg);
 			break;
@@ -85,7 +84,7 @@ main(int argc, char *argv[])
 		}
 	}
 	argc -= optind;
-        argv += optind;
+	argv += optind;
 
 	if (argc > 0) {
 		usage();
@@ -97,12 +96,12 @@ main(int argc, char *argv[])
 	tv_init();
 	disk_init(disk_filename);
 	iob_init();
-	if (lashup_flag)
+	if (lashup_flag == true)
 		lashup_init(lashup_port);
 	chaos_init();
 	ether_init();
 
-	if (warm_boot_flag)
+	if (warm_boot_flag == true)
 		kbd_warm_boot_key();
 
 	while (run())
