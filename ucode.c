@@ -25,18 +25,7 @@
 ucw_t prom_ucode[512];
 
 ucw_t ucode[16 * 1024];
-unsigned int a_memory[1024];
-unsigned int m_memory[32];
 unsigned int dispatch_memory[2048];
-
-unsigned int pdl_memory[1024];
-int pdl_ptr;
-int pdl_index;
-
-int lc;
-
-int spc_stack[32];
-int spc_stack_ptr;
 
 unsigned long cycles;
 
@@ -48,7 +37,6 @@ int interrupt_status_reg;
 
 int sequence_break_flag;
 int interrupt_enable_flag;
-int lc_byte_mode_flag;
 int bus_reset_flag;
 
 unsigned int md;
@@ -141,7 +129,7 @@ unibus_read(int offset, unsigned int *pv)
 	case 036:
 		spy_unibus_read(offset, pv);
 		break;
-		
+
 	case 040:
 		traceio("unibus: read interrupt status\n");
 		*pv = 0;
@@ -238,7 +226,7 @@ read_mem(int vaddr, unsigned int *pv)
 		uart_xbus_read(offset, pv);
 		return 0;
 	}
-	
+
 	// Page fault.
 	page = phy_pages[pn];
 	if (page == 0) {
@@ -412,6 +400,9 @@ write_mem(int vaddr, unsigned int v)
 	page->w[offset] = v;
 	return 0;
 }
+
+unsigned int a_memory[1024];
+unsigned int m_memory[32];
 
 void
 write_a_mem(int loc, unsigned int v)
@@ -442,8 +433,30 @@ write_m_mem(int loc, unsigned int v)
 	a_memory[loc] = v;
 }
 
+unsigned int pdl_memory[1024];
+int pdl_ptr;
+int pdl_index;
+
 #define USE_PDL_PTR 1
 #define USE_PDL_INDEX 2
+
+unsigned int
+read_pdl_mem(int which)
+{
+	switch (which) {
+	case USE_PDL_PTR:
+		if (pdl_ptr > 1024) {
+			printf("pdl ptr %o!\n", pdl_ptr);
+		}
+		return pdl_memory[pdl_ptr];
+	case USE_PDL_INDEX:
+		if (pdl_index > 1024) {
+			printf("pdl ptr %o!\n", pdl_index);
+		}
+		return pdl_memory[pdl_index];
+	}
+	return -1; 		///---!! Not reachable.
+}
 
 void
 write_pdl_mem(int which, unsigned int v)
@@ -465,24 +478,9 @@ write_pdl_mem(int which, unsigned int v)
 		break;
 	}
 }
-
-unsigned int
-rotate_left(unsigned int value, int bitstorotate)
-{
-	unsigned int tmp;
-	int mask;
-
-	// Determine which bits will be impacted by the rotate.
-	if (bitstorotate == 0)
-		mask = 0;
-	else
-		mask = (int) 0x80000000 >> bitstorotate;
-	// Save off the affected bits.
-	tmp = (value & mask) >> (32 - bitstorotate);
-	// Perform the actual rotate, and add the rotated bits back in
-	// (in the proper location).
-	return (value << bitstorotate) | tmp;
-}
+
+int spc_stack[32];
+int spc_stack_ptr;
 
 void
 push_spc(int pc)
@@ -500,6 +498,9 @@ pop_spc(void)
 	spc_stack_ptr = (spc_stack_ptr - 1) & 037;
 	return v;
 }
+
+int lc;
+int lc_byte_mode_flag;
 
 // Advance the LC register, following the rules; will read next VMA if
 // needed.
@@ -520,8 +521,7 @@ advance_lc(int *ppc)
 	if (lc & (1UL << 31UL)) {
 		lc &= ~(1UL << 31UL);
 		vma = old_lc >> 2;
-		if (read_mem(old_lc >> 2, &new_md)) {
-		}
+		read_mem(old_lc >> 2, &new_md);
 		new_md_delay = 2;
 		tracef("advance_lc() read vma %011o -> %011o\n", old_lc >> 2, new_md);
 	} else {
@@ -548,7 +548,7 @@ advance_lc(int *ppc)
 			lc |= (1UL << 31UL);
 	}
 }
-
+
 // Write value to decoded destination.
 void
 write_dest(int dest, unsigned int out_bus)
@@ -641,8 +641,7 @@ write_dest(int dest, unsigned int out_bus)
 		break;
 	case 021:		// VMA register, start main memory read.
 		vma = out_bus;
-		if (read_mem(vma, &new_md)) {
-		}
+		read_mem(vma, &new_md);
 		new_md_delay = 2;
 		break;
 	case 022:		// VMA register, start main memory write.
@@ -689,8 +688,7 @@ write_dest(int dest, unsigned int out_bus)
 		break;
 	case 031:
 		md = out_bus;
-		if (read_mem(vma, &new_md)) {
-		}
+		read_mem(vma, &new_md);
 		new_md_delay = 2;
 		break;
 	case 032:
@@ -719,6 +717,24 @@ write_dest(int dest, unsigned int out_bus)
 	out = (a) - (b) - ((ci) ? 0 : 1);		\
 	co = (unsigned)(out) < (unsigned)(a) ? 1 : 0;
 
+unsigned int
+rotate_left(unsigned int value, int bitstorotate)
+{
+	unsigned int tmp;
+	int mask;
+
+	// Determine which bits will be impacted by the rotate.
+	if (bitstorotate == 0)
+		mask = 0;
+	else
+		mask = (int) 0x80000000 >> bitstorotate;
+	// Save off the affected bits.
+	tmp = (value & mask) >> (32 - bitstorotate);
+	// Perform the actual rotate, and add the rotated bits back in
+	// (in the proper location).
+	return (value << bitstorotate) | tmp;
+}
+
 int
 run(void)
 {
@@ -786,9 +802,7 @@ run(void)
 
 	next:
 		iob_poll(cycles);
-
 		disk_poll();
-
 		if ((cycles & 0x0ffff) == 0) {
 			tv_poll();
 			chaos_poll();
@@ -870,8 +884,8 @@ run(void)
 				m_src_value = pdl_index & 01777;
 				break;
 			case 5:
-				tracef("reading pdl[%o] -> %o\n", pdl_index, pdl_memory[pdl_index]);
-				m_src_value = pdl_memory[pdl_index];
+				tracef("reading pdl[%o] -> %o\n", pdl_index, read_pdl_mem(USE_PDL_INDEX));
+				m_src_value = read_pdl_mem(USE_PDL_INDEX);
 				break;
 			case 6:
 				m_src_value = opc;
@@ -901,13 +915,13 @@ run(void)
 				spc_stack_ptr = (spc_stack_ptr - 1) & 037;
 				break;
 			case 024:
-				tracef("reading pdl[%o] -> %o, pop\n", pdl_ptr, pdl_memory[pdl_ptr]);
-				m_src_value = pdl_memory[pdl_ptr];
+				tracef("reading pdl[%o] -> %o, pop\n", pdl_ptr, read_pdfl_mem(USE_PDL_PTR));
+				m_src_value = read_pdl_mem(USE_PDL_PTR);
 				pdl_ptr = (pdl_ptr - 1) & 01777;
 				break;
 			case 025:
-				tracef("reading pdl[%o] -> %o\n", pdl_ptr, pdl_memory[pdl_ptr]);
-				m_src_value = pdl_memory[pdl_ptr];
+				tracef("reading pdl[%o] -> %o\n", pdl_ptr, read_pdl_mem(USE_PDL_PTR));
+				m_src_value = read_pdl_mem(USE_PDL_PTR);
 				break;
 			}
 		} else {
@@ -932,7 +946,7 @@ run(void)
 			alu_carry = 0;
 
 			switch (aluop) {
-				// Arithmetic.
+			// Arithmetic.
 			case 020:
 				alu_out = carry_in ? 0 : -1;
 				alu_carry = 0;
@@ -1008,7 +1022,7 @@ run(void)
 				add32(m_src_value, m_src_value, carry_in, alu_out, alu_carry);
 				break;
 
-				// Boolean.
+			// Boolean.
 			case 000:	// [SETZ]
 				alu_out = 0;
 				break;
@@ -1058,7 +1072,7 @@ run(void)
 				alu_out = ~0;
 				break;
 
-				// Conditioanl ALU operation.
+			// Conditioanl ALU operation.
 			case 040:	// Multiply step
 				do_add = q & 1;
 				if (do_add) {
@@ -1135,6 +1149,7 @@ run(void)
 				out_bus = (alu_out << 1) | ((old_q & 0x80000000) ? 1 : 0);
 				break;
 			}
+
 			write_dest(dest, out_bus);
 			tracef("alu_out 0x%08x, alu_carry %d, q 0x%08x\n", alu_out, alu_carry, q);
 			break;
