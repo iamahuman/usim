@@ -127,5 +127,10 @@
 #define CONS_DISP_N_BIT 01601
 #define CONS_DISP_RPN_BITS 01603
 #define CONS_DISP_PARITY_BIT 02101
+
+#define WRITE 1
+
+#define cc_execute(executor, ir)					\
+	(executor == WRITE) ? cc_execute_w(ir) : cc_execute_r(ir)
 
 #endif

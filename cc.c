@@ -12,56 +12,14 @@
 
 #include "ucode.h"
 #include "decode.h"
+#include "cc.h"
+
+#include "lcadrd.h"
+#include "lcadmc.h"
 
 int fd;
 int debug;
 int verbose;
-
-#define WRITE 1
-
-#define rd_spy_ir_low 0
-#define rd_spy_ir_med 1
-#define rd_spy_ir_high 2
-#define rd_spy_scratch 3
-#define rd_spy_opc 4
-#define rd_spy_pc 5
-#define rd_spy_ob_low 6
-#define rd_spy_ob_high 7
-#define rd_spy_flag_1 010
-#define rd_spy_flag_2 011
-#define rd_spy_m_low 012
-#define rd_spy_m_high 013
-#define rd_spy_a_low 014
-#define rd_spy_a_high 015
-#define rd_spy_stat_low 016
-#define rd_spy_stat_high 017
-#define rd_spy_md_low 020
-#define rd_spy_md_high 021
-#define rd_spy_vma_low 022
-#define rd_spy_vma_high 023
-#define rd_spy_disk 026
-#define rd_spy_bd 027
-
-#define wr_spy_ir_low 0
-#define wr_spy_ir_med 1
-#define wr_spy_ir_high 2
-#define wr_spy_clk 3
-#define wr_spy_opc_control 4
-#define wr_spy_mode 5
-#define wr_spy_scratch 7
-#define wr_spy_md_low 010
-#define wr_spy_md_high 011
-#define wr_spy_vma_low 012
-#define wr_spy_vma_high 013
-
-#include "lcadmc.h"
-
-uint32_t cc_read_md(void);
-
-int cc_noop_debug_clock(void);
-int cc_debug_clock(void);
-int cc_noop_clock(void);
-int cc_clock(void);
 
 int
 cc_send(unsigned char *b, int len)
@@ -221,18 +179,6 @@ mmc_set(int reg, int v)
 	return reg_set(0xd0, reg, v);
 }
 
-int
-cc_stop(void)
-{
-	return cc_set(wr_spy_clk, 0);
-}
-
-int
-cc_go(void)
-{
-	return cc_set(wr_spy_clk, 0001);
-}
-
 uint32_t
 _cc_read_pair(int r1, int r2)
 {
@@ -259,146 +205,16 @@ _cc_read_triple(int r1, int r2, int r3)
 	return (v1 << 32) | (v2 << 16) | v3;
 }
 
-// See SYS; LCADR: LCADRD LISP and SYS;LCADR:LCADMC LISP for details.
-//
-// ---!!! Split this into "lcadrd.c", and add comments from LCADMC LISP.
-
-uint32_t
-cc_read_obus(void)
-{
-	return _cc_read_pair(rd_spy_ob_high, rd_spy_ob_low);
-}
-
 uint32_t
 cc_read_obus_(void)
 {
 	return _cc_read_pair(025, 024);
 }
 
-uint32_t
-cc_read_a_bus(void)
-{
-	return _cc_read_pair(rd_spy_a_high, rd_spy_a_low);
-}
-
-uint32_t
-cc_read_m_bus(void)
-{
-	return _cc_read_pair(rd_spy_m_high, rd_spy_m_low);
-}
-
-uint64_t
-cc_read_ir(void)
-{
-	return _cc_read_triple(rd_spy_ir_high, rd_spy_ir_med, rd_spy_ir_low);
-}
-
-uint16_t
-cc_read_pc(void)
-{
-	return cc_get(rd_spy_pc);
-}
-
 uint16_t
 cc_read_scratch(void)
 {
-	return cc_get(rd_spy_scratch);
-}
-
-uint32_t
-cc_read_status(void)
-{
-	uint16_t v1;
-	uint16_t v2;
-	uint16_t v3;
-
-	v1 = cc_get(rd_spy_flag_1);
-	v2 = cc_get(rd_spy_flag_2);
-	v3 = cc_get(rd_spy_ir_low);
-
-	if (v3 & 0100)
-		v2 ^= 4;	// Hardware reads JC-TRUE incorrectly.
-
-	return (v1 << 16) | v2;
-}
-
-int
-cc_write_diag_ir(uint64_t ir)
-{
-	if (debug || verbose)
-		disassemble_ucode_loc(ir);
-
-	cc_set(wr_spy_ir_high, (uint16_t) ((ir >> 32) & 0xffff));
-	cc_set(wr_spy_ir_med, (uint16_t) ((ir >> 16) & 0xffff));
-	cc_set(wr_spy_ir_low, (uint16_t) ((ir >> 0) & 0xffff));
-
-	cc_set(wr_spy_ir_high, (uint16_t) ((ir >> 32) & 0xffff));
-	cc_set(wr_spy_ir_med, (uint16_t) ((ir >> 16) & 0xffff));
-	cc_set(wr_spy_ir_low, (uint16_t) ((ir >> 0) & 0xffff));
-
-	return 0;
-}
-
-int
-cc_write_ir(uint64_t ir)
-{
-	if (debug || verbose)
-		printf("ir %" PRIu64 " (0x%016llx)\n", ir, ir);
-	cc_write_diag_ir(ir);
-	return cc_noop_debug_clock();
-}
-
-int
-cc_execute_r(uint64_t ir)
-{
-	int ret;
-
-	if (debug || verbose)
-		printf("ir %" PRIu64 " (0x%016" PRIx64 ")\n", ir, ir);
-
-again:
-	cc_write_diag_ir(ir);
-	cc_noop_debug_clock();
-	if (cc_read_ir() != ir) {
-		printf("ir reread failed; retry\n");
-		goto again;
-	}
-
-	ret = cc_debug_clock();
-	return ret;
-}
-
-int
-cc_execute_w(uint64_t ir)
-{
-	int ret;
-
-	if (debug || verbose)
-		printf("ir %" PRIu64 " (0x%016" PRIx64 ")\n", ir, ir);
-
-again:
-	cc_write_diag_ir(ir);
-	cc_noop_debug_clock();
-	if (cc_read_ir() != ir) {
-		printf("ir reread failed; retry\n");
-		goto again;
-	}
-	cc_clock();
-	ret = cc_noop_clock();
-
-	return ret;
-}
-
-int
-cc_execute(int op, uint64_t ir)
-{
-	if (debug)
-		disassemble_ucode_loc(ir);
-
-	if (op == WRITE) {
-		return cc_execute_w(ir);
-	}
-	return cc_execute_r(ir);
+	return cc_get(SPY_SCRATCH);
 }
 
 uint32_t
@@ -436,54 +252,6 @@ ir_pair(int field, uint32_t val)
 	return ir;
 }
 
-uint32_t
-cc_read_md(void)
-{
-	return _cc_read_pair(rd_spy_md_high, rd_spy_md_low);
-}
-
-int
-cc_write_md(uint32_t md)
-{
-	cc_set(wr_spy_md_high, (uint16_t) (md >> 16) & 0xffff);
-	cc_set(wr_spy_md_low, (uint16_t) (md >> 0) & 0xffff);
-
-	while (1) {
-		uint32_t v;
-
-		v = cc_read_md();
-		if (v == md)
-			break;
-
-		printf("md readback failed, retry got %x want %x\n", v, md);
-		cc_set(wr_spy_md_high, (uint16_t) (md >> 16) & 0xffff);
-		cc_set(wr_spy_md_low, (uint16_t) (md >> 0) & 0xffff);
-	}
-
-	return 0;
-}
-
-uint32_t
-cc_read_vma(void)
-{
-	return _cc_read_pair(rd_spy_vma_high, rd_spy_vma_low);
-}
-
-int
-cc_write_vma(uint32_t vma)
-{
-	cc_set(wr_spy_vma_high, (uint16_t) (vma >> 16) & 0xffff);
-	cc_set(wr_spy_vma_low, (uint16_t) (vma >> 0) & 0xffff);
-
-	while (cc_read_vma() != vma) {
-		printf("vma readback failed, retry\n");
-		cc_set(wr_spy_vma_high, (uint16_t) (vma >> 16) & 0xffff);
-		cc_set(wr_spy_vma_low, (uint16_t) (vma >> 0) & 0xffff);
-	}
-
-	return 0;
-}
-
 int
 cc_write_md_1s(void)
 {
@@ -496,92 +264,6 @@ int
 cc_write_md_0s(void)
 {
 	cc_write_md(0x00000000);
-
-	return 0;
-}
-
-uint32_t
-cc_read_a_mem(uint32_t adr)
-{
-	cc_execute(0,
-		   ir_pair(CONS_IR_A_SRC, adr) |
-		   ir_pair(CONS_IR_ALUF, CONS_ALU_SETA) |
-		   ir_pair(CONS_IR_OB, CONS_OB_ALU));
-
-	return cc_read_obus();
-}
-
-uint32_t
-cc_write_a_mem(uint32_t loc, uint32_t val)
-{
-	uint32_t v2;
-
-	cc_write_md(val);
-	v2 = cc_read_md();
-	if (v2 != val) {
-		printf("cc_write_a_mem; md readback error (got=%o wanted=%o)\n", v2, val);
-	}
-	cc_execute(WRITE,
-		   ir_pair(CONS_IR_M_SRC, CONS_M_SRC_MD) |
-		   ir_pair(CONS_IR_ALUF, CONS_ALU_SETM) |
-		   ir_pair(CONS_IR_OB, CONS_OB_ALU) |
-		   ir_pair(CONS_IR_A_MEM_DEST, CONS_A_MEM_DEST_INDICATOR + loc));
-
-	return 0;
-}
-
-uint32_t
-cc_read_m_mem(uint32_t adr)
-{
-	cc_execute(0,
-		   ir_pair(CONS_IR_M_SRC, adr) |
-		   ir_pair(CONS_IR_ALUF, CONS_ALU_SETM) |
-		   ir_pair(CONS_IR_OB, CONS_OB_ALU));
-
-	return cc_read_obus();
-}
-
-int
-cc_debug_clock(void)
-{
-	cc_set(wr_spy_clk, 012);
-	cc_set(wr_spy_clk, 0);
-
-	return 0;
-}
-
-int
-cc_noop_debug_clock(void)
-{
-	cc_set(wr_spy_clk, 016);
-	cc_set(wr_spy_clk, 0);
-
-	return 0;
-}
-
-int
-cc_clock(void)
-{
-	cc_set(wr_spy_clk, 2);
-	cc_set(wr_spy_clk, 0);
-
-	return 0;
-}
-
-int
-cc_noop_clock(void)
-{
-	cc_set(wr_spy_clk, 6);
-	cc_set(wr_spy_clk, 0);
-
-	return 0;
-}
-
-int
-cc_single_step(void)
-{
-	cc_set(wr_spy_clk, 6);
-	cc_set(wr_spy_clk, 0);
 
 	return 0;
 }
@@ -615,8 +297,8 @@ cc_report_basic_regs(void)
 		uint32_t bd;
 		uint32_t mmc;
 
-		disk = cc_get(rd_spy_disk);
-		bd = cc_get(rd_spy_bd);
+		disk = cc_get(SPY_DISK);
+		bd = cc_get(SPY_BD);
 		mmc = bd >> 6;
 		bd &= 0x3f;
 
@@ -874,7 +556,7 @@ _test_scratch(uint16_t v)
 	uint16_t s2;
 
 	s1 = cc_read_scratch();
-	cc_set(wr_spy_scratch, v);
+	cc_set(SPY_SCRATCH, v);
 	s2 = cc_read_scratch();
 
 	printf("write 0%o; scratch %o -> %o (0x%x) ", v, s1, s2, s2);
@@ -889,7 +571,7 @@ _test_scratch(uint16_t v)
 		} else {
 			printf("BAD\n");
 			s1 = cc_read_scratch();
-			cc_set(wr_spy_scratch, v);
+			cc_set(SPY_SCRATCH, v);
 			s2 = cc_read_scratch();
 
 			printf(" rewrite 0%o; scratch %o -> %o (0x%x) ", v, s1, s2, s2);
@@ -1044,7 +726,7 @@ main(int argc, char *argv[])
 			cc_pipe2();
 			break;
 		case 'g':
-			cc_go();
+			cc_start_mach();
 			break;
 		case 'c':
 			cc_single_step();
@@ -1068,7 +750,7 @@ main(int argc, char *argv[])
 			}
 			break;
 		case 'h':	// Halt.
-			cc_stop();
+			cc_stop_mach();
 			cc_report_status();
 			printf("\n");
 			cc_report_basic_regs();
@@ -1090,15 +772,15 @@ main(int argc, char *argv[])
 			}
 			break;
 		case 'n':
-			cc_set(wr_spy_clk, 2);
+			cc_set(SPY_CLK, 2);
 			usleep(1000 * 200);
-			cc_set(wr_spy_clk, 0);
+			cc_set(SPY_CLK, 0);
 			usleep(1000 * 200);
 			break;
 		case 'x':	// Reset.
-			cc_set(wr_spy_mode, 0000);
-			cc_set(wr_spy_mode, 0301);
-			cc_set(wr_spy_mode, 0001);
+			cc_set(SPY_MODE, 0000);
+			cc_set(SPY_MODE, 0301);
+			cc_set(SPY_MODE, 0001);
 			break;
 		case 'i':
 			cc_test_ir();

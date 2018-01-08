@@ -22,7 +22,7 @@ lmfs: lmfs.o
 lod: lod.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-cc: cc.o decode.o misc.o
+cc: cc.o lcadrd.o decode.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
