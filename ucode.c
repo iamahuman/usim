@@ -928,15 +928,14 @@ run(void)
 			m_src_value = read_m_mem(m_src);
 		}
 
+		// NOP short cut.
+		if ((u & NOP_MASK) == 0) {
+			goto next;
+		}
+
 		// Decode isntruction.
 		switch (op_code = (u >> 43) & 03) {
 		case 0:	// ALU
-
-			// NOP short cut.
-			if ((u & NOP_MASK) == 0) {
-				goto next;
-			}
-
 			dest = (u >> 14) & 07777;
 			out_bus = (u >> 12) & 3;
 			carry_in = (u >> 2) & 1;
