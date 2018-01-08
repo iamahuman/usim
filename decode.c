@@ -461,12 +461,6 @@ unsigned int buf[256];
 
 extern int disk_fd;
 
-unsigned int
-str4(char *s)
-{
-	return (unsigned int) ((s[3] << 24) | (s[2] << 16) | (s[1] << 8) | s[0]);
-}
-
 int
 find_disk_partition_table(int fd)
 {

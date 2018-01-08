@@ -9,6 +9,8 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include "misc.h"
+
 #ifdef __BIG_ENDIAN__
 #define NEED_SWAP
 #endif
@@ -108,25 +110,6 @@ add_partition(char *name, int start, int size, int ptype, char *label, char *fil
 	p->filename = filename;
 
 	return 0;
-}
-
-unsigned long
-str4(char *s)
-{
-	return (s[3] << 24) | (s[2] << 16) | (s[1] << 8) | s[0];
-}
-
-char *
-unstr4(unsigned long s)
-{
-	static char b[5];
-
-	b[3] = s >> 24;
-	b[2] = s >> 16;
-	b[1] = s >> 8;
-	b[0] = s;
-	b[4] = 0;
-	return b;
 }
 
 int

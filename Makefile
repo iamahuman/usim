@@ -13,13 +13,13 @@ usim: usim.o ucode.o mem.o iob.o mouse.o kbd.o tv.o x11.o chaos.o ether.o disk.o
 readmcr: readmcr.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-diskmaker: diskmaker.o
+diskmaker: diskmaker.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 lmfs: lmfs.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-lod: lod.o
+lod: lod.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 cc: cc.o decode.o misc.o
