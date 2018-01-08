@@ -17,11 +17,13 @@
 extern char *disk_filename;
 extern char *mcrsym_filename;
 extern char *promsym_filename;
+extern char *lashup_port;
 
 extern bool save_state_flag;
 extern bool warm_boot_flag;
 extern bool stop_after_prom_flag;
 extern bool run_ucode_flag;
 extern bool prom_enabled_flag;
+extern bool lashup_flag;
 
 #endif
