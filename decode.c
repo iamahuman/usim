@@ -74,11 +74,7 @@ show_prom(void)
 
 	return 0;
 }
-
-#define l48(n) ((uint64)(n))
-#define mask(v, n) (l48(v) << (n))
-#define bit(n) (l48(1) << (n))
-
+
 char *alu_bool_op[] = {
 	"SETZ",
 	"AND",
