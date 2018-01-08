@@ -12,10 +12,6 @@ int fd;
 void
 lashup_init(char *port)
 {
-	int err;
-	struct termios oldtio;
-	struct termios newtio;
-
 	fd = open(port, O_RDWR | O_NONBLOCK);
 	if (fd < 0) {
 		perror(port);
