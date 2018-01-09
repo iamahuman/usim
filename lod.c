@@ -111,7 +111,7 @@ read_virt(int fd, int addr)
 	addr &= 077777777;
 	b = addr / 256;
 
-	offset = (b + partoff) * (256 * 4);
+	offset = (b + partoff) * BLOCKSZ;
 
 	if (b != bnum) {
 		bnum = b;
@@ -120,8 +120,8 @@ read_virt(int fd, int addr)
 			perror("seek");
 		}
 
-		ret = read(fd, buf, 256 * 4);
-		if (ret != 256 * 4) {
+		ret = read(fd, buf, BLOCKSZ);
+		if (ret != BLOCKSZ) {
 		}
 	}
 
@@ -156,8 +156,8 @@ read_partition_table(void)
 	int p;
 	int count;
 
-	ret = read(swapfd, buf, 256 * 4);
-	if (ret != 256 * 4) {
+	ret = read(swapfd, buf, BLOCKSZ);
+	if (ret != BLOCKSZ) {
 		perror(disk_filename);
 		return -1;
 	}

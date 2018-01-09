@@ -16,7 +16,7 @@ readmcr: readmcr.o misc.o
 diskmaker: diskmaker.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-lmfs: lmfs.o
+lmfs: lmfs.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 lod: lod.o misc.o

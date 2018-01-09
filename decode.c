@@ -477,8 +477,8 @@ find_disk_partition_table(int fd)
 	if (ret != offset) {
 		return -1;
 	}
-	ret = read(fd, buf, 256 * 4);
-	if (ret != 256 * 4) {
+	ret = read(fd, buf, BLOCKSZ);
+	if (ret != BLOCKSZ) {
 		return -1;
 	}
 
@@ -509,7 +509,7 @@ read_virt(int fd, unsigned int addr, unsigned int *pv)
 	addr &= 077777777;
 
 	b = addr / 256;
-	offset = (b + partoff) * (256 * 4);
+	offset = (b + partoff) * BLOCKSZ;
 
 	if (b != bnum) {
 		bnum = b;
@@ -520,8 +520,8 @@ read_virt(int fd, unsigned int addr, unsigned int *pv)
 			return 1;
 		}
 
-		ret = read(fd, buf, 256 * 4);
-		if (ret != 256 * 4) {
+		ret = read(fd, buf, BLOCKSZ);
+		if (ret != BLOCKSZ) {
 			return 1;
 		}
 	}

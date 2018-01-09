@@ -6,6 +6,8 @@
 #include <string.h>
 #include <fcntl.h>
 
+#include "misc.h"
+
 int do_dir;
 int do_read;
 int do_write;
@@ -292,52 +294,6 @@ dumpmem(char *ptr, int len)
 }
 
 int
-read_block(int fd, int block_no, unsigned char *buf)
-{
-	off_t offset;
-	off_t ret;
-	int size;
-
-	offset = block_no * (256 * 4);
-	ret = lseek(fd, offset, SEEK_SET);
-	if (ret != offset) {
-		perror("lseek");
-		return -1;
-	}
-	size = 256 * 4;
-	ret = read(fd, buf, size);
-	if (ret != size) {
-		printf("disk read error; ret %d, size %d\n", (int) ret, size);
-		perror("read");
-		return -1;
-	}
-	return 0;
-}
-
-int
-write_block(int fd, int block_no, unsigned char *buf)
-{
-	off_t offset;
-	off_t ret;
-	int size;
-
-	offset = block_no * (256 * 4);
-	ret = lseek(fd, offset, SEEK_SET);
-	if (ret != offset) {
-		perror("lseek");
-		return -1;
-	}
-	size = 256 * 4;
-	ret = write(fd, buf, size);
-	if (ret != size) {
-		printf("disk write error; ret %d, size %d\n", (int) ret, size);
-		perror("write");
-		return -1;
-	}
-	return 0;
-}
-
-int
 read_record(baccess *pb, int record_no)
 {
 	int i;
@@ -351,7 +307,7 @@ read_record(baccess *pb, int record_no)
 
 	for (i = 0; i < 4; i++) {
 		read_block(pb->fd, block_no, pbuf);
-		pbuf += 256 * 4;
+		pbuf += BLOCKSZ;
 		block_no++;
 	}
 
@@ -545,7 +501,7 @@ lmfs_open(char *img_filename, int offset)
 {
 	int fd;
 	int ret;
-	unsigned char buffer[256 * 4];
+	unsigned char buffer[BLOCKSZ];
 	struct partition_label_s *pl;
 	baccess b;
 
@@ -555,8 +511,8 @@ lmfs_open(char *img_filename, int offset)
 		return -1;
 	}
 
-	ret = read(fd, buffer, 256 * 4);
-	if (ret != 256 * 4) {
+	ret = read(fd, buffer, BLOCKSZ);
+	if (ret != BLOCKSZ) {
 		perror(img_filename);
 		return -1;
 	}

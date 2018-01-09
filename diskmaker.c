@@ -176,58 +176,8 @@ make_labl(int fd)
 	_swaplongbytes(&buffer[0200], 128);
 #endif
 
-	if (write(fd, buffer, 256 * 4) != 256 * 4)
+	if (write(fd, buffer, BLOCKSZ) != BLOCKSZ)
 		return -1;
-
-	return 0;
-}
-
-int
-read_block(int fd, int block_no, unsigned char *buf)
-{
-	off_t offset;
-	off_t ret;
-	int size;
-
-	offset = block_no * (256 * 4);
-	ret = lseek(fd, offset, SEEK_SET);
-	if (ret != offset) {
-		perror("lseek");
-		return -1;
-	}
-
-	size = 256 * 4;
-	ret = read(fd, buf, size);
-	if (ret != size) {
-		printf("disk read error; ret %d, size %d\n", (int) ret, size);
-		perror("read");
-		return -1;
-	}
-
-	return 0;
-}
-
-int
-write_block(int fd, int block_no, unsigned char *buf)
-{
-	off_t offset;
-	off_t ret;
-	int size;
-
-	offset = block_no * (256 * 4);
-	ret = lseek(fd, offset, SEEK_SET);
-	if (ret != offset) {
-		perror("lseek");
-		return -1;
-	}
-
-	size = 256 * 4;
-	ret = write(fd, buf, size);
-	if (ret != size) {
-		printf("disk write error; ret %d, size %d\n", (int) ret, size);
-		perror("write");
-		return -1;
-	}
 
 	return 0;
 }
@@ -239,7 +189,7 @@ make_one_partition(int fd, int index)
 	int count;
 	int fd1;
 	int offset;
-	unsigned char b[256 * 4];
+	unsigned char b[BLOCKSZ];
 
 	printf("making %s... ", parts[index].name);
 
@@ -259,7 +209,7 @@ make_one_partition(int fd, int index)
 		fflush(stdout);
 
 		while (1) {
-			ret = read(fd1, b, 256 * 4);
+			ret = read(fd1, b, BLOCKSZ);
 			if (ret <= 0)
 				break;
 
@@ -271,7 +221,7 @@ make_one_partition(int fd, int index)
 				break;
 			count++;
 
-			if (ret < 256 * 4)
+			if (ret < BLOCKSZ)
 				break;
 		}
 		close(fd1);
@@ -407,7 +357,7 @@ fillout_image_file(int fd)
 			last_block_no = last;
 	}
 
-	offset = (last_block_no + 1) * (256 * 4);
+	offset = (last_block_no + 1) * BLOCKSZ;
 
 	ret = ftruncate(fd, offset - 1);
 	if (ret) {
@@ -599,8 +549,8 @@ show_partition_info(char *filename)
 		return -1;
 	}
 
-	ret = read(fd, buffer, 256 * 4);
-	if (ret != 256 * 4) {
+	ret = read(fd, buffer, BLOCKSZ);
+	if (ret != BLOCKSZ) {
 		perror(filename);
 		return -1;
 	}
@@ -696,8 +646,8 @@ extract_partition(char *filename, char *extract_filename, char *part_name)
 		return -1;
 	}
 
-	ret = read(fd, buffer, 256 * 4);
-	if (ret != 256 * 4) {
+	ret = read(fd, buffer, BLOCKSZ);
+	if (ret != BLOCKSZ) {
 		perror(filename);
 		close(fd);
 		return -1;
@@ -763,7 +713,7 @@ extract_partition(char *filename, char *extract_filename, char *part_name)
 		fprintf(stderr, "can't find partition '%s'\n", part_name);
 		result = -1;
 	} else {
-		unsigned char b[256 * 4];
+		unsigned char b[BLOCKSZ];
 
 		printf("extracting partition '%s' at %o from %s\n", part_name, offset, filename);
 		fd_out = open(extract_filename, O_RDWR | O_CREAT, 0666);
@@ -804,8 +754,8 @@ read_labl(const char *filename)
 		return -1;
 	}
 
-	ret = read(fd, buffer, 256 * 4);
-	if (ret != 256 * 4) {
+	ret = read(fd, buffer, BLOCKSZ);
+	if (ret != BLOCKSZ) {
 		perror(filename);
 		return -1;
 	}

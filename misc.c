@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "misc.h"
+
 unsigned int
 read16(int fd)
 {
@@ -47,4 +49,54 @@ unstr4(unsigned long s)
 	b[0] = s;
 	b[4] = 0;
 	return b;
+}
+
+int
+read_block(int fd, int block_no, unsigned char *buf)
+{
+	off_t offset;
+	off_t ret;
+	int size;
+
+	offset = block_no * BLOCKSZ;
+	ret = lseek(fd, offset, SEEK_SET);
+	if (ret != offset) {
+		perror("lseek");
+		return -1;
+	}
+
+	size = BLOCKSZ;
+	ret = read(fd, buf, size);
+	if (ret != size) {
+		printf("disk read error; ret %d, size %d\n", (int) ret, size);
+		perror("read");
+		return -1;
+	}
+
+	return 0;
+}
+
+int
+write_block(int fd, int block_no, unsigned char *buf)
+{
+	off_t offset;
+	off_t ret;
+	int size;
+
+	offset = block_no * BLOCKSZ;
+	ret = lseek(fd, offset, SEEK_SET);
+	if (ret != offset) {
+		perror("lseek");
+		return -1;
+	}
+
+	size = BLOCKSZ;
+	ret = write(fd, buf, size);
+	if (ret != size) {
+		printf("disk write error; ret %d, size %d\n", (int) ret, size);
+		perror("write");
+		return -1;
+	}
+
+	return 0;
 }

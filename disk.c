@@ -14,6 +14,7 @@
 #include "usim.h"
 #include "ucode.h"
 #include "mem.h"
+#include "misc.h"
 
 #include "syms.h"
 
@@ -60,11 +61,11 @@ _disk_read(int block_no, unsigned int *buffer)
 	off_t offset;
 	int size;
 
-	offset = block_no * (256 * 4);
+	offset = block_no * BLOCKSZ;
 
 	tracedio("disk: file image block %d(10), offset %ld(10)\n", block_no, (long) offset);
 
-	size = 256 * 4;
+	size = BLOCKSZ;
 	memcpy(buffer, disk_mm + offset, size);
 
 	if (disk_byteswap) {
@@ -80,11 +81,11 @@ _disk_write(int block_no, unsigned int *buffer)
 	off_t offset;
 	int size;
 
-	offset = block_no * (256 * 4);
+	offset = block_no * BLOCKSZ;
 
 	tracedio("disk: file image block %d, offset %ld\n", block_no, (long) offset);
 
-	size = 256 * 4;
+	size = BLOCKSZ;
 	memcpy(disk_mm + offset, buffer, size);
 
 	if (disk_byteswap) {
