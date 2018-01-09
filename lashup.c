@@ -15,7 +15,7 @@ lashup_init(char *port)
 	fd = open(port, O_RDWR | O_NONBLOCK);
 	if (fd < 0) {
 		perror(port);
-		exit (1);
+		exit(1);
 	}
 }
 

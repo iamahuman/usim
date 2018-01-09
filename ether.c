@@ -127,7 +127,7 @@ ether_tx(void)
 
 			len = (size_t) descs.desc_structs[i].len;
 			ptr = descs.desc_structs[i].ptr;
-			words = (int)((len + 3) >> 2);
+			words = (int) ((len + 3) >> 2);
 
 			for (int j = 0; j < words; j++)
 				read_phy_mem(ptr + j, &packet[j]);
@@ -170,7 +170,7 @@ ether_rx(void)
 
 			ptr = descs.desc_structs[i].ptr;
 			descs.desc_structs[i].len = (uint16_t) len;
-			words = (int)((len + 3) >> 2);
+			words = (int) ((len + 3) >> 2);
 
 			for (int j = 0; j < words; j++)
 				write_phy_mem(ptr + j, packet[j]);
@@ -192,10 +192,10 @@ ether_poll(void)
 {
 	if (!enabled)
 		return;
-	
+
 	if (moder & ETHER_MODE_TXEN)
 		ether_tx();
-	
+
 	if (moder & ETHER_MODE_RXEN)
 		ether_rx();
 }
@@ -204,16 +204,16 @@ void
 ether_xbus_reg_read(int offset, unsigned int *pv)
 {
 	switch (offset) {
-	case 0: *pv = moder; break;
-	case 1: *pv = int_source; break;
-	case 2: *pv = int_mask; break;
-	case 3: *pv = ipgt; break;
-	case 4: *pv = ipgr1; break;
-	case 5: *pv = ipgr2; break;
-	case 6: *pv = packetlen; break;
-	case 7: *pv = collconf; break;
-	case 8: *pv = tx_bd_num; break;
-	case 9: *pv = ctrlmoder; break;
+	case  0: *pv = moder; break;
+	case  1: *pv = int_source; break;
+	case  2: *pv = int_mask; break;
+	case  3: *pv = ipgt; break;
+	case  4: *pv = ipgr1; break;
+	case  5: *pv = ipgr2; break;
+	case  6: *pv = packetlen; break;
+	case  7: *pv = collconf; break;
+	case  8: *pv = tx_bd_num; break;
+	case  9: *pv = ctrlmoder; break;
 	case 10: *pv = miimoder; break;
 	case 11: *pv = miicommand; break;
 	case 12: *pv = miiaddress; break;
@@ -234,16 +234,16 @@ void
 ether_xbus_reg_write(int offset, unsigned int v)
 {
 	switch (offset) {
-	case 0: moder = v; break;
-	case 1: int_source ^= v; break;
-	case 2: int_mask = v; break;
-	case 3: ipgt = v; break;
-	case 4: ipgr1 = v; break;
-	case 5: ipgr2 = v; break;
-	case 6: packetlen = v; break;
-	case 7: collconf = v; break;
-	case 8: tx_bd_num = v; break;
-	case 9: ctrlmoder = v; break;
+	case  0: moder = v; break;
+	case  1: int_source ^= v; break;
+	case  2: int_mask = v; break;
+	case  3: ipgt = v; break;
+	case  4: ipgr1 = v; break;
+	case  5: ipgr2 = v; break;
+	case  6: packetlen = v; break;
+	case  7: collconf = v; break;
+	case  8: tx_bd_num = v; break;
+	case  9: ctrlmoder = v; break;
 	case 10: miimoder = v; break;
 	case 11: miicommand = v; break;
 	case 12: miiaddress = v; break;

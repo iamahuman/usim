@@ -612,7 +612,8 @@ lmfs_open(char *img_filename, int offset)
 				struct directory_entry_s *de;
 				int i;
 
-				de = (struct directory_entry_s *) ensure_access(&b, woffset * 4, sizeof(struct directory_entry_s));
+				de = (struct directory_entry_s *)
+					ensure_access(&b, woffset * 4, sizeof(struct directory_entry_s));
 
 				printf("file_name '%s', file_type '%s', bytesize %d, author '%s'\n", de->file_name, de->file_type, de->bytesize, de->author);
 				printf("number_of_records %d\n", de->number_of_records);
@@ -628,7 +629,8 @@ lmfs_open(char *img_filename, int offset)
 				printf("uid_path_offset %d\n", dh->uid_path_offset);
 				printf("uid_path_length %d\n", dh->uid_path_length);
 				for (i = 0; i < dh->number_of_entries; i++) {
-					de = (struct directory_entry_s *) advance_access(&b, sizeof(struct directory_entry_s));
+					de = (struct directory_entry_s *)
+						advance_access(&b, sizeof(struct directory_entry_s));
 					printf("file_name '%s', file_type '%s', bytesize %d, author '%s'\n", de->file_name, de->file_type, de->bytesize, de->author);
 					printf("number_of_records %d\n", de->number_of_records);
 					printf("record_0_address %d\n", de->record_0_address);

@@ -59,7 +59,7 @@ read_prom_files(void)
 	}
 
 	read_promsym_file();
-	
+
 	return 0;
 }
 
@@ -540,7 +540,7 @@ read_string(unsigned int loc)
 	if (read_virt(disk_fd, loc, &v) == 0) {
 		unsigned int j;
 		unsigned int t;
-	
+
 		t = v & 0xff;
 		j = 0;
 

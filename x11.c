@@ -59,7 +59,7 @@ process_key(XEvent *e, int keydown)
 	int extra;
 	int lmcode;
 	int newkbd = 0;
-	
+
 	extra = 0;
 	if (e->xkey.state & X_META)
 		extra |= 3 << 12;

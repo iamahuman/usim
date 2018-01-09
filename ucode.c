@@ -114,7 +114,7 @@ unibus_read(int offset, unsigned int *pv)
 	case 000:
 	case 002:
 	case 004:
-	case 006: // Not used.
+	case 006:		// Not used.
 	case 010:
 	case 012:
 	case 014:
@@ -204,25 +204,25 @@ read_mem(int vaddr, unsigned int *pv)
 	case 037766:		// Unibus.
 		unibus_read(offset, pv);
 		return 0;
-	case 036777:		// Disk & TV controller on XBUS.
-		if (offset >= 0370) {	// Disk.
+	case 036777:		      // Disk & TV controller on XBUS.
+		if (offset >= 0370) { // Disk.
 			disk_xbus_read(offset, pv);
 			return 0;
 		}
-		if (offset == 0360) {	// TV.
+		if (offset == 0360) { // TV.
 			tv_xbus_read(offset, pv);
 			return 0;
 		}
 		printf("xbus read %o %o\n", offset, vaddr);
 		*pv = 0;
 		return 0;
-	case 036774:	// Ethernet.
+	case 036774:		// Ethernet.
 		ether_xbus_reg_read(offset, pv);
 		return 0;
-	case 036775:	// Ethernet.
+	case 036775:		// Ethernet.
 		ether_xbus_desc_read(offset, pv);
 		return 0;
-	case 036776:	// UART.
+	case 036776:		// UART.
 		uart_xbus_read(offset, pv);
 		return 0;
 	}
@@ -267,8 +267,8 @@ unibus_write(int offset, unsigned int v)
 			traceio("unibus: normal speed\n");
 		}
 		break;
-	case 014: // Not used.
-	case 016: // Not used.
+	case 014:		// Not used.
+	case 016:		// Not used.
 		spy_unibus_write(offset, v);
 		break;
 
@@ -365,11 +365,11 @@ write_mem(int vaddr, unsigned int v)
 		traceio("unibus: iob v %o, offset %o\n", vaddr, offset);
 		iob_unibus_write(offset, v);
 		return 0;
-	case 037766:	// Unibus.
+	case 037766:		// Unibus.
 		offset <<= 1;
 		unibus_write(offset, v);
 		return 0;
-	case 036777:	// Disk & TV controller on XBUS.
+	case 036777:		// Disk & TV controller on XBUS.
 		if (offset >= 0370) {
 			disk_xbus_write(offset, v);
 			return 0;
@@ -378,13 +378,13 @@ write_mem(int vaddr, unsigned int v)
 			tv_xbus_write(offset, v);
 			return 0;
 		}
-	case 036774:	// Ethernet.
+	case 036774:		// Ethernet.
 		ether_xbus_reg_write(offset, v);
 		return 0;
-	case 036775:	// Ethernet.
+	case 036775:		// Ethernet.
 		ether_xbus_desc_write(offset, v);
 		return 0;
-	case 036776:	// UART.
+	case 036776:		// UART.
 		uart_xbus_write(offset, v);
 		return 0;
 	}
@@ -455,7 +455,7 @@ read_pdl_mem(int which)
 		}
 		return pdl_memory[pdl_index];
 	}
-	return -1; 		///---!! Not reachable.
+	return -1;		///---!! Not reachable.
 }
 
 void
@@ -509,7 +509,7 @@ advance_lc(int *ppc)
 {
 	int old_lc;
 
-	old_lc = lc & 0377777777;	// LC is 26 bits.
+	old_lc = lc & 0377777777; // LC is 26 bits.
 
 	if (lc_byte_mode_flag) {
 		lc++;		// Byte mode.
@@ -538,8 +538,8 @@ advance_lc(int *ppc)
 
 		// This is ugly, but follows the hardware logic (I
 		// need to distill it to intent but it seems correct).
-		lc0b = (lc_byte_mode_flag ? 1 : 0) &	// Byte mode.
-			((lc & 1) ? 1 : 0);	// LC0.
+		lc0b = (lc_byte_mode_flag ? 1 : 0) & // Byte mode.
+			((lc & 1) ? 1 : 0);	     // LC0.
 		lc1 = (lc & 2) ? 1 : 0;
 		last_byte_in_word = (~lc0b & ~lc1) & 1;
 		tracef("lc0b %d, lc1 %d, last_byte_in_word %d\n", lc0b, lc1, last_byte_in_word);
@@ -559,7 +559,7 @@ write_dest(int dest, unsigned int out_bus)
 	}
 
 	switch (dest >> 5) {
-	case 1:		// LC (location counter) 26 bits.
+	case 1:			// LC (location counter) 26 bits.
 		tracef("writing LC <- %o\n", out_bus);
 		lc = (lc & ~0377777777) | (out_bus & 0377777777);
 
@@ -574,7 +574,7 @@ write_dest(int dest, unsigned int out_bus)
 		// Set NEED-FETCH.
 		lc |= (1UL << 31UL);
 		break;
-	case 2:		// Interrrupt Control <29-26>.
+	case 2:			// Interrrupt Control <29-26>.
 		tracef("writing IC <- %o\n", out_bus);
 		interrupt_control = out_bus;
 
@@ -599,7 +599,7 @@ write_dest(int dest, unsigned int out_bus)
 			traceint("ic: lc byte mode\n");
 		}
 
-		lc = (lc & ~(017 << 26)) |	// Preserve flags.
+		lc = (lc & ~(017 << 26)) | // Preserve flags.
 			(interrupt_control & (017 << 26));
 		break;
 	case 010:		// PDL (addressed by pointer)
@@ -639,12 +639,12 @@ write_dest(int dest, unsigned int out_bus)
 	case 020:		// VMA register (memory address).
 		vma = out_bus;
 		break;
-	case 021:		// VMA register, start main memory read.
+	case 021:	      // VMA register, start main memory read.
 		vma = out_bus;
 		read_mem(vma, &new_md);
 		new_md_delay = 2;
 		break;
-	case 022:		// VMA register, start main memory write.
+	case 022:	     // VMA register, start main memory write.
 		vma = out_bus;
 		write_mem(vma, md);
 		break;
@@ -861,7 +861,7 @@ run(void)
 		a_src = (u >> 32) & 01777;
 		m_src = (u >> 26) & 077;
 
-		a_src_value = read_a_mem(a_src);	// Get A source value.
+		a_src_value = read_a_mem(a_src); // Get A source value.
 
 		// Calculate M source value.
 		if (m_src & 040) {
@@ -935,7 +935,7 @@ run(void)
 
 		// Decode isntruction.
 		switch (op_code = (u >> 43) & 03) {
-		case 0:	// ALU
+		case 0:		// ALU
 			dest = (u >> 14) & 07777;
 			out_bus = (u >> 12) & 3;
 			carry_in = (u >> 2) & 1;
@@ -945,7 +945,7 @@ run(void)
 			alu_carry = 0;
 
 			switch (aluop) {
-			// Arithmetic.
+				// Arithmetic.
 			case 020:
 				alu_out = carry_in ? 0 : -1;
 				alu_carry = 0;
@@ -975,7 +975,7 @@ run(void)
 				alu_out = (unsigned int) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
-			case 026:	// [M-A-1] [SUB]
+			case 026: // [M-A-1] [SUB]
 				sub32(m_src_value, a_src_value, carry_in, alu_out, alu_carry);
 				break;
 			case 027:
@@ -988,7 +988,7 @@ run(void)
 				alu_out = (unsigned int) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
-			case 031:	// [ADD] [M+A+1]
+			case 031: // [ADD] [M+A+1]
 				add32(m_src_value, a_src_value, carry_in, alu_out, alu_carry);
 				break;
 			case 032:
@@ -1001,7 +1001,7 @@ run(void)
 				alu_out = (unsigned int) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
-			case 034:	// [M+1]
+			case 034: // [M+1]
 				alu_out = m_src_value + (carry_in ? 1 : 0);
 				alu_carry = 0;
 				if (m_src_value == 0xffffffff && carry_in)
@@ -1017,62 +1017,62 @@ run(void)
 				alu_out = (unsigned int) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
-			case 037:	// [M+M] [M+M+1]
+			case 037: // [M+M] [M+M+1]
 				add32(m_src_value, m_src_value, carry_in, alu_out, alu_carry);
 				break;
 
-			// Boolean.
-			case 000:	// [SETZ]
+				// Boolean.
+			case 000: // [SETZ]
 				alu_out = 0;
 				break;
-			case 001:	// [AND]
+			case 001: // [AND]
 				alu_out = m_src_value & a_src_value;
 				break;
-			case 002:	// [ANDCA]
+			case 002: // [ANDCA]
 				alu_out = m_src_value & ~a_src_value;
 				break;
-			case 003:	// [SETM]
+			case 003: // [SETM]
 				alu_out = m_src_value;
 				break;
-			case 004:	// [ANDCM]
+			case 004: // [ANDCM]
 				alu_out = ~m_src_value & a_src_value;
 				break;
-			case 005:	// [SETA]
+			case 005: // [SETA]
 				alu_out = a_src_value;
 				break;
-			case 006:	// [XOR]
+			case 006: // [XOR]
 				alu_out = m_src_value ^ a_src_value;
 				break;
-			case 007:	// [IOR]
+			case 007: // [IOR]
 				alu_out = m_src_value | a_src_value;
 				break;
-			case 010:	// [ANDCB]
+			case 010: // [ANDCB]
 				alu_out = ~a_src_value & ~m_src_value;
 				break;
-			case 011:	// [EQV]
+			case 011: // [EQV]
 				alu_out = a_src_value == m_src_value;
 				break;
-			case 012:	// [SETCA]
+			case 012: // [SETCA]
 				alu_out = ~a_src_value;
 				break;
-			case 013:	// [ORCA]
+			case 013: // [ORCA]
 				alu_out = m_src_value | ~a_src_value;
 				break;
-			case 014:	// [SETCM]
+			case 014: // [SETCM]
 				alu_out = ~m_src_value;
 				break;
-			case 015:	// [ORCM]
+			case 015: // [ORCM]
 				alu_out = ~m_src_value | a_src_value;
 				break;
-			case 016:	// [ORCB]
+			case 016: // [ORCB]
 				alu_out = ~m_src_value | ~a_src_value;
 				break;
-			case 017:	// [SETO]
+			case 017: // [SETO]
 				alu_out = ~0;
 				break;
 
-			// Conditioanl ALU operation.
-			case 040:	// Multiply step
+				// Conditioanl ALU operation.
+			case 040: // Multiply step
 				do_add = q & 1;
 				if (do_add) {
 					add32(a_src_value, m_src_value, carry_in, alu_out, alu_carry);
@@ -1081,7 +1081,7 @@ run(void)
 					alu_carry = alu_out & 0x80000000 ? 1 : 0;
 				}
 				break;
-			case 041:	// Divide step
+			case 041: // Divide step
 				do_sub = q & 1;
 				tracef("do_sub %d\n", do_sub);
 				if (do_sub) {
@@ -1090,7 +1090,7 @@ run(void)
 					add32(m_src_value, a_src_value, carry_in, alu_out, alu_carry);
 				}
 				break;
-			case 045:	// Remainder correction
+			case 045: // Remainder correction
 				do_sub = q & 1;
 				tracef("do_sub %d\n", do_sub);
 				if (do_sub) {
@@ -1099,7 +1099,7 @@ run(void)
 					add32(alu_out, a_src_value, carry_in, alu_out, alu_carry);
 				}
 				break;
-			case 051:	// Initial divide step
+			case 051: // Initial divide step
 				tracef("divide-first-step\n");
 				tracef("divide: %o / %o \n", q, a_src_value);
 				sub32(m_src_value, a_src_value, !carry_in, alu_out, alu_carry);
@@ -1152,7 +1152,7 @@ run(void)
 			write_dest(dest, out_bus);
 			tracef("alu_out 0x%08x, alu_carry %d, q 0x%08x\n", alu_out, alu_carry, q);
 			break;
-		case 1:	// JUMP
+		case 1:		// JUMP
 			new_pc = (u >> 12) & 037777;
 			tracef("a=%o (%o), m=%o (%o)\n", a_src, a_src_value, m_src, m_src_value);
 			r_bit = (u >> 9) & 1;
@@ -1241,7 +1241,7 @@ run(void)
 				popj = 0;
 			}
 			break;
-		case 2:	// DISPATCH.
+		case 2:		// DISPATCH.
 			disp_const = (u >> 32) & 01777;
 			n_plus1 = (u >> 25) & 1;
 			enable_ish = (u >> 24) & 1;
@@ -1333,7 +1333,7 @@ run(void)
 			disp_addr = dispatch_memory[disp_addr];
 			dispatch_constant = disp_const;
 
-			new_pc = disp_addr & 037777;	// 14 bits.
+			new_pc = disp_addr & 037777; // 14 bits.
 
 			n_bit = (disp_addr >> 14) & 1;
 			p_bit = (disp_addr >> 15) & 1;
@@ -1362,7 +1362,7 @@ run(void)
 			goto process_jump;
 		dispatch_done:
 			break;
-		case 3:	// BYTE.
+		case 3:		// BYTE.
 			dest = (u >> 14) & 07777;
 			mr_sr_bits = (u >> 12) & 3;
 			tracef("a=%o (%o), m=%o (%o), dest=%o\n", a_src, a_src_value, m_src, m_src_value, dest);

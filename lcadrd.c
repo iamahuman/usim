@@ -11,32 +11,38 @@
 
 // Routines which manipulate the machine directly.
 
-uint32_t cc_read_obus(void)
+uint32_t
+cc_read_obus(void)
 {
 	return _cc_read_pair(SPY_OB_HIGH, SPY_OB_LOW);
 }
 
-uint32_t cc_read_a_bus(void)
+uint32_t
+cc_read_a_bus(void)
 {
 	return _cc_read_pair(SPY_A_HIGH, SPY_A_LOW);
 }
 
-uint32_t cc_read_m_bus(void)
+uint32_t
+cc_read_m_bus(void)
 {
 	return _cc_read_pair(SPY_M_HIGH, SPY_M_LOW);
 }
 
-uint32_t cc_read_ir(void)
+uint32_t
+cc_read_ir(void)
 {
 	return _cc_read_triple(SPY_IR_HIGH, SPY_IR_MED, SPY_IR_LOW);
 }
 
-uint32_t cc_read_pc(void)
+uint32_t
+cc_read_pc(void)
 {
 	return cc_get(SPY_PC);
 }
 
-uint32_t cc_read_status(void)
+uint32_t
+cc_read_status(void)
 {
 	uint16_t v1;
 	uint16_t v2;
@@ -52,7 +58,8 @@ uint32_t cc_read_status(void)
 	return (v1 << 16) | v2;
 }
 
-void cc_write_diag_ir(ucw_t ir)
+void
+cc_write_diag_ir(ucw_t ir)
 {
 #if 0
 	if (debug || verbose)
@@ -68,7 +75,8 @@ void cc_write_diag_ir(ucw_t ir)
 	cc_set(SPY_IR_LOW, (uint16_t) ((ir >> 0) & 0xffff));
 }
 
-void cc_write_ir(ucw_t ir)
+void
+cc_write_ir(ucw_t ir)
 {
 #if 0
 	if (debug || verbose)
@@ -78,7 +86,8 @@ void cc_write_ir(ucw_t ir)
 	cc_noop_debug_clock();
 }
 
-void cc_write_md(uint32_t num)
+void
+cc_write_md(uint32_t num)
 {
 	cc_set(SPY_MD_HIGH, (uint16_t) (num >> 16) & 0xffff);
 	cc_set(SPY_MD_LOW, (uint16_t) (num >> 0) & 0xffff);
@@ -96,12 +105,14 @@ void cc_write_md(uint32_t num)
 	}
 }
 
-uint32_t cc_read_md(void)
+uint32_t
+cc_read_md(void)
 {
 	return _cc_read_pair(SPY_MD_HIGH, SPY_MD_LOW);
 }
 
-void cc_write_vma(uint32_t val)
+void
+cc_write_vma(uint32_t val)
 {
 	cc_set(SPY_VMA_HIGH, (uint16_t) (val >> 16) & 0xffff);
 	cc_set(SPY_VMA_LOW, (uint16_t) (val >> 0) & 0xffff);
@@ -113,36 +124,42 @@ void cc_write_vma(uint32_t val)
 	}
 }
 
-uint32_t cc_read_vma(void)
+uint32_t
+cc_read_vma(void)
 {
 	return _cc_read_pair(SPY_VMA_HIGH, SPY_VMA_LOW);
 }
 
-void cc_debug_clock (void)
+void
+cc_debug_clock(void)
 {
 	cc_set(SPY_CLK, 012);
 	cc_set(SPY_CLK, 0);
 }
 
-void cc_noop_debug_clock (void)
+void
+cc_noop_debug_clock(void)
 {
 	cc_set(SPY_CLK, 016);
 	cc_set(SPY_CLK, 0);
 }
 
-void cc_clock (void)
+void
+cc_clock(void)
 {
 	cc_set(SPY_CLK, 2);
 	cc_set(SPY_CLK, 0);
 }
 
-void cc_noop_clock (void)
+void
+cc_noop_clock(void)
 {
 	cc_set(SPY_CLK, 6);
 	cc_set(SPY_CLK, 0);
 }
 
-void cc_single_step (void)
+void
+cc_single_step(void)
 {
 	cc_set(SPY_CLK, 6);
 	cc_set(SPY_CLK, 0);
@@ -152,7 +169,8 @@ void cc_single_step (void)
 
 // Call these via the CC_EXECUTE function.
 
-void cc_execute_r (ucw_t ir)
+void
+cc_execute_r(ucw_t ir)
 {
 #if 0
 	if (debug || verbose)
@@ -170,7 +188,8 @@ again:
 	cc_debug_clock();
 }
 
-void cc_execute_w (ucw_t ir)
+void
+cc_execute_w(ucw_t ir)
 {
 #if 0
 	if (debug || verbose)
@@ -191,7 +210,8 @@ again:
 
 // Read and write RAMs.
 
-uint32_t cc_read_m_mem (uint32_t adr)
+uint32_t
+cc_read_m_mem(uint32_t adr)
 {
 	cc_execute(0,
 		   ir_pair(CONS_IR_M_SRC, adr) |
@@ -201,13 +221,14 @@ uint32_t cc_read_m_mem (uint32_t adr)
 	return cc_read_obus();
 }
 
-
-void cc_write_m_mem (uint32_t loc, uint32_t val)
+void
+cc_write_m_mem(uint32_t loc, uint32_t val)
 {
-	///---!!!
+				///---!!!
 }
 
-uint32_t cc_read_a_mem (uint32_t adr)
+uint32_t
+cc_read_a_mem(uint32_t adr)
 {
 	cc_execute(0,
 		   ir_pair(CONS_IR_A_SRC, adr) |
@@ -217,7 +238,8 @@ uint32_t cc_read_a_mem (uint32_t adr)
 	return cc_read_obus();
 }
 
-void cc_write_a_mem (uint32_t loc, uint32_t val)
+void
+cc_write_a_mem(uint32_t loc, uint32_t val)
 {
 	uint32_t v2;
 
@@ -235,12 +257,14 @@ void cc_write_a_mem (uint32_t loc, uint32_t val)
 
 // Reset, start and stop.
 
-void cc_stop_mach (void)
+void
+cc_stop_mach(void)
 {
 	cc_set(SPY_CLK, 0);
 }
 
-void cc_start_mach (void)
+void
+cc_start_mach(void)
 {
 	cc_set(SPY_CLK, 0001);
 }

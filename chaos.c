@@ -68,21 +68,21 @@ unsigned short
 ch_checksum(const unsigned char *addr, int count)
 {
 	long sum = 0;
-	
+
 	while (count > 1) {
 		sum += *(addr) << 8 | *(addr + 1);
 		addr += 2;
 		count -= 2;
 	}
-	
-// Add left-over byte, if any.
+
+	// Add left-over byte, if any.
 	if (count > 0)
 		sum += *(unsigned char *) addr;
-	
-// Fold 32-bit sum to 16 bits.
+
+	// Fold 32-bit sum to 16 bits.
 	while (sum >> 16)
 		sum = (sum & 0xffff) + (sum >> 16);
-	
+
 	return (~sum) & 0xffff;
 }
 
@@ -141,7 +141,7 @@ dumpbuffer(unsigned short *buffer, int size)
 	int cnt = (buffer[1] & 0x0fff);
 	int opcode = (buffer[0] & 0xff00) >> 8;
 
-	size = size - (int) (8 * sizeof(short));	// Subtract off the size of packet header.
+	size = size - (int) (8 * sizeof(short)); // Subtract off the size of packet header.
 	if (size < cnt)
 		printf("ERROR: packet size mismatch: size %d < cnt %d\n", size, cnt);
 	else if (size > cnt) {
@@ -214,8 +214,8 @@ chaos_xmit_pkt(void)
 
 	// Dest is already in the buffer.
 
-	chaos_xmit_buffer[chaos_xmit_buffer_size++] = (unsigned short) chaos_addr;	// Source.
-	chaos_xmit_buffer[chaos_xmit_buffer_size] = ch_checksum((unsigned char *) chaos_xmit_buffer, chaos_xmit_buffer_size * 2);	// Checksum.
+	chaos_xmit_buffer[chaos_xmit_buffer_size++] = (unsigned short) chaos_addr; // Source.
+	chaos_xmit_buffer[chaos_xmit_buffer_size] = ch_checksum((unsigned char *) chaos_xmit_buffer, chaos_xmit_buffer_size * 2); // Checksum.
 	chaos_xmit_buffer_size++;
 
 	chaos_send_to_chaosd((char *) chaos_xmit_buffer, chaos_xmit_buffer_size * 2);
@@ -347,7 +347,7 @@ chaos_set_csr(int v)
 		chaos_rcv_buffer_ptr = 0;
 		chaos_csr &= ~(CHAOS_CSR_RESET | CHAOS_CSR_RECEIVE_DONE);
 		chaos_csr |= CHAOS_CSR_TRANSMIT_DONE;
-		reconnect_delay = 200;	// Do it right away.
+		reconnect_delay = 200; // Do it right away.
 		chaos_force_reconect();
 	}
 
@@ -428,8 +428,7 @@ chaos_poll(void)
 
 	ret = poll(pfd, nfds, timeout);
 	if (ret < 0) {
-		tracenet("chaos: Polling, nothing there (RDN=%o)\n",
-		       chaos_csr & CHAOS_CSR_RECEIVE_DONE);
+		tracenet("chaos: Polling, nothing there (RDN=%o)\n", chaos_csr & CHAOS_CSR_RECEIVE_DONE);
 		chaos_need_reconnect = 1;
 		return -1;
 	}
@@ -439,9 +438,7 @@ chaos_poll(void)
 		int len;
 
 		/* is rx buffer full? */
-		if (!chaos_rcv_buffer_empty &&
-		    (chaos_csr & CHAOS_CSR_RECEIVE_DONE))
-		{
+		if (!chaos_rcv_buffer_empty && (chaos_csr & CHAOS_CSR_RECEIVE_DONE)) {
 #ifndef CHAOS_TOSS_IF_RXBUFF_FULL
 			printf("chaos: polling, but unread data exists\n");
 			return 0;
@@ -450,10 +447,7 @@ chaos_poll(void)
 			 * Toss packets arriving when buffer is already in use
 			 * they will be resent
 			 */
-			tracenet("chaos: polling, unread data, drop "
-			       "(RDN=%o, lost %d)\n",
-			       chaos_csr & CHAOS_CSR_RECEIVE_DONE,
-			       chaos_lost_count);
+			tracenet("chaos: polling, unread data, drop " "(RDN=%o, lost %d)\n", chaos_csr & CHAOS_CSR_RECEIVE_DONE, chaos_lost_count);
 			chaos_lost_count++;
 			read(chaos_fd, lenbytes, 4);
 			len = (lenbytes[0] << 8) | lenbytes[1];
@@ -465,7 +459,7 @@ chaos_poll(void)
 			}
 
 			/* toss it */
-			read(chaos_fd, (char *)chaos_rcv_buffer_toss, len);
+			read(chaos_fd, (char *) chaos_rcv_buffer_toss, len);
 			return -1;
 #endif
 		}
@@ -481,16 +475,14 @@ chaos_poll(void)
 		len = (lenbytes[0] << 8) | lenbytes[1];
 
 		if (len > sizeof(chaos_rcv_buffer)) {
-			printf("chaos: packet too big: "
-			       "pkt size %d, buffer size %lu\n",
-			       len, sizeof(chaos_rcv_buffer));
+			printf("chaos: packet too big: " "pkt size %d, buffer size %lu\n", len, sizeof(chaos_rcv_buffer));
 
 			/* When we get out of synch break socket conn */
 			chaos_force_reconect();
 			return -1;
 		}
 
-		ret = read(chaos_fd, (char *)chaos_rcv_buffer, len);
+		ret = read(chaos_fd, (char *) chaos_rcv_buffer, len);
 		if (ret < 0) {
 			perror("chaos: read");
 			chaos_force_reconect();
@@ -500,35 +492,35 @@ chaos_poll(void)
 		tracenet("chaos: polling; got chaosd packet %d\n", ret);
 
 		if (ret > 0) {
-		  int dest_addr;
+			int dest_addr;
 
-		  chaos_rcv_buffer_size = (ret+1)/2;
-		  chaos_rcv_buffer_empty = 0;
+			chaos_rcv_buffer_size = (ret + 1) / 2;
+			chaos_rcv_buffer_empty = 0;
 
 #if __BIG_ENDIAN__
-		  /* flip shorts to host order */
-		  int w;
-		  for (w = 0; w < chaos_rcv_buffer_size; w++) {
-		    chaos_rcv_buffer[w] = SWAP_SHORT(chaos_rcv_buffer[w]);
-		  }
-#endif		  
-
-		  dest_addr = chaos_rcv_buffer[chaos_rcv_buffer_size-3];
-
-		  /* if not to us, ignore */
-		  if (dest_addr != chaos_addr) {
-		    chaos_rcv_buffer_size = 0;
-		    chaos_rcv_buffer_empty = 1;
-		    return 0;
-		  }
-
-            tracenet("chaos rx: to %o, my %o\n", dest_addr, chaos_addr);
-            
-#if CHAOS_DEBUG_PKT
-            dumpbuffer(chaos_rcv_buffer, chaos_rcv_buffer_size * 2);
+			/* flip shorts to host order */
+			int w;
+			for (w = 0; w < chaos_rcv_buffer_size; w++) {
+				chaos_rcv_buffer[w] = SWAP_SHORT(chaos_rcv_buffer[w]);
+			}
 #endif
-            
-		  chaos_rx_pkt();
+
+			dest_addr = chaos_rcv_buffer[chaos_rcv_buffer_size - 3];
+
+			/* if not to us, ignore */
+			if (dest_addr != chaos_addr) {
+				chaos_rcv_buffer_size = 0;
+				chaos_rcv_buffer_empty = 1;
+				return 0;
+			}
+
+			tracenet("chaos rx: to %o, my %o\n", dest_addr, chaos_addr);
+
+#if CHAOS_DEBUG_PKT
+			dumpbuffer(chaos_rcv_buffer, chaos_rcv_buffer_size * 2);
+#endif
+
+			chaos_rx_pkt();
 		}
 	}
 
@@ -546,7 +538,7 @@ chaos_send_to_chaosd(char *buffer, int size)
 		printf("chaos: loopback %d bytes\n", size);
 		memcpy(chaos_rcv_buffer, buffer, size);
 
-		chaos_rcv_buffer_size = (size+1)/2;
+		chaos_rcv_buffer_size = (size + 1) / 2;
 		chaos_rcv_buffer_empty = 0;
 
 		chaos_rx_pkt();
@@ -554,8 +546,8 @@ chaos_send_to_chaosd(char *buffer, int size)
 		return 0;
 	}
 
-	wcount = (size+1)/2;
-	dest_addr = ((u_short *)buffer)[wcount-3];
+	wcount = (size + 1) / 2;
+	dest_addr = ((u_short *) buffer)[wcount - 3];
 
 	//printf("chaos_send_to_chaosd() dest_addr %o\n", dest_addr);
 
@@ -563,19 +555,18 @@ chaos_send_to_chaosd(char *buffer, int size)
 	/* flip host order to network order */
 	int w;
 	for (w = 0; w < wcount; w++) {
-		u_short *ps = &((u_short *)buffer)[w];
+		u_short *ps = &((u_short *) buffer)[w];
 		*ps = SWAP_SHORT(*ps);
 	}
 #endif
 
-	tracenet("chaos tx: dest_addr = %o, chaos_addr=%o, size %d, wcount %d\n", 
-	       dest_addr, chaos_addr, size, wcount);
+	tracenet("chaos tx: dest_addr = %o, chaos_addr=%o, size %d, wcount %d\n", dest_addr, chaos_addr, size, wcount);
 
 	/* recieve packets address to ourselves */
 	if (dest_addr == chaos_addr) {
 		memcpy(chaos_rcv_buffer, buffer, size);
 
-		chaos_rcv_buffer_size = (size+1)/2;
+		chaos_rcv_buffer_size = (size + 1) / 2;
 		chaos_rcv_buffer_empty = 0;
 
 		chaos_rx_pkt();
@@ -585,29 +576,28 @@ chaos_send_to_chaosd(char *buffer, int size)
 	if (chaos_fd) {
 		struct iovec iov[2];
 		unsigned char lenbytes[4];
-        int ret;
-        
+		int ret;
+
 		lenbytes[0] = size >> 8;
 		lenbytes[1] = size;
 		lenbytes[2] = 1;
 		lenbytes[3] = 0;
-        
+
 		iov[0].iov_base = lenbytes;
 		iov[0].iov_len = 4;
-        
+
 		iov[1].iov_base = buffer;
 		iov[1].iov_len = size;
-        
+
 		ret = writev(chaos_fd, iov, 2);
 		if (ret < 0) {
 			perror("chaos write");
 			return -1;
 		}
 	}
-    
+
 	return 0;
 }
-
 
 /*
  * connect to server using specificed socket type
@@ -617,7 +607,8 @@ chaos_connect_to_server(void)
 {
 	int len;
 
-	if (0) printf("connect_to_server()\n");
+	if (0)
+		printf("connect_to_server()\n");
 
 	if ((chaos_fd = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
 		perror("socket(AF_UNIX)");
@@ -627,15 +618,14 @@ chaos_connect_to_server(void)
 
 	memset(&unix_addr, 0, sizeof(unix_addr));
 
-	sprintf(unix_addr.sun_path, "%s%s%05u",
-		UNIX_SOCKET_PATH, UNIX_SOCKET_CLIENT_NAME, getpid());
+	sprintf(unix_addr.sun_path, "%s%s%05u", UNIX_SOCKET_PATH, UNIX_SOCKET_CLIENT_NAME, getpid());
 
 	unix_addr.sun_family = AF_UNIX;
 	len = SUN_LEN(&unix_addr);
 
 	unlink(unix_addr.sun_path);
 
-	if ((bind(chaos_fd, (struct sockaddr *)&unix_addr, len) < 0)) {
+	if ((bind(chaos_fd, (struct sockaddr *) &unix_addr, len) < 0)) {
 		perror("bind(AF_UNIX)");
 		return -1;
 	}
@@ -646,28 +636,27 @@ chaos_connect_to_server(void)
 	}
 
 	memset(&unix_addr, 0, sizeof(unix_addr));
-	sprintf(unix_addr.sun_path, "%s%s",
-		UNIX_SOCKET_PATH, UNIX_SOCKET_SERVER_NAME);
+	sprintf(unix_addr.sun_path, "%s%s", UNIX_SOCKET_PATH, UNIX_SOCKET_SERVER_NAME);
 	unix_addr.sun_family = AF_UNIX;
 	len = SUN_LEN(&unix_addr);
 
-	if (connect(chaos_fd, (struct sockaddr *)&unix_addr, len) < 0) {
+	if (connect(chaos_fd, (struct sockaddr *) &unix_addr, len) < 0) {
 		printf("chaos: no chaosd server\n");
 		return -1;
 	}
 
-    socklen_t value = 0;
-    socklen_t length = sizeof(value);
-    
-    if (getsockopt(chaos_fd, SOL_SOCKET, SO_RCVBUF, &value, &length) == 0)
-    {
-        value = value * 4;
-        if (setsockopt(chaos_fd, SOL_SOCKET, SO_RCVBUF, &value, sizeof(value)) != 0)
-            printf("setsockopt(SO_RCVBUF) failed\n");
-    }
+	socklen_t value = 0;
+	socklen_t length = sizeof(value);
 
-	if (0) printf("chaos_fd %d\n", chaos_fd);
-        
+	if (getsockopt(chaos_fd, SOL_SOCKET, SO_RCVBUF, &value, &length) == 0) {
+		value = value * 4;
+		if (setsockopt(chaos_fd, SOL_SOCKET, SO_RCVBUF, &value, sizeof(value)) != 0)
+			printf("setsockopt(SO_RCVBUF) failed\n");
+	}
+
+	if (0)
+		printf("chaos_fd %d\n", chaos_fd);
+
 	return 0;
 }
 
@@ -688,16 +677,13 @@ chaos_init(void)
 int
 chaos_reconnect(void)
 {
-	/* */
 	if (++reconnect_delay < 200) {
 		return 0;
 	}
 	reconnect_delay = 0;
 
 	/* try every 5 seconds */
-	if (reconnect_time &&
-	    time(NULL) < (reconnect_time + 5))
-	{
+	if (reconnect_time && time(NULL) < (reconnect_time + 5)) {
 		return 0;
 	}
 	reconnect_time = time(NULL);

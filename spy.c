@@ -17,7 +17,7 @@ spy_init(char *port)
 	fd = open(port, O_RDWR | O_NONBLOCK);
 	if (fd < 0) {
 		perror(port);
-		exit (1);
+		exit(1);
 	}
 }
 
@@ -37,7 +37,7 @@ spy_unibus_read(int offset, unsigned int *pv)
 		traceio("unibus: read IR<47-32>\n");
 		*pv = 0;
 		break;
-	case 006: // Not used.
+	case 006:		// Not used.
 		*pv = 0;
 		break;
 	case 010:
@@ -96,7 +96,7 @@ spy_unibus_write(int offset, unsigned int v)
 {
 	switch (offset) {
 	case 000:
-		traceio("unibus: write DEBUG-IR<15-0> %o\n",v);
+		traceio("unibus: write DEBUG-IR<15-0> %o\n", v);
 		break;
 	case 002:
 		traceio("unibus: write DEBUG-IR<31-16>\n", v);
@@ -111,8 +111,8 @@ spy_unibus_write(int offset, unsigned int v)
 		traceio("unibus: write OPC control register\n", v);
 		break;
 	//---!!! 012: Handled directly in unibus_write.
-	case 014: // Not used.
-	case 016: // Not used.
+	case 014:		// Not used.
+	case 016:		// Not used.
 		break;
 	}
 }
