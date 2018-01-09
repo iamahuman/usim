@@ -15,6 +15,8 @@
 #include "ucode.h"
 #include "mem.h"
 
+#include "syms.h"
+
 int disk_fd;
 uint8_t *disk_mm;
 
