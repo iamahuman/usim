@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "ucode.h"
 #include "decode.h"
@@ -67,8 +68,7 @@ int
 show_prom(void)
 {
 	for (int i = 0; i < 512; i++) {
-		printf("%03o %016llo", i, prom_ucode[i]);
-		printf("\n");
+		printf("%03o %016" PRIo64 "\n", i, prom_ucode[i]);
 	}
 	printf("----\n");
 
@@ -448,7 +448,7 @@ disassemble_prom(void)
 
 	for (unsigned int i = start; i < finish; i++) {
 		ucw_t u = prom_ucode[i];
-		printf("%03o %016llo ", i, prom_ucode[i]);
+		printf("%03o %016" PRIo64 " ", i, prom_ucode[i]);		
 		disassemble_ucode_loc(u);
 	}
 }
