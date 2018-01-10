@@ -630,9 +630,10 @@ char *serial_devicename = "/dev/ttyUSB1";
 void
 usage(void)
 {
-	fprintf(stderr, "usage: cc [OPTION]...\n");
+	fprintf(stderr, "usage: cc [OPTION]... [DEVICE]\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -d             extra debug output\n");
+	fprintf(stderr, "  -h             help message\n");
 }
 
 int
