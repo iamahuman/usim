@@ -1,3 +1,5 @@
+// syms.c --- ---!!!
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -24,7 +26,7 @@ struct symtab_s sym_prom;
 struct symtab_s sym_mcr;
 
 static void
-_sym_add(struct symtab_s *tab, int memory, char *name, int v)
+_sym_add(struct symtab_s *tab, int memory, char *name, unsigned int v)
 {
 	struct sym_s *s;
 
@@ -40,7 +42,7 @@ _sym_add(struct symtab_s *tab, int memory, char *name, int v)
 }
 
 static char *
-_sym_find_by_val(struct symtab_s *tab, int memory, int v)
+_sym_find_by_val(struct symtab_s *tab, int memory, unsigned int v)
 {
 	struct sym_s *s;
 
@@ -53,7 +55,7 @@ _sym_find_by_val(struct symtab_s *tab, int memory, int v)
 }
 
 char *
-_sym_find_last(struct symtab_s *tab, int memory, int v, int *poffset)
+_sym_find_last(struct symtab_s *tab, int memory, unsigned int v, int *poffset)
 {
 	int i;
 	struct sym_s *s;
