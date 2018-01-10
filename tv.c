@@ -20,13 +20,13 @@ unsigned int tv_bitmap[(768 * 1024)];
 int tv_csr;
 
 void
-tv_xbus_read(int offset, unsigned int *pv)
+tv_xbus_read(unsigned int offset, unsigned int *pv)
 {
 	*pv = tv_csr;
 }
 
 void
-tv_xbus_write(int offset, unsigned int v)
+tv_xbus_write(unsigned int offset, unsigned int v)
 {
 	tv_csr = v;
 	tv_csr &= ~(1 << 4);
@@ -47,7 +47,7 @@ sigalrm_handler(int arg)
 }
 
 void
-tv_write(int offset, unsigned int bits)
+tv_write(unsigned int offset, unsigned int bits)
 {
 	int i;
 	int h;
@@ -73,7 +73,7 @@ tv_poll(void)
 }
 
 void
-tv_read(int offset, unsigned int *pv)
+tv_read(unsigned int offset, unsigned int *pv)
 {
 	unsigned long bits;
 	int i;
