@@ -1,4 +1,4 @@
-#include "usim.h"
+// decode.c --- ---!!!
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+#include "usim.h"
 #include "ucode.h"
 #include "decode.h"
 #include "syms.h"

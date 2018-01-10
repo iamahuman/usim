@@ -1,11 +1,16 @@
-int read_prom_files(void);
-int show_prom(void);
+#ifndef USIM_DECODE_H
+#define USIM_DECODE_H
 
-void disassemble_m_src(ucw_t u, int m_src);
-void disassemble_dest(int dest);
-void disassemble_ucode_loc(ucw_t u);
-void disassemble_prom(void);
+extern int read_prom_files(void);
+extern int show_prom(void);
 
-char *find_function_name(unsigned int the_lc);
+extern void disassemble_m_src(ucw_t u, int m_src);
+extern void disassemble_dest(int dest);
+extern void disassemble_ucode_loc(ucw_t u);
+extern void disassemble_prom(void);
 
-void show_list(void);
+extern char *find_function_name(unsigned int the_lc);
+
+extern void show_list(void);
+
+#endif
