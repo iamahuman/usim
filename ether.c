@@ -1,3 +1,5 @@
+// ether.c --- ---!!!
+
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -124,7 +126,7 @@ ether_tx(void)
 			size_t len;
 			uint32_t ptr;
 			int words;
-			int ret;
+			size_t ret;
 
 			len = (size_t) descs.desc_structs[i].len;
 			ptr = descs.desc_structs[i].ptr;
@@ -161,7 +163,7 @@ ether_rx(void)
 		status = descs.desc_structs[i].status;
 
 		if (status & ETHER_DESC_RX_EMPTY) {
-			size_t len;
+			ssize_t len;
 			uint32_t ptr;
 			int words;
 
