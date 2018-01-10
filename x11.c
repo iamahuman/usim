@@ -147,7 +147,7 @@ process_key(XEvent *e, int keydown)
 			break;
 		default:
 			if (keysym > 255) {
-				printf("unknown keycode: %d\n", keysym);
+				printf("unknown keycode: %lu\n", keysym);
 				return;
 			}
 			lmcode = okb_to_scancode[keysym][(extra & (3 << 6)) ? 1 : 0];
