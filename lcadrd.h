@@ -1,3 +1,6 @@
+#ifndef USIM_LCADRD_H
+#define USIM_LCADRD_H
+
 #include <stdint.h>
 
 #include "ucode.h"
@@ -37,32 +40,34 @@ enum {				// WRITING
 	SPY_MODE        = 5,
 };
 
-uint32_t cc_read_obus(void);
-uint32_t cc_read_a_bus(void);
-uint32_t cc_read_m_bus(void);
-uint32_t cc_read_ir(void);
-uint32_t cc_read_pc(void);
-uint32_t cc_read_status(void);
-void cc_write_diag_ir(ucw_t ir);
-void cc_write_ir(ucw_t ir);
-void cc_write_md(uint32_t num);
-uint32_t cc_read_md(void);
-void cc_write_vma(uint32_t val);
-uint32_t cc_read_vma(void);
+extern uint32_t cc_read_obus(void);
+extern uint32_t cc_read_a_bus(void);
+extern uint32_t cc_read_m_bus(void);
+extern uint32_t cc_read_ir(void);
+extern uint32_t cc_read_pc(void);
+extern uint32_t cc_read_status(void);
+extern void cc_write_diag_ir(ucw_t ir);
+extern void cc_write_ir(ucw_t ir);
+extern void cc_write_md(uint32_t num);
+extern uint32_t cc_read_md(void);
+extern void cc_write_vma(uint32_t val);
+extern uint32_t cc_read_vma(void);
 
-void cc_debug_clock(void);
-void cc_noop_debug_clock(void);
-void cc_clock(void);
-void cc_noop_clock(void);
-void cc_single_step(void);
+extern void cc_debug_clock(void);
+extern void cc_noop_debug_clock(void);
+extern void cc_clock(void);
+extern void cc_noop_clock(void);
+extern void cc_single_step(void);
 
-void cc_execute_r(ucw_t ir);
-void cc_execute_w(ucw_t ir);
+extern void cc_execute_r(ucw_t ir);
+extern void cc_execute_w(ucw_t ir);
 
-uint32_t cc_read_m_mem(uint32_t adr);
-void cc_write_m_mem(uint32_t loc, uint32_t val);
-uint32_t cc_read_a_mem(uint32_t adr);
-void cc_write_a_mem(uint32_t loc, uint32_t val);
+extern uint32_t cc_read_m_mem(uint32_t adr);
+extern void cc_write_m_mem(uint32_t loc, uint32_t val);
+extern uint32_t cc_read_a_mem(uint32_t adr);
+extern void cc_write_a_mem(uint32_t loc, uint32_t val);
 
-void cc_stop_mach(void);
-void cc_start_mach(void);
+extern void cc_stop_mach(void);
+extern void cc_start_mach(void);
+
+#endif
