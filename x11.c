@@ -1,15 +1,16 @@
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
-#include <X11/keysym.h>
+// x11.c --- X11 routines used by the TV and KBD interfaces
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <signal.h>
 
-#include "usim.h"
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xos.h>
+#include <X11/keysym.h>
 
+#include "usim.h"
 #include "tv.h"
 #include "kbd.h"
 #include "mouse.h"
@@ -246,7 +247,7 @@ send_accumulated_updates(void)
 	u_maxv = 0;
 }
 
-int
+void
 x11_init(void)
 {
 	char *displayname;
@@ -329,6 +330,4 @@ x11_init(void)
 	XFlush(display);
 	ximage = XCreateImage(display, visual, (unsigned) color_depth, ZPixmap, 0, (char *) tv_bitmap, tv_width, tv_height, 32, 0);
 	ximage->byte_order = LSBFirst;
-
-	return 0;
 }
