@@ -445,7 +445,7 @@ cc_pipe2(void)
 	uint64_t isn;
 	uint32_t v2;
 
-	for (int i = 0; i < 8; i++) {
+	for (uint32_t i = 0; i < 8; i++) {
 		printf("val %o:\n", i);
 		cc_write_md(i);
 		v2 = cc_read_md();
@@ -663,11 +663,8 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	int ret;
 	int done;
 	int c;
-	struct termios oldtio;
-	struct termios newtio;
 
 	while ((c = getopt(argc, argv, "dh")) != -1) {
 		switch (c) {
@@ -700,7 +697,7 @@ main(int argc, char *argv[])
 	done = 0;
 	while (!done) {
 		int c;
-		int arg;
+		uint32_t arg;
 		uint32_t PC;
 		uint32_t v;
 		char line[256];
@@ -734,7 +731,7 @@ main(int argc, char *argv[])
 			cc_report_pc_and_ir(&PC);
 			break;
 		case 's':	// Step.
-			for (int i = 0; i < arg; i++) {
+			for (uint32_t i = 0; i < arg; i++) {
 				cc_clock();
 				cc_report_status();
 				cc_report_pc(&PC);
