@@ -11,36 +11,90 @@
 #include "lcadmc.h"
 #include "lcadrd.h"
 
+// Basic SPY I/O routines.
+
+uint16_t
+spy_read (int regn)
+{
+	return cc_get(regn);
+}
+
+uint32_t
+spy_read32(int high, int low)
+{
+	uint16_t h;
+	uint16_t l;
+
+	h = spy_read(high);
+	l = spy_read(low);
+
+	return w32(h, l);
+}
+
+uint64_t
+spy_read64(int high,int med,int low)
+{
+	uint64_t h;
+	uint16_t m;
+	uint16_t l;
+
+	h = spy_read(high);
+	m = spy_read(med);
+	l = spy_read(low);
+
+	return w64(h, m, l);
+}
+
+void spy_write (int regn, int val)
+{
+	cc_set(regn, val);
+}
+
+void
+spy_write32(int high, int low, uint32_t val)
+{
+	spy_write(high, (uint16_t) (val >> 16) & 0xffff);
+	spy_write(low, (uint16_t) (val >> 0) & 0xffff);
+}
+
+void
+spy_write64(int high, int med, int low, uint64_t val)
+{
+	spy_write(high, (uint16_t) ((val >> 32) & 0xffff));
+	spy_write(med, (uint16_t) ((val >> 16) & 0xffff));
+	spy_write(low, (uint16_t) ((val >> 0) & 0xffff));
+}
+
 // Routines which manipulate the machine directly.
 
 uint32_t
 cc_read_obus(void)
 {
-	return _cc_read_pair(SPY_OB_HIGH, SPY_OB_LOW);
+	return spy_read32(SPY_OB_HIGH, SPY_OB_LOW);
 }
 
 uint32_t
 cc_read_a_bus(void)
 {
-	return _cc_read_pair(SPY_A_HIGH, SPY_A_LOW);
+	return spy_read32(SPY_A_HIGH, SPY_A_LOW);
 }
 
 uint32_t
 cc_read_m_bus(void)
 {
-	return _cc_read_pair(SPY_M_HIGH, SPY_M_LOW);
+	return spy_read32(SPY_M_HIGH, SPY_M_LOW);
 }
 
-uint32_t
+uint64_t
 cc_read_ir(void)
 {
-	return _cc_read_triple(SPY_IR_HIGH, SPY_IR_MED, SPY_IR_LOW);
+	return spy_read64(SPY_IR_HIGH, SPY_IR_MED, SPY_IR_LOW);
 }
 
-uint32_t
+uint16_t
 cc_read_pc(void)
 {
-	return cc_get(SPY_PC);
+	return spy_read(SPY_PC);
 }
 
 uint32_t
@@ -50,14 +104,14 @@ cc_read_status(void)
 	uint16_t v2;
 	uint16_t v3;
 
-	v1 = cc_get(SPY_FLAG_1);
-	v2 = cc_get(SPY_FLAG_2);
-	v3 = cc_get(SPY_IR_LOW);
+	v1 = spy_read(SPY_FLAG_1);
+	v2 = spy_read(SPY_FLAG_2);
+	v3 = spy_read(SPY_IR_LOW);
 
 	if (v3 & 0100)
 		v2 ^= 4;	// Hardware reads JC-TRUE incorrectly.
 
-	return (v1 << 16) | v2;
+	return w32(v1, v2);
 }
 
 void
@@ -68,13 +122,8 @@ cc_write_diag_ir(ucw_t ir)
 		disassemble_ucode_loc(ir);
 #endif
 
-	cc_set(SPY_IR_HIGH, (uint16_t) ((ir >> 32) & 0xffff));
-	cc_set(SPY_IR_MED, (uint16_t) ((ir >> 16) & 0xffff));
-	cc_set(SPY_IR_LOW, (uint16_t) ((ir >> 0) & 0xffff));
-
-	cc_set(SPY_IR_HIGH, (uint16_t) ((ir >> 32) & 0xffff));
-	cc_set(SPY_IR_MED, (uint16_t) ((ir >> 16) & 0xffff));
-	cc_set(SPY_IR_LOW, (uint16_t) ((ir >> 0) & 0xffff));
+	spy_write64(SPY_IR_HIGH, SPY_IR_MED, SPY_IR_LOW, ir);
+	spy_write64(SPY_IR_HIGH, SPY_IR_MED, SPY_IR_LOW, ir);
 }
 
 void
@@ -91,8 +140,7 @@ cc_write_ir(ucw_t ir)
 void
 cc_write_md(uint32_t num)
 {
-	cc_set(SPY_MD_HIGH, (uint16_t) (num >> 16) & 0xffff);
-	cc_set(SPY_MD_LOW, (uint16_t) (num >> 0) & 0xffff);
+	spy_write32(SPY_MD_HIGH, SPY_MD_LOW, num);
 
 	while (1) {
 		uint32_t v;
@@ -102,34 +150,31 @@ cc_write_md(uint32_t num)
 			break;
 
 		printf("md readback failed, retry got %x want %x\n", v, num);
-		cc_set(SPY_MD_HIGH, (uint16_t) (num >> 16) & 0xffff);
-		cc_set(SPY_MD_LOW, (uint16_t) (num >> 0) & 0xffff);
+		spy_write32(SPY_MD_HIGH, SPY_MD_LOW, num);
 	}
 }
 
 uint32_t
 cc_read_md(void)
 {
-	return _cc_read_pair(SPY_MD_HIGH, SPY_MD_LOW);
+	return spy_read32(SPY_MD_HIGH, SPY_MD_LOW);
 }
 
 void
 cc_write_vma(uint32_t val)
 {
-	cc_set(SPY_VMA_HIGH, (uint16_t) (val >> 16) & 0xffff);
-	cc_set(SPY_VMA_LOW, (uint16_t) (val >> 0) & 0xffff);
+	spy_write32(SPY_VMA_HIGH, SPY_VMA_LOW, val);
 
 	while (cc_read_vma() != val) {
 		printf("vma readback failed, retry\n");
-		cc_set(SPY_VMA_HIGH, (uint16_t) (val >> 16) & 0xffff);
-		cc_set(SPY_VMA_LOW, (uint16_t) (val >> 0) & 0xffff);
+		spy_write32(SPY_VMA_HIGH, SPY_VMA_LOW, val);
 	}
 }
 
 uint32_t
 cc_read_vma(void)
 {
-	return _cc_read_pair(SPY_VMA_HIGH, SPY_VMA_LOW);
+	return spy_read32(SPY_VMA_HIGH, SPY_VMA_LOW);
 }
 
 void
@@ -226,7 +271,7 @@ cc_read_m_mem(uint32_t adr)
 void
 cc_write_m_mem(uint32_t loc, uint32_t val)
 {
-				///---!!!
+	///---!!!
 }
 
 uint32_t

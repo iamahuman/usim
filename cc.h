@@ -8,8 +8,6 @@ extern uint16_t cc_get(int reg);
 extern int cc_set(int reg, int v);
 extern uint16_t mmc_get(int reg);
 extern int mmc_set(int reg, int v);
-extern uint32_t _cc_read_pair(int r1, int r2);
-extern uint64_t _cc_read_triple(int r1, int r2, int r3);
 extern uint32_t cc_read_obus_(void);
 extern uint16_t cc_read_scratch(void);
 extern uint32_t bitmask(int wid);

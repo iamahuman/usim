@@ -40,11 +40,24 @@ enum {				// WRITING
 	SPY_MODE        = 5,
 };
 
+#define w32(high,low) ((high << 16) | low)
+#define w64(high,med,low) ((high << 32) | (med << 16) | low)
+
+extern uint16_t spy_read (int regn);
+#define spy_read16(regn) spy_read(regn)
+extern uint32_t spy_read32(int high, int low);
+extern uint64_t spy_read64(int high,int med,int low);
+
+extern void spy_write (int regn, int val);
+#define spy_write16(regn,val) spy_write(regn, val)
+extern void spy_write32(int high, int low, uint32_t val);
+extern void spy_write64(int high, int med, int low, uint64_t val);
+
 extern uint32_t cc_read_obus(void);
 extern uint32_t cc_read_a_bus(void);
 extern uint32_t cc_read_m_bus(void);
-extern uint32_t cc_read_ir(void);
-extern uint32_t cc_read_pc(void);
+extern uint64_t cc_read_ir(void);
+extern uint16_t cc_read_pc(void);
 extern uint32_t cc_read_status(void);
 extern void cc_write_diag_ir(ucw_t ir);
 extern void cc_write_ir(ucw_t ir);

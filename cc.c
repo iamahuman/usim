@@ -181,35 +181,9 @@ mmc_set(int reg, int v)
 }
 
 uint32_t
-_cc_read_pair(int r1, int r2)
-{
-	uint32_t v1;
-	uint32_t v2;
-
-	v1 = cc_get(r1);
-	v2 = cc_get(r2);
-
-	return (v1 << 16) | v2;
-}
-
-uint64_t
-_cc_read_triple(int r1, int r2, int r3)
-{
-	uint64_t v1;
-	uint32_t v2;
-	uint32_t v3;
-
-	v1 = cc_get(r1);
-	v2 = cc_get(r2);
-	v3 = cc_get(r3);
-
-	return (v1 << 32) | (v2 << 16) | v3;
-}
-
-uint32_t
 cc_read_obus_(void)
 {
-	return _cc_read_pair(025, 024);
+	return spy_read32(025, 024);
 }
 
 uint16_t
