@@ -60,6 +60,7 @@ again:
 	usleep(1000 * 100);
 
 	memset(buffer, 0, 64);
+	memset(nibs, 0, 4);
 	loops = 0;
 	off = 0;
 	while (1) {
