@@ -1,7 +1,5 @@
 // diskmaker --- manage disk packs (Trident T-300 & T-80) for CADR
 
-#include "usim.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -9,6 +7,7 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include "usim.h"
 #include "misc.h"
 
 #ifdef __BIG_ENDIAN__
@@ -51,7 +50,7 @@ struct part_s {
 	char *filename;
 } parts[MAX_PARTITIONS];
 
-int part_count;
+unsigned int part_count;
 
 void
 _swaplongbytes(unsigned int *buf, int words)
@@ -129,14 +128,13 @@ make_labl(int fd)
 	buffer[7] = str4(lod_name);	// Name of LOD partition.
 
 	{
-		int i;
 		int p = 0200;
 
 		printf("%d partitions\n", part_count);
 		buffer[p++] = part_count;	// Number of partitions.
 		buffer[p++] = 7;	// Words per partition.
 
-		for (i = 0; i < part_count; i++) {
+		for (unsigned int i = 0; i < part_count; i++) {
 			unsigned long n;
 			char *pn = parts[i].name;
 
@@ -253,9 +251,7 @@ make_one_partition(int fd, int index)
 void
 make_partitions(int fd)
 {
-	int i;
-
-	for (i = 0; i < part_count; i++) {
+	for (unsigned int i = 0; i < part_count; i++) {
 		make_one_partition(fd, i);
 	}
 }
@@ -344,14 +340,13 @@ parse_template(char *template)
 int
 fillout_image_file(int fd)
 {
-	int i;
 	int last_block_no;
 	int ret;
 	off_t offset;
 
 	// Find highest block number + 1.
 	last_block_no = 0;
-	for (i = 0; i < part_count; i++) {
+	for (unsigned int i = 0; i < part_count; i++) {
 		int last = parts[i].start + parts[i].size;
 		if (last > last_block_no)
 			last_block_no = last;
@@ -405,7 +400,7 @@ create_disk(char *template)
 int
 modify_disk(char *template, char *img_filename, char *part_name)
 {
-	int i;
+	unsigned int i;
 	int fd;
 	int part_index;
 
@@ -539,8 +534,8 @@ show_partition_info(char *filename)
 	int fd;
 	int ret;
 	int p;
-	int i;
-	int count;
+	unsigned int i;
+	unsigned int count;
 	int size;
 
 	fd = open(filename, O_RDONLY, 0666);
@@ -632,11 +627,11 @@ extract_partition(char *filename, char *extract_filename, char *part_name)
 	int fd_out;
 	int ret;
 	int p;
-	int i;
+	unsigned int i;
 	int result;
-	int count;
+	unsigned int count;
 	int offset;
-	int size;
+	unsigned int size;
 
 	result = -1;
 
