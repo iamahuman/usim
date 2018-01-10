@@ -1,3 +1,6 @@
+#ifndef USIM_MACROOPS_H
+#define USIM_MACROOPS_H
+
 char *op_names[16] = {
 	"CALL",
 	"CALL0",
@@ -403,3 +406,5 @@ char *call_names[] = {
 
 int misc_inst_vector[1024];
 int misc_inst_vector_setup;
+
+#endif
