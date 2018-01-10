@@ -1,15 +1,14 @@
-#include "usim.h"
+// lod --- ---!!!
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
 
+#include "usim.h"
 #include "macroops.h"
 #include "misc.h"
-
-char *loadband_filename;
-char *disk_filename;
 
 int show_comm;
 int show_scratch;
@@ -18,6 +17,10 @@ int show_fef;
 int show_initial_sg;
 int show_memory;
 int set_wide;
+
+int lodfd;
+
+int bnum = -1;
 
 struct {
 	char *name;
@@ -95,25 +98,21 @@ struct {
 	{(char *) 0, 0, 0}
 };
 
-int lodfd;
-int swapfd;
-int partoff;
-int bnum = -1;
-unsigned int buf[256];
-
 unsigned int
 read_virt(int fd, int addr)
 {
 	int b;
 	off_t offset;
-	off_t ret;
+	unsigned int buf[256];
 
 	addr &= 077777777;
 	b = addr / 256;
 
-	offset = (b + partoff) * BLOCKSZ;
+	offset = b * BLOCKSZ;
 
 	if (b != bnum) {
+		off_t ret;
+
 		bnum = b;
 		ret = lseek(fd, offset, SEEK_SET);
 		if (ret != offset) {
@@ -122,105 +121,11 @@ read_virt(int fd, int addr)
 
 		ret = read(fd, buf, BLOCKSZ);
 		if (ret != BLOCKSZ) {
+			perror("read");
 		}
 	}
 
 	return buf[addr % 256];
-}
-
-unsigned int
-vr(int addr)
-{
-	return read_virt(lodfd, addr);
-}
-
-unsigned int
-swap_vr(int addr)
-{
-	return read_virt(swapfd, addr);
-}
-
-struct part_s {
-	char *name;
-	int start;
-	int size;
-} parts[16];
-
-int part_count;
-
-int
-read_partition_table(void)
-{
-	int i;
-	int ret;
-	int p;
-	int count;
-
-	ret = read(swapfd, buf, BLOCKSZ);
-	if (ret != BLOCKSZ) {
-		perror(disk_filename);
-		return -1;
-	}
-
-	if (buf[0] != str4("LABL")) {
-		fprintf(stderr, "%s: no valid disk label found\n", disk_filename);
-		return -1;
-	}
-
-	if (buf[1] != 1) {
-		fprintf(stderr, "%s: label version not 1\n", disk_filename);
-		return -1;
-	}
-
-	count = buf[0200];
-	p = 0202;
-
-	part_count = 0;
-	for (i = 0; i < count; i++) {
-		parts[part_count].name = strdup(unstr4(buf[p + 0]));
-		parts[part_count].start = buf[p + 1];
-		parts[part_count].size = buf[p + 2];
-		part_count++;
-	}
-
-	return 0;
-}
-
-void
-set_swap(void)
-{
-	int i;
-
-	// Nice hack, eh? Swap starts at block 0524 - see diskmaker.c.
-	partoff = 0524;
-
-	for (i = 0; i < part_count; i++) {
-		if (strcmp(parts[i].name, "SWAP") == 0) {
-			partoff = parts[i].start;
-			break;
-		}
-	}
-	printf("SWAP partoff %o\n", partoff);
-	bnum = -1;
-}
-
-void
-set_lod1(void)
-{
-	int i;
-
-	bnum = -1;
-
-	// Nice hack, eh? Swap starts at block 0524 - see diskmaker.c.
-	partoff = 021210;
-
-	for (i = 0; i < part_count; i++) {
-		if (strcmp(parts[i].name, "LOD1") == 0) {
-			partoff = parts[i].start;
-			break;
-		}
-	}
-	printf("LOD1 partoff %o\n", partoff);
 }
 
 unsigned int
@@ -265,31 +170,18 @@ showlabel(char *l, int a, int cr)
 	return _show(lodfd, a, cr);
 }
 
-unsigned int
-showswap(char *l, int a, int cr)
-{
-	printf("%s: ", l);
-	return _show(swapfd, a, cr);
-}
-
-unsigned int
-swap_show(int a, int cr)
-{
-	return _show(swapfd, a, cr);
-}
-
 void
 showstr(int a, int cr)
 {
 	int t;
-	int i;
 	int j;
-	unsigned int n;
 	char s[256];
 
 	t = get(a) & 0xff;
 	j = 0;
-	for (i = 0; i < t; i += 4) {
+	for (int i = 0; i < t; i += 4) {
+		unsigned int n;
+
 		n = get(a + 1 + (i / 4));
 		s[j++] = n >> 0;
 		s[j++] = n >> 8;
@@ -335,9 +227,9 @@ disass(unsigned int fefptr, unsigned int loc, int even, unsigned int inst, unsig
 	unsigned int nlc;
 
 	if (!misc_inst_vector_setup) {
-		int i;
-		int index;
-		for (i = 0; i < 1024; i++) {
+		for (int i = 0; i < 1024; i++) {
+					int index;
+
 			if (misc_inst[i].name == 0)
 				break;
 			index = misc_inst[i].value;
@@ -435,11 +327,10 @@ find_and_dump_fef(unsigned int pc)
 	unsigned int v;
 	unsigned int n;
 	unsigned int o;
-	int i;
 	int j;
 	int tag;
 	int icount;
-	int max;
+	unsigned int max;
 	unsigned short ib[512];
 	unsigned int width;
 
@@ -448,8 +339,8 @@ find_and_dump_fef(unsigned int pc)
 	addr = pc >> 2;
 	printf("pc %o, addr %o\n", pc, addr);
 
-	// Find FEF>
-	for (i = 0; i < 512; i--) {
+	// Find FEF.
+	for (int i = 0; i < 512; i--) {
 		n = get(addr);
 		tag = (n >> width) & 037;
 		if (tag == 7)
@@ -469,7 +360,7 @@ find_and_dump_fef(unsigned int pc)
 	icount = (max - o / 2) * 2;
 
 	j = 0;
-	for (i = 0; i < max; i++) {
+	for (unsigned int i = 0; i < max; i++) {
 		unsigned int loc;
 		unsigned int inst;
 
@@ -501,7 +392,7 @@ find_and_dump_fef(unsigned int pc)
 		}
 	}
 
-	for (i = o; i < o + icount; i++) {
+	for (unsigned int i = o; i < o + icount; i++) {
 		unsigned int loc;
 
 		loc = addr + i / 2;
@@ -514,43 +405,29 @@ find_and_dump_fef(unsigned int pc)
 void
 usage(void)
 {
-	fprintf(stderr, "usage: lod -l FILE [OPTION]...\n");
-	fprintf(stderr, "  or:  lod -i FILE [OPTION]...\n");
-	fprintf(stderr, "\n");
-	fprintf(stderr, "  -l FILE        LOD band file\n");
-	fprintf(stderr, "  -i FILE        disk image\n");
+	fprintf(stderr, "usage: lod FILE [OPTION]...\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -c             dump system communication area\n");
 	fprintf(stderr, "  -s             dump scratch-pad area\n");
 	fprintf(stderr, "  -f             find and disassemble initial FEF\n");
 	fprintf(stderr, "  -g             dump initial stack group\n");
 	fprintf(stderr, "  -p PC          find and disassemble FEF for given pc\n");
-	fprintf(stderr, "  -a addr        find and disassemble FEF for given address\n");
+	fprintf(stderr, "  -a ADDR        find and disassemble FEF for given address\n");
 	fprintf(stderr, "  -m ADDR        dump memory\n");
 	fprintf(stderr, "  -w             decode 25-bit pointers\n");
-	exit(1);
+	fprintf(stderr, "  -h             help message\n");
 }
-
-extern char *optarg;
-extern int optind;
 
 int
 main(int argc, char *argv[])
 {
 	unsigned int com;
-	int i;
 	int c;
 	unsigned int pc = 0;
 	unsigned int addr = 0;
 
-	while ((c = getopt(argc, argv, "l:i:csfgp:a:m:w")) != -1) {
+	while ((c = getopt(argc, argv, "csfgp:a:m:wh")) != -1) {
 		switch (c) {
-		case 'l':
-			loadband_filename = strdup(optarg);
-			break;
-		case 'i':
-			disk_filename = strdup(optarg);
-			break;
 		case 'c':
 			show_comm++;
 			break;
@@ -579,107 +456,87 @@ main(int argc, char *argv[])
 		case 'w':
 			set_wide++;
 			break;
+		case 'h':
+			usage();
+			exit(0);
+		default:
+			usage();
+			exit(1);
 		}
 	}
+	argc -= optind;
+	argv += optind;
 
-	if (optind < argc || argc == 1) {
+	if (argc != 1) {
 		usage();
+		exit(1);
 	}
 
-	// Raw LOD band.
-	if (loadband_filename) {
-		lodfd = open(loadband_filename, O_RDONLY);
-		if (lodfd < 0) {
-			perror(loadband_filename);
-			exit(1);
-		}
+
+	lodfd = open(argv[0], O_RDONLY);
+	if (lodfd < 0) {
+		perror(argv[0]);
+		exit(1);
 	}
 
-	// Optional full disk image (to check swap).
-	if (disk_filename) {
-		swapfd = open(disk_filename, O_RDONLY);
-		if (swapfd < 0) {
-			perror(disk_filename);
-			exit(1);
-		}
+	com = showlabel("%SYS-COM-AREA-ORIGIN-PNTR", 0400, 1);
+	showlabel("%SYS-COM-BAND-FORMAT", 0410, 1);
 
-		read_partition_table();
-		set_swap();
+	if (show_comm) {
+		for (int i = 0; cv[i].name; i++) {
+			printf("%s ", cv[i].name);
+			cv[i].a = com + i;
+			cv[i].v = show(cv[i].a, 0);
+			printf("; ");
+			show(cv[i].v, 1);
+		}
+		printf("\n");
 	}
 
-	if (swapfd == 0 && lodfd == 0) {
-		fprintf(stderr, "need either -l or -f (or both)\n");
-		exit(2);
+	if (show_scratch) {
+		printf("scratch-pad\n");
+		for (int i = 0; sv[i].name; i++) {
+			printf("%s ", sv[i].name);
+			sv[i].a = 01000 + i;
+			sv[i].v = show(sv[i].a, 0);
+			printf("; ");
+			show(sv[i].v, 1);
+		}
+		printf("\n");
 	}
 
-	if (loadband_filename) {
-		com = showlabel("%SYS-COM-AREA-ORIGIN-PNTR", 0400, 1);
-		showlabel("%SYS-COM-BAND-FORMAT", 0410, 1);
+	if (show_initial_fef) {
+		unsigned int v;
 
-		if (show_comm) {
-			for (i = 0; cv[i].name; i++) {
-				printf("%s ", cv[i].name);
-				cv[i].a = com + i;
-				cv[i].v = show(cv[i].a, 0);
-				printf("; ");
-				show(cv[i].v, 1);
-			}
-			printf("\n");
-		}
+		sv[0].a = 01000 + 0;
+		sv[0].v = showlabel(sv[0].name, sv[0].a, 1);
+		v = show(sv[0].v, 1);
+		find_and_dump_fef(v << 2);
+	}
 
-		if (show_scratch) {
-			printf("scratch-pad\n");
-			for (i = 0; sv[i].name; i++) {
-				printf("%s ", sv[i].name);
-				sv[i].a = 01000 + i;
-				sv[i].v = show(sv[i].a, 0);
-				printf("; ");
-				show(sv[i].v, 1);
-			}
-			printf("\n");
-		}
+	if (show_fef) {
+		find_and_dump_fef(pc);
+	}
 
-		if (show_initial_fef) {
-			unsigned int v;
+	if (show_initial_sg) {
+		unsigned int a;
 
-			sv[0].a = 01000 + 0;
-			sv[0].v = showlabel(sv[0].name, sv[0].a, 1);
-			v = show(sv[0].v, 1);
-			find_and_dump_fef(v << 2);
-		}
+		sv[3].a = 01000 + 3;
+		sv[3].v = showlabel(sv[3].name, sv[3].a, 1);
+		a = sv[3].v & 0x00ffffff;
+		printf("\ninitial sg:\n");
+		for (int i = 10; i >= 0; i--) {
+			char b[16];
 
-		if (show_fef) {
-			find_and_dump_fef(pc);
-		}
-
-		if (show_initial_sg) {
-			int i;
-			unsigned int a;
-
-			sv[3].a = 01000 + 3;
-			sv[3].v = showlabel(sv[3].name, sv[3].a, 1);
-			a = sv[3].v & 0x00ffffff;
-			printf("\ninitial sg:\n");
-			for (i = 10; i >= 0; i--) {
-				char b[16];
-				sprintf(b, "%d", -i);
-				show(a - i, 1);
-			}
-		}
-
-		if (show_memory) {
-			printf("memory @ %o:\n", addr);
-			for (i = 0; i < 10; i++) {
-				show(addr + i, 1);
-			}
+			sprintf(b, "%d", -i);
+			show(a - i, 1);
 		}
 	}
 
-	if (disk_filename) {
-		if (show_comm) {
-			for (i = 0; sys_com[i].name; i++) {
-				sys_com[i].v = showswap(sys_com[i].name, sys_com[i].a, 1);
-			}
+	if (show_memory) {
+		printf("memory @ %o:\n", addr);
+		for (int i = 0; i < 10; i++) {
+			show(addr + i, 1);
 		}
 	}
 
