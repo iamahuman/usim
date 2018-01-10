@@ -17,17 +17,17 @@ char *path;
 
 void dumpmem(char *ptr, int len);
 
-typedef struct {
+struct baccess {
 	unsigned char buffer[8192];
 
 	unsigned char *base;
 	int offset;
 	int record_no;
 	int fd;
-} baccess;
+};
 
 void
-init_access(baccess *pb, int fd)
+init_access(struct baccess *pb, int fd)
 {
 	pb->base = pb->buffer;
 	pb->offset = 0;
@@ -36,7 +36,7 @@ init_access(baccess *pb, int fd)
 }
 
 void *
-ensure_access(baccess *pb, int offset, int size)
+ensure_access(struct baccess *pb, int offset, int size)
 {
 	unsigned char *ptr;
 	int blknum;
@@ -65,7 +65,7 @@ ensure_access(baccess *pb, int offset, int size)
 }
 
 void *
-advance_access(baccess *pb, int size)
+advance_access(struct baccess *pb, int size)
 {
 	unsigned char *ptr;
 	int blknum;
@@ -101,7 +101,7 @@ advance_access(baccess *pb, int size)
 }
 
 int
-remaining_access(baccess *pb)
+remaining_access(struct baccess *pb)
 {
 	int boff;
 	int left;
@@ -112,7 +112,7 @@ remaining_access(baccess *pb)
 }
 
 int
-remaining_buffer(baccess *pb)
+remaining_buffer(struct baccess *pb)
 {
 	return (1008 * 4) - pb->offset;
 }
@@ -122,18 +122,18 @@ typedef int address;
 typedef int date;
 typedef char flag;
 
-typedef struct tapeinfo_s {
+struct tapeinfo {
 	date date;
 	char tapename[8];
-} tapeinfo;
+};
 
-typedef struct fh_element_s {
+struct fh_element {
 	char name[4];
 	short location;		// In words.
 	short length;		// In words.
-} fh_element;
+};
 
-struct partition_label_s {
+struct partition_label {
 	fixnum version;
 	short name_len;
 	char name[30];
@@ -158,10 +158,10 @@ struct partition_label_s {
 
 	fixnum uid_generator;
 	fixnum monotone_generator;
-	fh_element root_list;
+	struct fh_element root_list;
 };
 
-typedef struct link_transparencies_s {
+struct link_transparencies {
 	struct {
 		flag read_thru;
 		flag write_thru;
@@ -171,16 +171,16 @@ typedef struct link_transparencies_s {
 		flag lpad[6];
 		int ignore;
 	} attributes;
-} link_transparencies;
+};
 
-struct file_map_s {
+struct file_map {
 	fixnum allocated_length;
 	short valid_length;
 	short link;
 	fixnum element[1];
 };
 
-struct dir_header_s {
+struct dir_header {
 	short version;
 	short size;
 	short name_len;
@@ -200,10 +200,10 @@ struct dir_header_s {
 	date auto_expunge_interval;
 	date auto_expunge_last_time;
 
-	link_transparencies default_link_transparencies;
+	struct link_transparencies default_link_transparencies;
 };
 
-struct directory_entry_s {
+struct directory_entry {
 	short file_name_len;
 	char file_name[30];
 	short file_type_len;
@@ -229,19 +229,19 @@ struct directory_entry_s {
 	char partition_index[3];
 	address record_0_address;
 
-	tapeinfo archive_a;
-	tapeinfo archive_b;
+	struct tapeinfo archive_a;
+	struct tapeinfo archive_b;
 	short ignore_mode_word;
 };
 
-struct file_header_s {
+struct file_header {
 	fixnum version;
 	fixnum logical_size;
 	fixnum bootload_generation;
 	fixnum version_in_bootload;
 	short number_of_elements;
 	short ignore_mode_word;
-	fh_element parts_array[8];
+	struct fh_element parts_array[8];
 };
 
 char
@@ -294,7 +294,7 @@ dumpmem(char *ptr, int len)
 }
 
 int
-read_record(baccess *pb, int record_no)
+read_record(struct baccess *pb, int record_no)
 {
 	int i;
 	int block_no;
@@ -318,15 +318,15 @@ read_record(baccess *pb, int record_no)
 #define STANDARD_BLOCKS_PER_RECORD 4
 
 int
-show_file(int fd, struct directory_entry_s *de, int record_no)
+show_file(int fd, struct directory_entry *de, int record_no)
 {
-	baccess b;
+	struct baccess b;
 	int i;
 	int woffset;
 	int wlast;
 	int bl;
 	int tot;
-	struct file_header_s *fh;
+	struct file_header *fh;
 	int n;
 	int blocks[64];
 	char *p;
@@ -334,7 +334,7 @@ show_file(int fd, struct directory_entry_s *de, int record_no)
 	init_access(&b, fd);
 	read_record(&b, record_no);
 
-	fh = (struct file_header_s *) ensure_access(&b, 0, sizeof(struct file_header_s));
+	fh = (struct file_header *) ensure_access(&b, 0, sizeof(struct file_header));
 
 	printf("logical_size %d\n", fh->logical_size);
 	printf("number_of_elements %d\n", fh->number_of_elements);
@@ -349,9 +349,9 @@ show_file(int fd, struct directory_entry_s *de, int record_no)
 		wlast = fh->parts_array[i].location;
 
 		if (memcmp(fh->parts_array[i].name, "fmap", 4) == 0) {
-			struct file_map_s *fm;
+			struct file_map *fm;
 			int j;
-			fm = (struct file_map_s *) ensure_access(&b, woffset * 4, sizeof(struct file_map_s));
+			fm = (struct file_map *) ensure_access(&b, woffset * 4, sizeof(struct file_map));
 			printf("allocated_length %d\n", fm->allocated_length);
 			printf("valid_length %d\n", fm->valid_length);
 			printf("link %d\n", fm->link);
@@ -410,13 +410,13 @@ show_file(int fd, struct directory_entry_s *de, int record_no)
 int
 show_de(int fd, int record_no)
 {
-	baccess b;
-	struct directory_entry_s *de;
+	struct baccess b;
+	struct directory_entry *de;
 	int i;
 	int woffset;
 	int wlast;
 	int numentries;
-	struct file_header_s *fh;
+	struct file_header *fh;
 	int n;
 	int blocks[64];
 
@@ -425,7 +425,7 @@ show_de(int fd, int record_no)
 
 	printf("%d\n", record_no);
 
-	fh = (struct file_header_s *) ensure_access(&b, 0, sizeof(struct file_header_s));
+	fh = (struct file_header *) ensure_access(&b, 0, sizeof(struct file_header));
 	printf("number_of_elements %d\n", fh->number_of_elements);
 	for (i = 0; i < 8; i++) {
 		char n[5];
@@ -440,10 +440,10 @@ show_de(int fd, int record_no)
 		wlast = fh->parts_array[i].location;
 
 		if (memcmp(fh->parts_array[i].name, "fmap", 4) == 0) {
-			struct file_map_s *fm;
+			struct file_map *fm;
 			int j;
 
-			fm = (struct file_map_s *) ensure_access(&b, woffset * 4, sizeof(struct file_map_s));
+			fm = (struct file_map *) ensure_access(&b, woffset * 4, sizeof(struct file_map));
 			printf("allocated_length %d\n", fm->allocated_length);
 			printf("valid_length %d\n", fm->valid_length);
 			printf("link %d\n", fm->link);
@@ -453,9 +453,9 @@ show_de(int fd, int record_no)
 		}
 
 		if (memcmp(fh->parts_array[i].name, "dire", 4) == 0) {
-			struct directory_entry_s *de;
+			struct directory_entry *de;
 
-			de = (struct directory_entry_s *) ensure_access(&b, woffset * 4, sizeof(struct directory_entry_s));
+			de = (struct directory_entry *) ensure_access(&b, woffset * 4, sizeof(struct directory_entry));
 			printf("file_name '%s', file_type '%s', bytesize %d, author '%s'\n", de->file_name, de->file_type, de->bytesize, de->author);
 			printf("byte_length %d\n", de->byte_length);
 			printf("number_of_records %d\n", de->number_of_records);
@@ -463,10 +463,10 @@ show_de(int fd, int record_no)
 		}
 	}
 
-	struct dir_header_s *dh;
+	struct dir_header *dh;
 
 	woffset = wlast;
-	dh = (struct dir_header_s *) ensure_access(&b, woffset * 4, sizeof(struct dir_header_s));
+	dh = (struct dir_header *) ensure_access(&b, woffset * 4, sizeof(struct dir_header));
 	printf("version %d, size %d, name '%s'\n", dh->version, dh->size, dh->name);
 	printf("number_of_entries %d\n", dh->number_of_entries);
 	printf("entries_index_offset %d\n", dh->entries_index_offset);
@@ -476,10 +476,10 @@ show_de(int fd, int record_no)
 	numentries = dh->number_of_entries;
 	n = 0;
 	for (i = 0; i < numentries; i++) {
-		de = (struct directory_entry_s *) advance_access(&b, sizeof(struct directory_entry_s));
+		de = (struct directory_entry *) advance_access(&b, sizeof(struct directory_entry));
 		if (de == 0) {
 			read_record(&b, blocks[n++]);
-			de = (struct directory_entry_s *) ensure_access(&b, 0, sizeof(struct directory_entry_s));
+			de = (struct directory_entry *) ensure_access(&b, 0, sizeof(struct directory_entry));
 		}
 
 		printf("#%d:\n", i + 1);
@@ -489,7 +489,7 @@ show_de(int fd, int record_no)
 		printf("byte_length %d\n", de->byte_length);
 		printf("number_of_records %d\n", de->number_of_records);
 		printf("record_0_address %d\n", de->record_0_address);
-		printf("size %ld\n", sizeof(struct directory_entry_s));
+		printf("size %ld\n", sizeof(struct directory_entry));
 		show_file(fd, de, de->record_0_address);
 	}
 
@@ -502,8 +502,8 @@ lmfs_open(char *img_filename, int offset)
 	int fd;
 	int ret;
 	unsigned char buffer[BLOCKSZ];
-	struct partition_label_s *pl;
-	baccess b;
+	struct partition_label *pl;
+	struct baccess b;
 
 	fd = open(img_filename, O_RDONLY, 0666);
 	if (fd < 0) {
@@ -517,7 +517,7 @@ lmfs_open(char *img_filename, int offset)
 		return -1;
 	}
 
-	pl = (struct partition_label_s *) buffer;
+	pl = (struct partition_label *) buffer;
 	printf("version %d\n", pl->version);
 	printf("name %s\n", pl->name);
 	printf("primary_root %d\n", pl->disk_address.primary_root);
@@ -530,12 +530,12 @@ lmfs_open(char *img_filename, int offset)
 	read_record(&b, pl->disk_address.primary_root);
 
 	{
-		struct file_header_s *fh;
+		struct file_header *fh;
 		int i;
 		int woffset;
 		int wlast;
 
-		fh = (struct file_header_s *) ensure_access(&b, 0, sizeof(struct file_header_s));
+		fh = (struct file_header *) ensure_access(&b, 0, sizeof(struct file_header));
 		printf("number_of_elements %d\n", fh->number_of_elements);
 
 		for (i = 0; i < 8; i++) {
@@ -551,9 +551,9 @@ lmfs_open(char *img_filename, int offset)
 			woffset = fh->parts_array[i].location;
 
 			if (memcmp(fh->parts_array[i].name, "fmap", 4) == 0) {
-				struct file_map_s *fm;
+				struct file_map *fm;
 
-				fm = (struct file_map_s *) ensure_access(&b, woffset * 4, sizeof(struct file_map_s));
+				fm = (struct file_map *) ensure_access(&b, woffset * 4, sizeof(struct file_map));
 				printf("allocated_length %d\n", fm->allocated_length);
 				printf("valid_length %d\n", fm->valid_length);
 				printf("link %d\n", fm->link);
@@ -565,19 +565,19 @@ lmfs_open(char *img_filename, int offset)
 			woffset = fh->parts_array[i].location;
 
 			if (memcmp(fh->parts_array[i].name, "dire", 4) == 0) {
-				struct directory_entry_s *de;
+				struct directory_entry *de;
 				int i;
 
-				de = (struct directory_entry_s *)
-					ensure_access(&b, woffset * 4, sizeof(struct directory_entry_s));
+				de = (struct directory_entry *)
+					ensure_access(&b, woffset * 4, sizeof(struct directory_entry));
 
 				printf("file_name '%s', file_type '%s', bytesize %d, author '%s'\n", de->file_name, de->file_type, de->bytesize, de->author);
 				printf("number_of_records %d\n", de->number_of_records);
 				printf("record_0_address %d\n", de->record_0_address);
 
-				struct dir_header_s *dh;
+				struct dir_header *dh;
 				woffset = wlast;
-				dh = (struct dir_header_s *) ensure_access(&b, woffset * 4, sizeof(struct dir_header_s));
+				dh = (struct dir_header *) ensure_access(&b, woffset * 4, sizeof(struct dir_header));
 
 				printf("version %d, size %d, name '%s'\n", dh->version, dh->size, dh->name);
 				printf("number_of_entries %d\n", dh->number_of_entries);
@@ -585,12 +585,12 @@ lmfs_open(char *img_filename, int offset)
 				printf("uid_path_offset %d\n", dh->uid_path_offset);
 				printf("uid_path_length %d\n", dh->uid_path_length);
 				for (i = 0; i < dh->number_of_entries; i++) {
-					de = (struct directory_entry_s *)
-						advance_access(&b, sizeof(struct directory_entry_s));
+					de = (struct directory_entry *)
+						advance_access(&b, sizeof(struct directory_entry));
 					printf("file_name '%s', file_type '%s', bytesize %d, author '%s'\n", de->file_name, de->file_type, de->bytesize, de->author);
 					printf("number_of_records %d\n", de->number_of_records);
 					printf("record_0_address %d\n", de->record_0_address);
-					printf("size %ld\n", sizeof(struct directory_entry_s));
+					printf("size %ld\n", sizeof(struct directory_entry));
 					show_de(fd, de->record_0_address);
 				}
 			}
