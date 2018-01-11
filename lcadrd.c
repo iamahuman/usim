@@ -117,11 +117,6 @@ cc_read_status(void)
 void
 cc_write_diag_ir(ucw_t ir)
 {
-#if 0
-	if (debug || verbose)
-		disassemble_ucode_loc(ir);
-#endif
-
 	spy_write64(SPY_IR_HIGH, SPY_IR_MED, SPY_IR_LOW, ir);
 	spy_write64(SPY_IR_HIGH, SPY_IR_MED, SPY_IR_LOW, ir);
 }
@@ -129,10 +124,6 @@ cc_write_diag_ir(ucw_t ir)
 void
 cc_write_ir(ucw_t ir)
 {
-#if 0
-	if (debug || verbose)
-		printf("ir %" PRIu64 " (0x%016llx)\n", ir, ir);
-#endif
 	cc_write_diag_ir(ir);
 	cc_noop_debug_clock();
 }
@@ -219,11 +210,6 @@ cc_single_step(void)
 void
 cc_execute_r(ucw_t ir)
 {
-#if 0
-	if (debug || verbose)
-		printf("ir %" PRIu64 " (0x%016" PRIx64 ")\n", ir, ir);
-#endif
-
 again:
 	cc_write_diag_ir(ir);
 	cc_noop_debug_clock();
@@ -238,11 +224,6 @@ again:
 void
 cc_execute_w(ucw_t ir)
 {
-#if 0
-	if (debug || verbose)
-		printf("ir %" PRIu64 " (0x%016" PRIx64 ")\n", ir, ir);
-#endif
-
 again:
 	cc_write_diag_ir(ir);
 	cc_noop_debug_clock();

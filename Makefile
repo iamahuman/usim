@@ -22,11 +22,13 @@ lmfs: lmfs.o misc.o
 lod: lod.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-cc: cc.o lcadrd.o decode.o misc.o
+cc: YFLAGS = -d
+cc: cc.o ccy.o ccl.o decode.o lcadrd.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
 	rm -f *.o
+	rm -rf *.tab.c *.tab.h
 	rm -f *~
 	rm -f xx
 	rm -f usim lod readmcr diskmaker lmfs cc

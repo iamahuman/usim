@@ -1,6 +1,8 @@
 *~
 
 *.o
+*.tab.c
+*.tab.h
 
 cc
 diskmaker
