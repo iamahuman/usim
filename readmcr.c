@@ -92,6 +92,7 @@ usage(void)
 	fprintf(stderr, "  -d             extra debug info\n");
 	fprintf(stderr, "  -s N           skip N * 32-bit values\n");
 	fprintf(stderr, "  -m             show microcode\n");
+	fprintf(stderr, "  -h             show help message\n");
 }
 
 int
