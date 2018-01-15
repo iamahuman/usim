@@ -809,6 +809,7 @@ run(void)
 			tv_poll();
 			chaos_poll();
 			ether_poll();
+			uart_poll();
 		}
 
 		// Fetch next instruction from PROM or RAM.

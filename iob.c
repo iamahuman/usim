@@ -146,6 +146,12 @@ iob_unibus_read(int offset, int *pv)
 		tracenet("unibus: chaos read xmt => %o\n", *pv);
 		chaos_xmit_pkt();
 		break;
+	case 160:
+	case 162:
+	case 164:
+	case 166:
+		traceio("unibus: uart read ---!!! %o\n", *pv);
+		break;
 	default:
 		if (offset > 0140 && offset <= 0153)
 			printf("unibus: chaos read other %o\n", offset);
@@ -193,6 +199,12 @@ iob_unibus_write(int offset, int v)
 	case 0142:
 		traceio("unibus: chaos write-buffer write %011o, u_pc %011o\n", v, get_u_pc());
 		chaos_put_xmit_buffer(v);
+		break;
+	case 160:
+	case 162:
+	case 164:
+	case 166:
+		traceio("unibus: uart write ---!!! %o\n", *pv);
 		break;
 	default:
 		if (offset > 0140 && offset <= 0152)

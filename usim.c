@@ -100,6 +100,7 @@ main(int argc, char *argv[])
 		lashup_init(lashup_port);
 	chaos_init();
 	ether_init();
+	uart_init();
 
 	if (warm_boot_flag == true)
 		kbd_warm_boot_key();
