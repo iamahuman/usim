@@ -10,10 +10,6 @@
 #include "usim.h"
 #include "misc.h"
 
-#ifdef __BIG_ENDIAN__
-#define NEED_SWAP
-#endif
-
 char *template_filename;
 char *img_filename;
 int cyls;
@@ -51,27 +47,6 @@ struct part_s {
 } parts[MAX_PARTITIONS];
 
 unsigned int part_count;
-
-void
-_swaplongbytes(unsigned int *buf, int words)
-{
-	int i;
-	unsigned char *p = (unsigned char *) buf;
-
-	for (i = 0; i < words * 4; i += 4) {
-		unsigned char t;
-		unsigned char u;
-		unsigned char v;
-
-		t = p[i];
-		u = p[i + 1];
-		v = p[i + 2];
-		p[i] = p[i + 3];
-		p[i + 1] = v;
-		p[i + 2] = u;
-		p[i + 3] = t;
-	}
-}
 
 void
 swapwords(unsigned int *buf)
@@ -167,12 +142,6 @@ make_labl(int fd)
 	memset((char *) &buffer[030], LABEL_PAD_CHAR, 32);
 	strcpy((char *) &buffer[030], comment);
 	printf("comment: '%s'\n", comment);
-
-#ifdef NEED_SWAP
-	// Don't swap the text label.
-	_swaplongbytes(&buffer[0], 8);
-	_swaplongbytes(&buffer[0200], 128);
-#endif
 
 	if (write(fd, buffer, BLOCKSZ) != BLOCKSZ)
 		return -1;
@@ -549,10 +518,6 @@ show_partition_info(char *filename)
 		perror(filename);
 		return -1;
 	}
-#ifdef NEED_SWAP
-	_swaplongbytes(&buffer[0], 8);
-	_swaplongbytes(&buffer[0200], 128);
-#endif
 
 	if (buffer[0] != str4("LABL")) {
 		fprintf(stderr, "%s: no valid disk label found\n", filename);
@@ -647,11 +612,6 @@ extract_partition(char *filename, char *extract_filename, char *part_name)
 		close(fd);
 		return -1;
 	}
-
-#ifdef NEED_SWAP
-	_swaplongbytes(&buffer[0], 8);
-	_swaplongbytes(&buffer[0200], 128);
-#endif
 
 	if (buffer[0] != str4("LABL")) {
 		fprintf(stderr, "%s: no valid disk label found\n", filename);
@@ -754,11 +714,6 @@ read_labl(const char *filename)
 		perror(filename);
 		return -1;
 	}
-
-#ifdef NEED_SWAP
-	_swaplongbytes(&buffer[0], 8);
-	_swaplongbytes(&buffer[0200], 128);
-#endif
 
 	if (buffer[0] != str4("LABL")) {
 		fprintf(stderr, "%s: no valid disk label found\n", filename);

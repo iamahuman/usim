@@ -28,8 +28,6 @@ int disk_ma;
 int disk_ecc;
 int disk_da;
 
-int disk_byteswap;
-
 int cyls;
 int heads;
 int blocks_per_track;
@@ -37,23 +35,6 @@ int cur_unit;
 int cur_cyl;
 int cur_head;
 int cur_block;
-
-// Words in the disk image are written as little endian, this routine
-// will swap bytes around so that on disk word values will be in
-// little endian order match if we are reading the file on a big
-// endian machine.
-void
-_swaplongbytes(unsigned int *buf, int word_count)
-{
-#define SWAP_LONG(x) ( (((x) & 0xff000000) >> 24) |	\
-		       (((x) & 0x00ff0000) >> 8) |	\
-		       (((x) & 0x0000ff00) << 8) |	\
-		       (((x) & 0x000000ff) << 24) )
-
-	for (int i = 0; i < word_count; i++) {
-		buf[i] = SWAP_LONG(buf[i]);
-	}
-}
 
 int
 _disk_read(int block_no, unsigned int *buffer)
@@ -67,10 +48,6 @@ _disk_read(int block_no, unsigned int *buffer)
 
 	size = BLOCKSZ;
 	memcpy(buffer, disk_mm + offset, size);
-
-	if (disk_byteswap) {
-		_swaplongbytes((unsigned int *) buffer, 256);
-	}
 
 	return 0;
 }
@@ -87,10 +64,6 @@ _disk_write(int block_no, unsigned int *buffer)
 
 	size = BLOCKSZ;
 	memcpy(disk_mm + offset, buffer, size);
-
-	if (disk_byteswap) {
-		_swaplongbytes((unsigned int *) buffer, 256);
-	}
 
 	return 0;
 }
@@ -432,10 +405,6 @@ disk_init(char *filename)
 
 	label[0] = 0;
 
-#ifdef __BIG_ENDIAN__
-	disk_byteswap = on;
-#endif
-
 	printf("disk: opening %s\n", filename);
 
 	disk_fd = open(filename, O_RDWR | O_BINARY);
@@ -472,10 +441,6 @@ disk_init(char *filename)
 
 		memset(fn, 0, sizeof(fn));
 		strcpy(fn, (char *) &label[030]);
-#ifdef __BIG_ENDIAN__
-		memcpy(fn, (char *) &label[030], 32);
-		_swaplongbytes((unsigned int *) fn, 8);
-#endif
 		printf("disk: pack label comment '%s'\n", fn);
 		s = strstr(fn, ".mcr.");
 		if (s)
