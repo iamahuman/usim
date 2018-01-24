@@ -18,6 +18,9 @@
 
 #include "syms.h"
 
+#define LABEL_LABL 011420440514ULL
+#define LABEL_BLANK 020020020020ULL
+
 int disk_fd;
 uint8_t *disk_mm;
 
@@ -75,38 +78,14 @@ disk_read_block(unsigned int vma, int unit, int cyl, int head, int block)
 	unsigned int buffer[256];
 
 	block_no = (cyl * blocks_per_track * heads) + (head * blocks_per_track) + block;
-	if (disk_fd) {
-		if (_disk_read(block_no, buffer) < 0) {
-			printf("disk_read_block: error reading block_no %d\n", block_no);
-			return -1;
-		}
-		for (int i = 0; i < 256; i++) {
-			write_phy_mem(vma + i, buffer[i]);
-		}
-		return 0;
+	if (_disk_read(block_no, buffer) < 0) {
+		printf("disk_read_block: error reading block_no %d\n", block_no);
+		return -1;
 	}
-
-	// Hack to fake a disk label when no disk image is present.
-#define LABEL_LABL 011420440514ULL
-#define LABEL_BLANK 020020020020ULL
-	if (unit == 0 && cyl == 0 && head == 0 && block == 0) {
-		write_phy_mem(vma + 0, LABEL_LABL);	// Label magic.
-		write_phy_mem(vma + 1, 000000000001);	// Version.
-		write_phy_mem(vma + 2, 000000001000);	// Number of cylinders
-		write_phy_mem(vma + 3, 000000000004);	// Number of heades.
-		write_phy_mem(vma + 4, 000000000100);	// Number of blocks.
-		write_phy_mem(vma + 5, 000000000400);	// Heads * blocks.
-		write_phy_mem(vma + 6, 000000001234);	// Name of microcode partition.
-		write_phy_mem(vma + 0200, 1);	// Number of partitions.
-		write_phy_mem(vma + 0201, 1);	// Words per partition.
-		write_phy_mem(vma + 0202, 01234);	// Start of partition info.
-		write_phy_mem(vma + 0203, 01000);	// Microcode address.
-		write_phy_mem(vma + 0204, 010);	// Number of blocks.
-
-		return 0;
+	for (int i = 0; i < 256; i++) {
+		write_phy_mem(vma + i, buffer[i]);
 	}
-
-	return -1;
+	return 0;
 }
 
 int
@@ -117,14 +96,10 @@ disk_write_block(unsigned int vma, int cyl, int head, int block)
 
 	block_no = (cyl * blocks_per_track * heads) + (head * blocks_per_track) + block;
 
-	if (disk_fd) {
-		for (int i = 0; i < 256; i++) {
-			read_phy_mem(vma + i, &buffer[i]);
-		}
-		_disk_write(block_no, buffer);
-
-		return 0;
+	for (int i = 0; i < 256; i++) {
+		read_phy_mem(vma + i, &buffer[i]);
 	}
+	_disk_write(block_no, buffer);
 
 	return 0;
 }
