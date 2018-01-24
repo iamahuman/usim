@@ -16,6 +16,7 @@
 #include "iob.h"
 #include "tv.h"
 #include "kbd.h"
+#include "uart.h"
 #include "chaos.h"
 #include "ether.h"
 #include "disk.h"
