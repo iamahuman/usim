@@ -345,11 +345,6 @@ write_mem(int vaddr, unsigned int v)
 		return 0;
 	}
 
-	// Catch questionable accesses.
-	if (pn >= 036000) {
-		printf("??: reg write vaddr %o, pn %o, offset %o, v %o; u_pc %o\n", vaddr, pn, offset, v, u_pc);
-	}
-
 	switch (pn) {
 	case 036000:
 		// Inhibit color probe.
@@ -389,6 +384,11 @@ write_mem(int vaddr, unsigned int v)
 	case 036776:		// UART.
 		uart_xbus_write(offset, v);
 		return 0;
+	}
+
+	// Catch questionable accesses.
+	if (pn >= 036000) {
+		printf("??: reg write vaddr %o, pn %o, offset %o, v %o; u_pc %o\n", vaddr, pn, offset, v, u_pc);
 	}
 
 	page = phy_pages[pn];
