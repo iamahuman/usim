@@ -1,5 +1,3 @@
-// ucode.c --- ---!!!
-//
 // 'The time has come,' the Walrus said,
 //   'To talk of many things:
 // Of shoes -- and ships -- and sealing wax --
@@ -766,8 +764,8 @@ run(void)
 		int r_bit;
 		int p_bit;
 		int n_bit;
-		unsigned int m_src_value;
-		unsigned int a_src_value;
+		int m_src_value;
+		int a_src_value;
 		int widthm1;
 		int pos;
 		int mr_sr_bits;
