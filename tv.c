@@ -49,7 +49,6 @@ sigalrm_handler(int arg)
 void
 tv_write(unsigned int offset, unsigned int bits)
 {
-	int i;
 	int h;
 	int v;
 
@@ -58,7 +57,7 @@ tv_write(unsigned int offset, unsigned int bits)
 	v = offset / tv_width;
 	h = offset % tv_width;
 
-	for (i = 0; i < 32; i++) {
+	for (int i = 0; i < 32; i++) {
 		tv_bitmap[offset + i] = (bits & 1) ? Black : White;
 		bits >>= 1;
 	}
@@ -76,7 +75,6 @@ void
 tv_read(unsigned int offset, unsigned int *pv)
 {
 	unsigned long bits;
-	int i;
 
 	offset *= 32;
 
@@ -87,10 +85,11 @@ tv_read(unsigned int offset, unsigned int *pv)
 	}
 
 	bits = 0;
-	for (i = 0; i < 32; i++) {
+	for (int i = 0; i < 32; i++) {
 		if (tv_bitmap[offset + i] == Black)
 			bits |= 1UL << i;
 	}
+
 	*pv = bits;
 }
 
@@ -102,13 +101,16 @@ tv_init(void)
 	{
 		struct itimerval itimer;
 		int usecs;
+
 		signal(SIGVTALRM, sigalrm_handler);
+
 		usecs = 16000;
 
 		itimer.it_interval.tv_sec = 0;
 		itimer.it_interval.tv_usec = usecs;
 		itimer.it_value.tv_sec = 0;
 		itimer.it_value.tv_usec = usecs;
+
 		setitimer(ITIMER_VIRTUAL, &itimer, 0);
 	}
 }

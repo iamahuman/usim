@@ -176,17 +176,13 @@ x11_event(void)
 	void send_accumulated_updates(void);
 	void dequeue_key_event(void);
 
-	if (ximage == NULL)
-		return;
-
 	send_accumulated_updates();
 	dequeue_key_event();
 
 	while (XCheckWindowEvent(display, window, USIM_EVENT_MASK, &e)) {
 		switch (e.type) {
 		case Expose:
-			if (ximage)
-				XPutImage(display, window, gc, ximage, 0, 0, 0, 0, tv_width, tv_height);
+			XPutImage(display, window, gc, ximage, 0, 0, 0, 0, tv_width, tv_height);
 			XFlush(display);
 			break;
 		case KeyPress:
@@ -236,8 +232,7 @@ send_accumulated_updates(void)
 	hs = u_maxh - u_minh;
 	vs = u_maxv - u_minv;
 	if (u_minh != 0x7fffffff && u_minv != 0x7fffffff && u_maxh && u_maxv) {
-		if (ximage)
-			XPutImage(display, window, gc, ximage, u_minh, u_minv, u_minh, u_minv, hs, vs);
+		XPutImage(display, window, gc, ximage, u_minh, u_minv, u_minh, u_minv, hs, vs);
 		XFlush(display);
 	}
 
