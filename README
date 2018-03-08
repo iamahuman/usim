@@ -15,17 +15,161 @@ The PROM microcode loads additional microcode from the simulated disk
 and then boots the load band.
 
 There is sufficient hardware support for the disk and network to
-provide a reasonaly functional Lisp Machine experience.
+provide a reasonably functional Lisp Machine experience.
 
 
-Quickstart
+Building
+--------
+
+UNIX-like systems:
+
+  Just run "make".
+
+Everything else:
+
+  Unsupported.
+
+
+Quick-start
 ----------
 
-Grab the pre-made disk image and run as "./usim".  Enter the data and
-time and press "F1" and "F7" to clean up the display.  You're up!
+Build usim and all related code as described above.  Then download the
+PROM, microcode and load bands from https://github.com/LM-3/bands.git,
+by default diskmaker assumes that the bands/ directory is located
+directly below the usim source code directory (usim/../bands).  You
+can also use a configuration file and customize the disk image, see
+the bands/disk.cfg fuke for an example.
 
-If you want to use the network download and run chaosd; see
-https://github.com/lm-3/chaos .
+  ./diskmaker -c
+
+When you have created a disk image you can run usim, and it will boot
+up to a time/date prompt.  The format of the date and time is quite
+flexible (see SYS: IO1; TIMPAR LISP), one possible format is:
+
+  Jan-3-1980 11:30
+
+Now you have a working CADR system, it will not have network setup, or
+a local file system, this will be described later in this section.
+
+Here are a simple few things to try (in the Listener you don't need to
+type Enter after closing a Lisp form):
+
+  (ed)		    ; Start Zmacs; it works just like any other Emacs.
+  (hacks:demo)	    ; A few Lisp Machine demo programs.
+
+Here are some interesting keybindings to try in the Listener, see the
+"Keyboard bindings" section of this document:
+
+  System-L		    ; Switch to the Listener.
+  System-E		    ; Switch to Zmacs.
+  System-P		    ; Peek program, show internal system information.
+  System-?		    ; Show what System commands are available.
+  
+  Terminal-M			; Toggle **MORE** processing.
+  Terminal-0-M			; Disable **MORE** processing.
+
+For more details see the Lisp Machine Manual
+(https://lm-3.github.io/lmman.html).
+
+
+To get usim talking to the host you need to build the chaos daemon and
+related programs from http://github.com/lm-3/chaos.  Build it as per
+the instructions in the README file and then start the chaosd daemon
+(just run ./chaosd where you build it) in another terminal window, you
+must start chaosd before starting usim (this is a bug, see #---!!!).
+
+Your CADR has the host name "CADR" (Chaos address: 0401) , and the
+host where usim is running is called "SERVER" (Chaos address: 0404).
+
+Once your CADR is up and running running, in the listener type:
+
+  (si:set-sys-host "server" ':unix 0404) 
+
+Answer Yes when asked if this is host is OK.  This is to set the SYS
+host accordingly so that the system knows where it can look for files.
+You can now login as LISPM onto the host SERVER using, USER is your
+_local_ user name (and if you are asked for a password, it is also
+your local password):
+
+  (login 'USER 'server)
+
+Now you can read/write files form the host system, the format for Unix
+pathnames is HOST:/DIRECTORY/FILE.EXTENTION.  N.B. Slashes in a string
+in Lisp have to be escaped!
+
+To edit the file /tmp/foo.lisp on the host SERVER, we can type the
+following form:
+
+  (ed "server://tmp//foo.lisp")
+
+Or if we are in Zmacs, we can enter (note the lack of escaped
+slashes):
+
+  C-x C-f server:/tmp/foo RET
+
+This is a fully usable system, but it has no site associated with it
+yet.  A site defines where to find system source code, the timezone,
+and a bunch of other things (see SYS: SITE; SITE LISP or the Chinual
+for details). 
+
+
+To finish of a complete, but basic setup we need load a site file and
+save our current setup (so we don't have to do everything again),
+first download the system source code from
+http://github.com/lm-3/chaos/sys.  
+
+By default, the system source code is assumed to be stored in /tree on
+the host, if you want to relocate this you will need to modify the
+lmsite/site.lisp file accordingly.
+
+The following two forms are only required if you didn't keep usim
+running from the previous setup:
+
+  (si:set-sys-host "server" ':unix 0404)
+  (login 'USER 'server)
+
+Load the site file and make the system aware of its new
+surroundings.  The system doesn't know how to translate logical
+pathnames yet, so we need to specify the actual location:
+
+  (load "server://tree//lmsite//site.lisp") ; Replace with actual location!
+  (fs:define-sys-logical-device)
+
+Recompile a few required files, and update internal state (this only
+needs to be done once, or when you modify the site definition):
+
+  (qc-file "sys:site;site lisp >")
+  (qc-file "sys:site;hsttbl lisp >")
+  (qc-file "sys:site;lmlocs lisp >")
+  (si:update-site-configuration-info)
+
+Now you can save the current system, and make it current:
+
+  (si:disk-save 2)		; Answer yes to clobber.
+  (set-current-band 2)
+
+Or if you just wish to try it out (you can make it current later):
+
+  (disk-restore 2)
+  
+Now all the fun can finally start since we can access the system
+source code, to see what the function SI:SET-SYST-HOST does we can
+issue the following in the Listener:
+
+  (ed 'hacks:demo)
+
+Or why not, open a file:
+
+  (ed "sys: sys; qmisc lisp")
+
+
+The final step is to update the system to the latest patch level
+(---!!! see system-patch-dir file?).  This is left as a small exercise
+for the reader, you need to do the following steps:
+
+ 1. Compile all the patch files in SYS: PATCH.
+ 2. Run the LOAD-PATCH function.
+ 3. Save and make current the world again (just like above).
 
 
 Keyboard bindings
@@ -41,10 +185,10 @@ Keys are mapped in the following manner by default:
 	f5	Clear Input
 	f6	Help
 	f7	Page
-	f8	
-	f9	
-	f10	
-	f11	
+	f8
+	f9
+	f10
+	f11
 	f12
 	pgup	Break
 	pgdn	{appears to crash usim}
@@ -53,102 +197,25 @@ Keys are mapped in the following manner by default:
 	backspace rubout
 	backspace Rub Out
 
-To enable/disable "MORE processing":
 
-	Terminal-M	Toggle **MORE** processing.
-	Terminal-0-M	Disable **MORE** processing.
+The diskmaker Utility
+---------------------
 
-
-Building
---------
-
-UNIX-like systems:
-
-  Just run "make".
-
-Everything else:
-
-  Unsupported.
-
-
-Making a disk
--------------
-
-It is recommend to use the distributed disk image unless you
-understand the structure of a Trident disk.  The program "diskmaker"
-will interpret a disk image partition table and make a new disk using
-a template file.
-
-The distributed disk was made using the default template.  The
-template file basically feeds all the parameters to "diskmaker" to
-build a valid disk image an populate it with microcode and a load
-band.
-
-
-Running
--------
-
-Everything basically works.  The simulator will boot a load band and
-talk on the (simulated) network.
-
-The emulation is reasonably complete (modulo bugs).  It gets through
-the boot PROM code, loads the microcode band, copies the band to swap
-and executes the load band cleanly.  The system boots and runs.
-
-The console display is drawn into an X11 window which tracks the mouse
-and keyboard.  The simplest way to run it is
-
-	./usim
-
-You can make a warm start state file with
-
-	./usim -S
-
-Run the emulator, enter the date and time.  Then C-c twice.  The
-memory state will be saved in "usim.state".  You can then warm start
-to come up quickly:
-
-	./usim -w
-
-Note that the warm start state file is intimately connected to the
-disk image.  If the two are mismatched bad things will happen.  The
-two files should be portable across different host operating systems.
-
-The disk emulation reads from a "disk image" file which is constructed
-with "diskmaker".  The disk image looks like a Trident T-300 disk to
-the microcode, complete with a parition table.
-
-The TV board and IOB are emulated.  An X11 window displays in
-monochrome at 768x1024.  The mouse and keyboard are tracked.  The
-keyboard is "mapped" to the old Knight keyboard.
-
-The internal microsecond clock and the 60hz TV interrupt currently try
-and use wall clock time for a more realistic simulation.
-
-There is also emulation of the Chaosnet board.  Packets are sent via a
-Unix socket to a Chaos daemon which distributes them to various client
-programs (see https://github.com/lm-3/chaos).
-
-There are some hacks for noticing Unibus access but no Xbus/Unibus
-mapping support.
-
-There's still a long delay when booting the distributed world.  The
-system is available right away, however, try "F2-p".  If you are
-impatient try the warm start state file, but be sure to use it with
-it's matching disk image!
-
-The mouse emulation works but doesn't track exactly.
+The program "diskmaker" will interpret a disk image partition table
+and make a new disk using a template file.  The template file
+basically feeds all the parameters to "diskmaker" to build a valid
+disk image an populate it with microcode and a load band.
 
 
 What programs are here?
 -----------------------
 
 usim		- the CADR emulator
-diskmaker 	- program to make Trident disk images for the MIT CADR from
-		  a microcode (MCR) file, and a load band (LOD)
+diskmaker 	- program to make Trident disk images for the CADR from
+		  a microcode file, and a load band
 readmcr		- utility to read MCR file
 lod		- utiltity to pick apart load bands and show their insides
-lmfs		- raw hack to read files from (Symbolics) LMFS paritition
+lmfs		- raw hack to read files from (Symbolics) LMFS partitions
 cc		- crude CADR debugger program
 
 
@@ -195,8 +262,8 @@ me on this, er, project:
 Without their support or encouragement I would probably not have done
 this.  Certainly if Al had not sent me the PROM images I would never
 have started.  And without Dan's box-of-tapes I could never have
-succeeded.  RG offered some good explainations when I was confused.
-TK and Howie were extremely supportive at the just right moment (and
+succeeded.  RG offered some good explanations when I was confused.  TK
+and Howie were extremely supportive at the just right moment (and
 answered a lot of email).  George offered many good suggestions and
 answered lots of questions.  Steve helped me locate missing pages from
 "memo 528".  Alastair did some amazing work on several explorer
