@@ -1,7 +1,6 @@
-MIT CADR simulator
+MIT CADR simulator						-*- org -*-
 
-What is this?
--------------
+* What is this?
 
 This is a program was originally written by Brad Parker
 <brad@heeltoe.com>, and is designed to emulate the MIT CADR
@@ -18,8 +17,7 @@ There is sufficient hardware support for the disk and network to
 provide a reasonably functional Lisp Machine experience.
 
 
-Building
---------
+* Building
 
 UNIX-like systems:
 
@@ -30,8 +28,7 @@ Everything else:
   Unsupported.
 
 
-Quick-start
-----------
+* Quick-start
 
 Build usim and all related code as described above.  Then download the
 PROM, microcode and load bands from https://github.com/LM-3/bands.git,
@@ -172,8 +169,7 @@ for the reader, you need to do the following steps:
  3. Save and make current the world again (just like above).
 
 
-Keyboard bindings
------------------
+* Keyboard bindings
 
 Keys are mapped in the following manner by default:
 
@@ -207,8 +203,7 @@ basically feeds all the parameters to "diskmaker" to build a valid
 disk image an populate it with microcode and a load band.
 
 
-What programs are here?
------------------------
+* What programs are here?
 
 usim		- the CADR emulator
 diskmaker 	- program to make Trident disk images for the CADR from
@@ -219,8 +214,7 @@ lmfs		- raw hack to read files from (Symbolics) LMFS partitions
 cc		- crude CADR debugger program
 
 
-Recent Changes
---------------
+* Recent Changes
 
 v0.10 - TBD
 
@@ -241,8 +235,7 @@ v0.7 - Added raw X11 support.
 v0.6 - Better network support.
 
 
-Standing on the Shoulders of Giants
------------------------------------
+* Standing on the Shoulders of Giants
 
 I (Brad Parker) would like to thanks the following people for helping
 me on this, er, project:
