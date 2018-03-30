@@ -16,7 +16,6 @@ and then boots the load band.
 There is sufficient hardware support for the disk and network to
 provide a reasonably functional Lisp Machine experience.
 
-
 * Building
 
 UNIX-like systems:
@@ -26,7 +25,6 @@ UNIX-like systems:
 Everything else:
 
   Unsupported.
-
 
 * Quick-start
 
@@ -57,10 +55,10 @@ type Enter after closing a Lisp form):
 Here are some interesting keybindings to try in the Listener, see the
 "Keyboard bindings" section of this document:
 
-  System-L		    ; Switch to the Listener.
-  System-E		    ; Switch to Zmacs.
-  System-P		    ; Peek program, show internal system information.
-  System-?		    ; Show what System commands are available.
+  System-L			; Switch to the Listener.
+  System-E			; Switch to Zmacs.
+  System-P			; Peek program, show internal system information.
+  System-?			; Show what System commands are available.
   
   Terminal-M			; Toggle **MORE** processing.
   Terminal-0-M			; Disable **MORE** processing.
@@ -168,7 +166,6 @@ for the reader, you need to do the following steps:
  2. Run the LOAD-PATCH function.
  3. Save and make current the world again (just like above).
 
-
 * Keyboard bindings
 
 Keys are mapped in the following manner by default:
@@ -202,7 +199,6 @@ and make a new disk using a template file.  The template file
 basically feeds all the parameters to "diskmaker" to build a valid
 disk image an populate it with microcode and a load band.
 
-
 * What programs are here?
 
 usim		- the CADR emulator
@@ -212,7 +208,6 @@ readmcr		- utility to read MCR file
 lod		- utiltity to pick apart load bands and show their insides
 lmfs		- raw hack to read files from (Symbolics) LMFS partitions
 cc		- crude CADR debugger program
-
 
 * Recent Changes
 
@@ -234,23 +229,22 @@ v0.7 - Added raw X11 support.
 
 v0.6 - Better network support.
 
-
 * Standing on the Shoulders of Giants
 
 I (Brad Parker) would like to thanks the following people for helping
 me on this, er, project:
 
-	Tom Knight
-	Howard Shrobe
-	Richard Greenblatt
-	Danial Weinreb
-	Al Kossow
-	George Carrette
-	Steve Krueger
-	Alastair Bridgewater
-	John Wroclawski
-	Bjorn Victor
-	Devon Sean McCullough
+  - Tom Knight
+  - Howard Shrobe
+  - Richard Greenblatt
+  - Danial Weinreb
+  - Al Kossow
+  - George Carrette
+  - Steve Krueger
+  - Alastair Bridgewater
+  - John Wroclawski
+  - Bjorn Victor
+  - Devon Sean McCullough
 
 Without their support or encouragement I would probably not have done
 this.  Certainly if Al had not sent me the PROM images I would never
