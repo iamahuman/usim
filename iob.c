@@ -197,14 +197,14 @@ iob_unibus_write(int offset, int v)
 		chaos_set_csr(v);
 		break;
 	case 0142:
-		traceio("unibus: chaos write-buffer write %011o, u_pc %011o\n", v, get_u_pc());
+		traceio("unibus: chaos write-buffer write %011o\n", v);
 		chaos_put_xmit_buffer(v);
 		break;
 	case 160:
 	case 162:
 	case 164:
 	case 166:
-		traceio("unibus: uart write ---!!! %o\n", *pv);
+		traceio("unibus: uart write ---!!! %o\n", v);
 		break;
 	default:
 		if (offset > 0140 && offset <= 0152)

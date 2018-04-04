@@ -297,7 +297,7 @@ unibus_write(int offset, unsigned int v)
 			traceio("unibus: mapping reg %o\n", offset);
 			break;
 		}
-		traceio("unibus: write? v %o, offset %o\n", vaddr, offset);
+		traceio("unibus: write? v %o, offset %o\n", v, offset);
 		break;
 	}
 }
@@ -916,7 +916,7 @@ run(void)
 				spc_stack_ptr = (spc_stack_ptr - 1) & 037;
 				break;
 			case 024:
-				tracef("reading pdl[%o] -> %o, pop\n", pdl_ptr, read_pdfl_mem(USE_PDL_PTR));
+				tracef("reading pdl[%o] -> %o, pop\n", pdl_ptr, read_pdl_mem(USE_PDL_PTR));
 				m_src_value = read_pdl_mem(USE_PDL_PTR);
 				pdl_ptr = (pdl_ptr - 1) & 01777;
 				break;

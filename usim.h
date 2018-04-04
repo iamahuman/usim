@@ -7,12 +7,12 @@
 #define O_BINARY 0
 #endif
 
-#define tracef(...)
-#define tracevm(...)
-#define traceint(...)
-#define tracedio(...)
-#define tracenet(...)
-#define traceio(...)
+#define tracef
+#define tracevm
+#define traceint
+#define tracedio
+#define tracenet
+#define traceio
 
 extern char *disk_filename;
 extern char *mcrsym_filename;
