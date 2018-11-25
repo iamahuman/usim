@@ -57,7 +57,7 @@ main(int argc, char *argv[])
 
 	printf("CADR emulator v0.9\n");
 
-	while ((c = getopt(argc, argv, "i:Sswl::h")) != -1) {
+	while ((c = getopt(argc, argv, "i:Sswl::hA:")) != -1) {
 		switch (c) {
 		case 'i':
 			disk_filename = strdup(optarg);
@@ -75,6 +75,16 @@ main(int argc, char *argv[])
 			lashup_flag = true;
 			if (optarg != NULL)
 				lashup_port = strdup(optarg);
+			break;
+		case 'A':
+			if (optarg != NULL) {
+				char *end;
+				chaos_addr = (int)strtoul (optarg, &end, 8);
+				if (*end != 0 || chaos_addr > 0177777) {
+					fprintf (stderr, "Chaosnet address must be a 16-bit octal number\n");
+					exit(1);
+				}
+			}
 			break;
 		case 'h':
 			usage();
