@@ -17,4 +17,6 @@ extern int chaos_get_bit_count(void);
 extern void chaos_put_xmit_buffer(int v);
 extern void chaos_xmit_pkt(void);
 
+extern int chaos_addr;
+
 #endif
