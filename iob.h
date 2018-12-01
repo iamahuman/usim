@@ -4,7 +4,7 @@
 extern unsigned int iob_csr;
 
 extern int iob_init(void);
-extern void iob_poll(int cycles);
+extern void iob_poll(void);
 
 extern void iob_unibus_read(int offset, int *pv);
 extern void iob_unibus_write(int offset, int v);

@@ -801,7 +801,7 @@ run(void)
 		}
 
 	next:
-		iob_poll(cycles);
+		iob_poll();
 		disk_poll();
 		if ((cycles & 0x0ffff) == 0) {
 			tv_poll();
