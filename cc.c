@@ -848,6 +848,7 @@ usage(void)
 {
 	fprintf(stderr, "usage: cc [OPTION]... [DEVICE]\n");
 	fprintf(stderr, "\n");
+	fprintf(stderr, "  -d             print extra debug output\n");
 	fprintf(stderr, "  -F FILE        input file\n");
 	fprintf(stderr, "  -h             help message\n");
 }
@@ -864,6 +865,7 @@ main(int argc, char **argv)
 		switch (c) {
 		case 'd':
 			debug = true;
+			break;
 		case 'F':
 			file = strdup(optarg);
 			break;
