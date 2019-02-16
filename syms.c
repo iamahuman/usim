@@ -98,6 +98,44 @@ _sym_find(struct symtab_s *tab, char *name, int *pval)
 	return -1;
 }
 
+static int
+_sym_loc_compare(const void *p1, const void *p2)
+{
+	struct sym_s *s1 = *(struct sym_s **) p1;
+	struct sym_s *s2 = *(struct sym_s **) p2;
+
+	if (s1->v < s2->v)
+		return -1;
+	if (s1->v > s2->v)
+		return 1;
+
+	return 0;
+}
+
+int
+_sym_sort(struct symtab_s *tab)
+{
+	struct sym_s *s;
+	int i;
+
+	// Make vector of pointers to symbols.
+	tab->sorted_syms = (struct sym_s **) malloc(sizeof(struct sym_s *) * tab->sym_count);
+	if (tab->sorted_syms == 0)
+		return -1;
+
+	// Fill in vector.
+	i = 0;
+	for (s = tab->syms; s; s = s->next) {
+		tab->sorted_syms[i++] = s;
+	}
+
+	printf("[%s] sort %d symbols (originally %d)\n", tab->name, i, tab->sym_count);
+	// Sort the vector...
+	qsort((void *) tab->sorted_syms, tab->sym_count, sizeof(void *), _sym_loc_compare);
+
+	return 0;
+}
+
 // Read a CADR MCR symbol file.
 int
 _sym_read_file(struct symtab_s *tab, const char *filename)
@@ -150,61 +188,19 @@ _sym_read_file(struct symtab_s *tab, const char *filename)
 
 	fclose(f);
 
-	return 0;
-}
-
-static int
-_sym_loc_compare(const void *p1, const void *p2)
-{
-	struct sym_s *s1 = *(struct sym_s **) p1;
-	struct sym_s *s2 = *(struct sym_s **) p2;
-
-	if (s1->v < s2->v)
-		return -1;
-	if (s1->v > s2->v)
-		return 1;
+	_sym_sort(tab);
 
 	return 0;
-}
-
-int
-_sym_sort(struct symtab_s *tab)
-{
-	struct sym_s *s;
-	int i;
-
-	// Make vector of pointers to symbols.
-	tab->sorted_syms = (struct sym_s **) malloc(sizeof(struct sym_s *) * tab->sym_count);
-	if (tab->sorted_syms == 0)
-		return -1;
-
-	// Fill in vector.
-	i = 0;
-	for (s = tab->syms; s; s = s->next) {
-		tab->sorted_syms[i++] = s;
-	}
-
-	printf("[%s] sort %d symbols (originally %d)\n", tab->name, i, tab->sym_count);
-	// Sort the vector...
-	qsort((void *) tab->sorted_syms, tab->sym_count, sizeof(void *), _sym_loc_compare);
-
-	return 0;
-}
-
-void
-read_promsym_file(void)
-{
-	_sym_read_file(&sym_prom, promsym_filename);
-	_sym_sort(&sym_prom);
-}
-
-void
-read_mcrsym_file(void)
-{
-	_sym_read_file(&sym_mcr, mcrsym_filename);
-	_sym_sort(&sym_mcr);
 }
 
+int
+read_sym_file(int mcr, char *fn)
+{
+	if (mcr)
+		return _sym_read_file(&sym_mcr, fn);
+	return _sym_read_file(&sym_prom, fn);
+}
+
 int
 sym_find(int mcr, char *name, int *pval)
 {

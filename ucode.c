@@ -65,24 +65,23 @@ unsigned int dispatch_constant;
 ucw_t prom_ucode[512];
 
 int
-read_prom(void)
+read_prom(char *file, char *symfile)
 {
-	char *name = "../bands/promh.mcr.9";
 	int fd;
 	unsigned int code;
 	unsigned int start;
 	unsigned int size;
 
-	fd = open(name, O_RDONLY | O_BINARY);
+	fd = open(file, O_RDONLY | O_BINARY);
 	if (fd < 0) {
-		perror(name);
+		perror(file);
 		exit(1);
 	}
 
 	code = read32(fd);
 	start = read32(fd);
 	size = read32(fd);
-	printf("prom (%s): code: %d, start: %d, size: %d\n", name, code, start, size);
+	printf("prom (%s): code: %d, start: %d, size: %d\n", file, code, start, size);
 
 	int loc = start;
 	for (unsigned int i = 0; i < size; i++) {
@@ -104,7 +103,7 @@ read_prom(void)
 		loc++;
 	}
 
-	read_promsym_file();
+	read_sym_file(0, symfile);
 
 	return 0;
 }

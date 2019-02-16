@@ -23,6 +23,7 @@
 
 char *disk_filename = "disk.img";
 char *mcrsym_filename = "../bands/ucadr.sym.841";
+char *prommcr_filename = "../bands/promh.mcr.9";
 char *promsym_filename = "../bands/promh.sym.9";
 
 bool run_ucode_flag = true;
@@ -91,7 +92,7 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	read_prom_files();
+	read_prom(prommcr_filename, promsym_filename);
 
 	tv_init();
 	disk_init(disk_filename);

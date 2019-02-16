@@ -423,7 +423,7 @@ disk_init(char *filename)
 		mcrsym_filename = strdup(fn);
 	}
 
-	read_mcrsym_file();
+	read_sym_file(1, mcrsym_filename);
 
 	return 0;
 }
