@@ -989,7 +989,7 @@ run(void)
 			case 034: // [M+1]
 				alu_out = m_src_value + (carry_in ? 1 : 0);
 				alu_carry = 0;
-				if (m_src_value == 0xffffffff && carry_in)
+				if (m_src_value == (int) 0xffffffff && carry_in)
 					alu_carry = 1;
 				break;
 			case 035:
