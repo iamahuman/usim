@@ -19,7 +19,6 @@
 #include "chaos.h"
 #include "ether.h"
 #include "disk.h"
-#include "lashup.h"
 #include "spy.h"
 
 ucw_t prom_ucode[512];
@@ -137,13 +136,6 @@ unibus_read(int offset, unsigned int *pv)
 	case 044:
 		traceio("unibus: read error status\n");
 		*pv = 0;
-		break;
-
-	case 0100:
-	case 0104:
-	case 0110:
-	case 0114:
-		lashup_unibus_read(offset, pv);
 		break;
 	}
 }
@@ -283,15 +275,6 @@ unibus_write(int offset, unsigned int v)
 	case 044:
 		traceio("unibus: clear bus error %o\n", v);
 		break;
-
-	case 0100:
-	case 0104:
-	case 0110:
-	case 0114:
-		printf("unibus: cadr debugee write (%o) v %o\n", offset, v);
-		lashup_unibus_write(offset, v);
-		break;
-
 	default:
 		if (offset >= 0140 && offset <= 0176) {
 			traceio("unibus: mapping reg %o\n", offset);

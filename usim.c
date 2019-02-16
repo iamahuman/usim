@@ -12,7 +12,6 @@
 
 #include "usim.h"
 #include "ucode.h"
-#include "lashup.h"
 #include "iob.h"
 #include "tv.h"
 #include "kbd.h"
@@ -27,14 +26,12 @@
 char *disk_filename = "disk.img";
 char *mcrsym_filename = "../bands/ucadr.sym.841";
 char *promsym_filename = "../bands/promh.sym.9";
-char *lashup_port = "/dev/ttyUSB0";
 
 bool run_ucode_flag = true;
 bool save_state_flag = false;
 bool warm_boot_flag = false;
 bool stop_after_prom_flag = false;
 bool prom_enabled_flag = true;
-bool lashup_flag = false;
 
 void
 usage(void)
@@ -46,7 +43,6 @@ usage(void)
 	fprintf(stderr, "  -S             save state\n");
 	fprintf(stderr, "  -s             halt after prom runs\n");
 	fprintf(stderr, "  -w             warm boot\n");
-	fprintf(stderr, "  -l[FILE]       lashup\n");
 	fprintf(stderr, "  -h             help message\n");
 }
 
@@ -70,11 +66,6 @@ main(int argc, char *argv[])
 			break;
 		case 'w':
 			warm_boot_flag = true;
-			break;
-		case 'l':
-			lashup_flag = true;
-			if (optarg != NULL)
-				lashup_port = strdup(optarg);
 			break;
 		case 'A':
 			if (optarg != NULL) {
@@ -107,8 +98,6 @@ main(int argc, char *argv[])
 	tv_init();
 	disk_init(disk_filename);
 	iob_init();
-	if (lashup_flag == true)
-		lashup_init(lashup_port);
 	chaos_init();
 	ether_init();
 	uart_init();
