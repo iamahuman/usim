@@ -480,8 +480,6 @@ cc_setup_map(void)
 void
 cc_report_ide_regs(void)
 {
-	uint32_t v;
-
 	printf("setting up map...\n");
 	cc_setup_map();
 
