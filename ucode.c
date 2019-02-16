@@ -9,6 +9,8 @@
 // (and then, they ate all the clams :-)
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
 
 #include "usim.h"
 #include "ucode.h"
@@ -17,6 +19,9 @@
 #include "tv.h"
 #include "chaos.h"
 #include "disk.h"
+
+#include "misc.h"
+#include "syms.h"
 
 ucw_t prom_ucode[512];
 
@@ -57,6 +62,53 @@ int oa_reg_hi_set;
 int interrupt_control;
 unsigned int dispatch_constant;
 
+ucw_t prom_ucode[512];
+
+int
+read_prom(void)
+{
+	char *name = "../bands/promh.mcr.9";
+	int fd;
+	unsigned int code;
+	unsigned int start;
+	unsigned int size;
+
+	fd = open(name, O_RDONLY | O_BINARY);
+	if (fd < 0) {
+		perror(name);
+		exit(1);
+	}
+
+	code = read32(fd);
+	start = read32(fd);
+	size = read32(fd);
+	printf("prom (%s): code: %d, start: %d, size: %d\n", name, code, start, size);
+
+	int loc = start;
+	for (unsigned int i = 0; i < size; i++) {
+		unsigned int w1;
+		unsigned int w2;
+		unsigned int w3;
+		unsigned int w4;
+
+		w1 = read16(fd);
+		w2 = read16(fd);
+		w3 = read16(fd);
+		w4 = read16(fd);
+		prom_ucode[loc] =
+			((unsigned long long) w1 << 48) |
+			((unsigned long long) w2 << 32) |
+			((unsigned long long) w3 << 16) |
+			((unsigned long long) w4 << 0);
+
+		loc++;
+	}
+
+	read_promsym_file();
+
+	return 0;
+}
+
 void
 set_interrupt_status_reg(int new)
 {

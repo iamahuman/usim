@@ -6,6 +6,9 @@
 #define NOP_MASK 03777777777767777LL
 
 typedef uint64_t ucw_t;
+extern ucw_t prom_ucode[512];
+
+extern int read_prom_files(void);
 
 extern int run(void);
 

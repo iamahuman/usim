@@ -18,64 +18,6 @@
 #include "syms.h"
 #include "misc.h"
 
-ucw_t prom_ucode[512];
-
-int
-read_prom_files(void)
-{
-	char *name = "../bands/promh.mcr.9";
-	int fd;
-	unsigned int code;
-	unsigned int start;
-	unsigned int size;
-
-	fd = open(name, O_RDONLY | O_BINARY);
-	if (fd < 0) {
-		perror(name);
-		exit(1);
-	}
-
-	code = read32(fd);
-	start = read32(fd);
-	size = read32(fd);
-	printf("prom (%s): code: %d, start: %d, size: %d\n", name, code, start, size);
-
-	int loc = start;
-	for (unsigned int i = 0; i < size; i++) {
-		unsigned int w1;
-		unsigned int w2;
-		unsigned int w3;
-		unsigned int w4;
-
-		w1 = read16(fd);
-		w2 = read16(fd);
-		w3 = read16(fd);
-		w4 = read16(fd);
-		prom_ucode[loc] =
-			((unsigned long long) w1 << 48) |
-			((unsigned long long) w2 << 32) |
-			((unsigned long long) w3 << 16) |
-			((unsigned long long) w4 << 0);
-
-		loc++;
-	}
-
-	read_promsym_file();
-
-	return 0;
-}
-
-int
-show_prom(void)
-{
-	for (int i = 0; i < 512; i++) {
-		printf("%03o %016" PRIo64 "\n", i, prom_ucode[i]);
-	}
-	printf("----\n");
-
-	return 0;
-}
-
 char *alu_bool_op[] = {
 	"SETZ",
 	"AND",
@@ -436,22 +378,6 @@ disassemble_ucode_loc(ucw_t u)
 
 done:
 	printf("\n");
-}
-
-void
-disassemble_prom(void)
-{
-	unsigned int start;
-	unsigned int finish;
-
-	start = 0;
-	finish = 512;
-
-	for (unsigned int i = start; i < finish; i++) {
-		ucw_t u = prom_ucode[i];
-		printf("%03o %016" PRIo64 " ", i, prom_ucode[i]);		
-		disassemble_ucode_loc(u);
-	}
 }
 
 // ---!!! See about merging with diskmaker.
