@@ -15,7 +15,6 @@
 #include "mem.h"
 #include "iob.h"
 #include "tv.h"
-#include "uart.h"
 #include "chaos.h"
 #include "ether.h"
 #include "disk.h"
@@ -214,9 +213,6 @@ read_mem(int vaddr, unsigned int *pv)
 	case 036775:		// Ethernet.
 		ether_xbus_desc_read(offset, pv);
 		return 0;
-	case 036776:		// UART.
-		uart_xbus_read(offset, pv);
-		return 0;
 	}
 
 	// Page fault.
@@ -361,9 +357,6 @@ write_mem(int vaddr, unsigned int v)
 		return 0;
 	case 036775:		// Ethernet.
 		ether_xbus_desc_write(offset, v);
-		return 0;
-	case 036776:		// UART.
-		uart_xbus_write(offset, v);
 		return 0;
 	}
 
@@ -790,7 +783,6 @@ run(void)
 			tv_poll();
 			chaos_poll();
 			ether_poll();
-			uart_poll();
 		}
 
 		// Fetch next instruction from PROM or RAM.

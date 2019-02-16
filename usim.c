@@ -15,7 +15,6 @@
 #include "iob.h"
 #include "tv.h"
 #include "kbd.h"
-#include "uart.h"
 #include "chaos.h"
 #include "ether.h"
 #include "disk.h"
@@ -100,7 +99,6 @@ main(int argc, char *argv[])
 	iob_init();
 	chaos_init();
 	ether_init();
-	uart_init();
 
 	if (warm_boot_flag == true)
 		kbd_warm_boot_key();
