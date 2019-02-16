@@ -16,7 +16,6 @@
 #include "iob.h"
 #include "tv.h"
 #include "chaos.h"
-#include "ether.h"
 #include "disk.h"
 #include "spy.h"
 
@@ -207,12 +206,6 @@ read_mem(int vaddr, unsigned int *pv)
 		printf("xbus read %o %o\n", offset, vaddr);
 		*pv = 0;
 		return 0;
-	case 036774:		// Ethernet.
-		ether_xbus_reg_read(offset, pv);
-		return 0;
-	case 036775:		// Ethernet.
-		ether_xbus_desc_read(offset, pv);
-		return 0;
 	}
 
 	// Page fault.
@@ -352,11 +345,6 @@ write_mem(int vaddr, unsigned int v)
 			tv_xbus_write(offset, v);
 			return 0;
 		}
-	case 036774:		// Ethernet.
-		ether_xbus_reg_write(offset, v);
-		return 0;
-	case 036775:		// Ethernet.
-		ether_xbus_desc_write(offset, v);
 		return 0;
 	}
 
@@ -782,7 +770,6 @@ run(void)
 		if ((cycles & 0x0ffff) == 0) {
 			tv_poll();
 			chaos_poll();
-			ether_poll();
 		}
 
 		// Fetch next instruction from PROM or RAM.
