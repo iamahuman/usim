@@ -76,7 +76,7 @@ add_partition(char *name, int start, int size, int ptype, char *label, char *fil
 	p->start = start;
 	p->size = size;
 	p->ptype = ptype;
-	strncpy(p->label, label, 16);
+	strncpy(p->label, label, 17);
 	p->label[16] = '\0';
 	// Make sure the label is padded out with spaces.
 	for (i = strlen(p->label); i < 16; i++)
