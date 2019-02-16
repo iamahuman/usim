@@ -89,7 +89,7 @@ disk_read_block(unsigned int vma, int unit, int cyl, int head, int block)
 }
 
 int
-disk_write_block(unsigned int vma, int cyl, int head, int block)
+disk_write_block(unsigned int vma, int unit, int cyl, int head, int block)
 {
 	int block_no;
 	unsigned int buffer[256];
@@ -249,7 +249,7 @@ disk_start_write(void)
 
 		disk_show_cur_addr();
 
-		disk_write_block(vma, cur_cyl, cur_head, cur_block);
+		disk_write_block(vma, cur_unit, cur_cyl, cur_head, cur_block);
 
 		if ((ccw & 1) == 0) {
 			tracedio("disk: last ccw\n");
