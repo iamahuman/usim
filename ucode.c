@@ -17,7 +17,6 @@
 #include "tv.h"
 #include "chaos.h"
 #include "disk.h"
-#include "spy.h"
 
 ucw_t prom_ucode[512];
 
@@ -108,31 +107,15 @@ void
 unibus_read(int offset, unsigned int *pv)
 {
 	switch (offset) {
-	case 000:
-	case 002:
-	case 004:
-	case 006:		// Not used.
-	case 010:
-	case 012:
-	case 014:
-	case 016:
-	case 020:
-	case 022:
-	case 024:
-	case 026:
-	case 030:
-	case 032:
-	case 034:
-	case 036:
-		spy_unibus_read(offset, pv);
-		break;
-
 	case 040:
 		traceio("unibus: read interrupt status\n");
 		*pv = 0;
 		break;
 	case 044:
 		traceio("unibus: read error status\n");
+		*pv = 0;
+		break;
+	default:
 		*pv = 0;
 		break;
 	}
@@ -226,13 +209,6 @@ void
 unibus_write(int offset, unsigned int v)
 {
 	switch (offset) {
-	case 000:
-	case 002:
-	case 004:
-	case 006:
-	case 010:
-		spy_unibus_write(offset, v);
-		break;
 	case 012:
 		traceio("unibus: write mode register %o\n", v);
 		if ((v & 044) == 044) {
@@ -248,11 +224,6 @@ unibus_write(int offset, unsigned int v)
 			traceio("unibus: normal speed\n");
 		}
 		break;
-	case 014:		// Not used.
-	case 016:		// Not used.
-		spy_unibus_write(offset, v);
-		break;
-
 	case 040:
 		traceio("unibus: write interrupt status %o\n", v);
 		set_interrupt_status_reg((interrupt_status_reg & ~0036001) | (v & 0036001));
