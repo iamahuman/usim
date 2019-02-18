@@ -103,7 +103,7 @@ read_prom(char *file, char *symfile)
 		loc++;
 	}
 
-	read_sym_file(0, symfile);
+	sym_read_file(0, symfile);
 
 	return 0;
 }
