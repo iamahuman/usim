@@ -28,7 +28,7 @@ ucw_t prom_ucode[512];
 ucw_t ucode[16 * 1024];
 uint32_t dispatch_memory[2048];
 
-unsigned long cycles;
+size_t cycles;
 
 int u_pc;
 
