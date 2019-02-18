@@ -6,7 +6,7 @@
 
 #include "misc.h"
 
-unsigned int
+uint32_t
 read16(int fd)
 {
 	unsigned char b[2];
@@ -20,7 +20,7 @@ read16(int fd)
 	return (b[1] << 8) | b[0];
 }
 
-unsigned int
+uint32_t
 read32(int fd)
 {
 	unsigned char b[4];

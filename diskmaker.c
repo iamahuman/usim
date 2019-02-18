@@ -33,7 +33,7 @@ int extract;
 int modify;
 int label;
 
-unsigned int buffer[256];
+uint32_t buffer[256];
 
 #define MAX_PARTITIONS 32
 
@@ -46,10 +46,10 @@ struct part_s {
 	char *filename;
 } parts[MAX_PARTITIONS];
 
-unsigned int part_count;
+uint32_t part_count;
 
 void
-swapwords(unsigned int *buf)
+swapwords(uint32_t *buf)
 {
 	int i;
 	unsigned short *p = (unsigned short *) buf;
@@ -109,7 +109,7 @@ make_labl(int fd)
 		buffer[p++] = part_count;	// Number of partitions.
 		buffer[p++] = 7;	// Words per partition.
 
-		for (unsigned int i = 0; i < part_count; i++) {
+		for (uint32_t i = 0; i < part_count; i++) {
 			unsigned long n;
 			char *pn = parts[i].name;
 
@@ -181,7 +181,7 @@ make_one_partition(int fd, int index)
 				break;
 
 			if (memcmp(parts[index].name, "MCR", 3) == 0) {
-				swapwords((unsigned int *) b);
+				swapwords((uint32_t *) b);
 			}
 
 			if (write_block(fd, offset + count, b))
@@ -220,7 +220,7 @@ make_one_partition(int fd, int index)
 void
 make_partitions(int fd)
 {
-	for (unsigned int i = 0; i < part_count; i++) {
+	for (uint32_t i = 0; i < part_count; i++) {
 		make_one_partition(fd, i);
 	}
 }
@@ -315,7 +315,7 @@ fillout_image_file(int fd)
 
 	// Find highest block number + 1.
 	last_block_no = 0;
-	for (unsigned int i = 0; i < part_count; i++) {
+	for (uint32_t i = 0; i < part_count; i++) {
 		int last = parts[i].start + parts[i].size;
 		if (last > last_block_no)
 			last_block_no = last;
@@ -369,7 +369,7 @@ create_disk(char *template)
 int
 modify_disk(char *template, char *img_filename, char *part_name)
 {
-	unsigned int i;
+	uint32_t i;
 	int fd;
 	int part_index;
 
@@ -503,8 +503,8 @@ show_partition_info(char *filename)
 	int fd;
 	int ret;
 	int p;
-	unsigned int i;
-	unsigned int count;
+	uint32_t i;
+	uint32_t count;
 	int size;
 
 	fd = open(filename, O_RDONLY, 0666);
@@ -592,11 +592,11 @@ extract_partition(char *filename, char *extract_filename, char *part_name)
 	int fd_out;
 	int ret;
 	int p;
-	unsigned int i;
+	uint32_t i;
 	int result;
-	unsigned int count;
+	uint32_t count;
 	int offset;
-	unsigned int size;
+	uint32_t size;
 
 	result = -1;
 
@@ -699,9 +699,9 @@ read_labl(const char *filename)
 	ssize_t ret;
 	int fd;
 	int p;
-	unsigned int i;
-	unsigned int count;
-	unsigned int size;
+	uint32_t i;
+	uint32_t count;
+	uint32_t size;
 
 	fd = open(filename, O_RDONLY, 0666);
 	if (fd < 0) {
@@ -764,7 +764,7 @@ set_current_band(const char *filename, const char *partition_name)
 {
 	int fd;
 	int found = 0;
-	unsigned int i;
+	uint32_t i;
 
 	if (read_labl(filename) < 0)
 		return -1;
@@ -804,7 +804,7 @@ set_current_mcr(const char *filename, const char *partition_name)
 {
 	int fd;
 	int found = 0;
-	unsigned int i;
+	uint32_t i;
 
 	if (read_labl(filename) < 0)
 		return -1;

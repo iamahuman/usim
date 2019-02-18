@@ -22,7 +22,7 @@
 #define LM_K_NETWORK 0236
 #define LM_K_SP 040
 
-extern unsigned int kbd_key_scan;
+extern uint32_t kbd_key_scan;
 
 extern unsigned char kb_old_table[64][3];
 extern unsigned short okb_to_scancode[256][4];

@@ -24,8 +24,8 @@ int bnum = -1;
 
 struct {
 	char *name;
-	unsigned int a;
-	unsigned int v;
+	uint32_t a;
+	uint32_t v;
 } sys_com[] = {
 	{"%SYS-COM-AREA-ORIGIN-PNTR", 0400, 0},
 	{"%SYS-COM-VALID-SIZE", 0401, 0},
@@ -48,8 +48,8 @@ struct {
 
 struct {
 	char *name;
-	unsigned int a;
-	unsigned int v;
+	uint32_t a;
+	uint32_t v;
 } cv[] = {
 	{"A-V-RESIDENT-SYMBOL-AREA", 0, 0},
 	{"A-V-SYSTEM-COMMUNICATION-AREA", 0, 0},
@@ -88,8 +88,8 @@ struct {
 
 struct {
 	char *name;
-	unsigned int a;
-	unsigned int v;
+	uint32_t a;
+	uint32_t v;
 } sv[] = {
 	{"A-INITIAL-FEF", 0, 0},
 	{"A-QTRSTKG", 0, 0},
@@ -98,12 +98,12 @@ struct {
 	{(char *) 0, 0, 0}
 };
 
-unsigned int
+uint32_t
 _read_virt(int fd, int addr)
 {
 	int b;
 	off_t offset;
-	unsigned int buf[256];
+	uint32_t buf[256];
 
 	addr &= 077777777;
 	b = addr / 256;
@@ -129,16 +129,16 @@ _read_virt(int fd, int addr)
 }
 
 ///---!!! For DISASSEMBLE_INSTRUCTION.
-unsigned int
+uint32_t
 read_virt(int a)
 {
 	return _read_virt(lodfd, a);
 }
 
-unsigned int
+uint32_t
 show(int a, int cr)
 {
-	unsigned int v;
+	uint32_t v;
 
 	v = read_virt(a);
 	printf("%011o %011o (0x%08x)", a, v, v);
@@ -148,7 +148,7 @@ show(int a, int cr)
 	return v;
 }
 
-unsigned int
+uint32_t
 showlabel(char *l, int a, int cr)
 {
 	printf("%s: ", l);
@@ -156,16 +156,16 @@ showlabel(char *l, int a, int cr)
 }
 
 int
-find_and_dump_fef(unsigned int pc, int width)
+find_and_dump_fef(uint32_t pc, int width)
 {
-	unsigned int addr;
-	unsigned int v;
-	unsigned int n;
-	unsigned int o;
+	uint32_t addr;
+	uint32_t v;
+	uint32_t n;
+	uint32_t o;
 	int j;
 	int tag;
 	int icount;
-	unsigned int max;
+	uint32_t max;
 	unsigned short ib[512];
 
 	printf("\n");
@@ -193,9 +193,9 @@ find_and_dump_fef(unsigned int pc, int width)
 	icount = (max - o / 2) * 2;
 
 	j = 0;
-	for (unsigned int i = 0; i < max; i++) {
-		unsigned int loc;
-		unsigned int inst;
+	for (uint32_t i = 0; i < max; i++) {
+		uint32_t loc;
+		uint32_t inst;
 
 		loc = addr + i;
 		inst = read_virt(loc);
@@ -226,8 +226,8 @@ find_and_dump_fef(unsigned int pc, int width)
 		}
 	}
 
-	for (unsigned int i = o; i < o + icount; i++) {
-		unsigned int loc;
+	for (uint32_t i = o; i < o + icount; i++) {
+		uint32_t loc;
 
 		loc = addr + i / 2;
 		disassemble_instruction(addr, loc, (i % 2) ? 0 : 1, ib[i], width);
@@ -255,10 +255,10 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	unsigned int com;
+	uint32_t com;
 	int c;
-	unsigned int pc = 0;
-	unsigned int addr = 0;
+	uint32_t pc = 0;
+	uint32_t addr = 0;
 
 	while ((c = getopt(argc, argv, "csfgp:a:m:wh")) != -1) {
 		switch (c) {
@@ -340,7 +340,7 @@ main(int argc, char *argv[])
 	}
 
 	if (show_initial_fef) {
-		unsigned int v;
+		uint32_t v;
 
 		sv[0].a = 01000 + 0;
 		sv[0].v = showlabel(sv[0].name, sv[0].a, 1);
@@ -353,7 +353,7 @@ main(int argc, char *argv[])
 	}
 
 	if (show_initial_sg) {
-		unsigned int a;
+		uint32_t a;
 
 		sv[3].a = 01000 + 3;
 		sv[3].v = showlabel(sv[3].name, sv[3].a, 1);

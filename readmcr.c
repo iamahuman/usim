@@ -18,7 +18,7 @@ bool needswap;
 int skip;
 
 ///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in readmcr.
-unsigned int
+uint32_t
 read_virt(int a)
 {
 	return -1;

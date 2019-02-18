@@ -346,7 +346,7 @@ done:
 }
 
 void
-disassemble_instruction(unsigned int fefptr, unsigned int loc, int even, unsigned int inst, unsigned int width)
+disassemble_instruction(uint32_t fefptr, uint32_t loc, int even, uint32_t inst, uint32_t width)
 {
 	int op;
 	int dest;
@@ -354,7 +354,7 @@ disassemble_instruction(unsigned int fefptr, unsigned int loc, int even, unsigne
 	int delta;
 	int adr;
 	int to;
-	unsigned int nlc;
+	uint32_t nlc;
 
 	op = (inst >> 011) & 017;
 	dest = (inst >> 015) & 07;
@@ -368,8 +368,8 @@ disassemble_instruction(unsigned int fefptr, unsigned int loc, int even, unsigne
 		printf("dest %s, ", dest_names[dest]);
 		printf("delta %o ", delta);
 		{
-			unsigned int v;
-			unsigned int tag;
+			uint32_t v;
+			uint32_t tag;
 
 			v = read_virt(fefptr + delta);
 			tag = (v >> width) & 037;
@@ -446,7 +446,7 @@ showstr(int a)
 	t = read_virt(a) & 0xff;
 	j = 0;
 	for (int i = 0; i < t; i += 4) {
-		unsigned int n;
+		uint32_t n;
 
 		n = read_virt(a + 1 + (i / 4));
 		s[j++] = n >> 0;
@@ -459,10 +459,10 @@ showstr(int a)
 }
 
 void
-show_fef_func_name(unsigned int fefptr, unsigned int width)
+show_fef_func_name(uint32_t fefptr, uint32_t width)
 {
-	unsigned int n;
-	unsigned int v;
+	uint32_t n;
+	uint32_t v;
 	int tag;
 
 	n = read_virt(fefptr + 2);

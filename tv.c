@@ -12,21 +12,21 @@
 #define Black 0x000000
 #define White 0xffffff
 
-unsigned int tv_width = 768;
-unsigned int tv_height = 897;
+uint32_t tv_width = 768;
+uint32_t tv_height = 897;
 
-unsigned int tv_bitmap[(768 * 1024)];
+uint32_t tv_bitmap[(768 * 1024)];
 
 int tv_csr;
 
 void
-tv_xbus_read(unsigned int offset, unsigned int *pv)
+tv_xbus_read(uint32_t offset, uint32_t *pv)
 {
 	*pv = tv_csr;
 }
 
 void
-tv_xbus_write(unsigned int offset, unsigned int v)
+tv_xbus_write(uint32_t offset, uint32_t v)
 {
 	tv_csr = v;
 	tv_csr &= ~(1 << 4);
@@ -47,7 +47,7 @@ sigalrm_handler(int arg)
 }
 
 void
-tv_write(unsigned int offset, unsigned int bits)
+tv_write(uint32_t offset, uint32_t bits)
 {
 	int h;
 	int v;
@@ -72,7 +72,7 @@ tv_poll(void)
 }
 
 void
-tv_read(unsigned int offset, unsigned int *pv)
+tv_read(uint32_t offset, uint32_t *pv)
 {
 	unsigned long bits;
 

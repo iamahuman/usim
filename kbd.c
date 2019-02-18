@@ -214,7 +214,7 @@ unsigned char kb_new_table[128][4] = {
 	// 100047                                ;175 Right Hyper
 };
 
-unsigned int kbd_key_scan;
+uint32_t kbd_key_scan;
 
 unsigned short okb_to_scancode[256][4];
 

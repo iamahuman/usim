@@ -18,9 +18,9 @@ struct page_s *phy_pages[16 * 1024];
 int l1_map[2048];
 int l2_map[1024];
 
-unsigned int last_virt = 0xffffff00;
-unsigned int last_l1;
-unsigned int last_l2;
+uint32_t last_virt = 0xffffff00;
+uint32_t last_l1;
+uint32_t last_l2;
 
 void
 invalidate_vtop_cache(void)
@@ -30,13 +30,13 @@ invalidate_vtop_cache(void)
 
 // Map virtual address to physical address, possibly returning l1
 // mapping and possibly returning offset into page.
-unsigned int
-map_vtop(unsigned int virt, int *pl1_map, int *poffset)
+uint32_t
+map_vtop(uint32_t virt, int *pl1_map, int *poffset)
 {
 	int l1_index;
 	int l2_index;
 	int l1;
-	unsigned int l2;
+	uint32_t l2;
 
 	virt &= 077777777;	// 24 bit address.
 
@@ -130,7 +130,7 @@ add_new_page_no(int pn)
 // Read physical memory, with no virtual-to-physical mapping (used by
 // disk controller).
 int
-read_phy_mem(int paddr, unsigned int *pv)
+read_phy_mem(int paddr, uint32_t *pv)
 {
 	int pn;
 	int offset;
@@ -158,7 +158,7 @@ read_phy_mem(int paddr, unsigned int *pv)
 }
 
 int
-write_phy_mem(int paddr, unsigned int v)
+write_phy_mem(int paddr, uint32_t v)
 {
 	int pn;
 	int offset;

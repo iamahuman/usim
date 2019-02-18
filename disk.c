@@ -40,7 +40,7 @@ int cur_head;
 int cur_block;
 
 int
-_disk_read(int block_no, unsigned int *buffer)
+_disk_read(int block_no, uint32_t *buffer)
 {
 	off_t offset;
 	int size;
@@ -56,7 +56,7 @@ _disk_read(int block_no, unsigned int *buffer)
 }
 
 int
-_disk_write(int block_no, unsigned int *buffer)
+_disk_write(int block_no, uint32_t *buffer)
 {
 	off_t offset;
 	int size;
@@ -72,10 +72,10 @@ _disk_write(int block_no, unsigned int *buffer)
 }
 
 int
-disk_read_block(unsigned int vma, int unit, int cyl, int head, int block)
+disk_read_block(uint32_t vma, int unit, int cyl, int head, int block)
 {
 	int block_no;
-	unsigned int buffer[256];
+	uint32_t buffer[256];
 
 	block_no = (cyl * blocks_per_track * heads) + (head * blocks_per_track) + block;
 	if (_disk_read(block_no, buffer) < 0) {
@@ -89,10 +89,10 @@ disk_read_block(unsigned int vma, int unit, int cyl, int head, int block)
 }
 
 int
-disk_write_block(unsigned int vma, int unit, int cyl, int head, int block)
+disk_write_block(uint32_t vma, int unit, int cyl, int head, int block)
 {
 	int block_no;
-	unsigned int buffer[256];
+	uint32_t buffer[256];
 
 	block_no = (cyl * blocks_per_track * heads) + (head * blocks_per_track) + block;
 
@@ -173,8 +173,8 @@ disk_incr_block(void)
 void
 disk_start_read(void)
 {
-	unsigned int ccw;
-	unsigned int vma;
+	uint32_t ccw;
+	uint32_t vma;
 
 	disk_decode_addr();
 
@@ -226,8 +226,8 @@ disk_start_read_compare(void)
 void
 disk_start_write(void)
 {
-	unsigned int ccw;
-	unsigned int vma;
+	uint32_t ccw;
+	uint32_t vma;
 
 	disk_decode_addr();
 
@@ -300,7 +300,7 @@ disk_start(void)
 }
 
 void
-disk_xbus_write(int offset, unsigned int v)
+disk_xbus_write(int offset, uint32_t v)
 {
 	tracef("disk register write, offset %o <- %o\n", offset, v);
 
@@ -332,7 +332,7 @@ disk_xbus_write(int offset, unsigned int v)
 }
 
 void
-disk_xbus_read(int offset, unsigned int *pv)
+disk_xbus_read(int offset, uint32_t *pv)
 {
 	tracef("disk register read, offset %o\n", offset);
 
@@ -375,7 +375,7 @@ disk_xbus_read(int offset, unsigned int *pv)
 int
 disk_init(char *filename)
 {
-	unsigned int label[256];
+	uint32_t label[256];
 	int ret;
 
 	label[0] = 0;

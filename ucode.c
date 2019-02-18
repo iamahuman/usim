@@ -26,7 +26,7 @@
 ucw_t prom_ucode[512];
 
 ucw_t ucode[16 * 1024];
-unsigned int dispatch_memory[2048];
+uint32_t dispatch_memory[2048];
 
 unsigned long cycles;
 
@@ -40,27 +40,27 @@ int sequence_break_flag;
 int interrupt_enable_flag;
 int bus_reset_flag;
 
-unsigned int md;
-unsigned int vma;
-unsigned int q;
-unsigned int opc;
+uint32_t md;
+uint32_t vma;
+uint32_t q;
+uint32_t opc;
 
-unsigned int new_md;
+uint32_t new_md;
 int new_md_delay;
 
 int write_fault_bit;
 int access_fault_bit;
 
 int alu_carry;
-unsigned int alu_out;
+uint32_t alu_out;
 
-unsigned int oa_reg_lo;
-unsigned int oa_reg_hi;
+uint32_t oa_reg_lo;
+uint32_t oa_reg_hi;
 int oa_reg_lo_set;
 int oa_reg_hi_set;
 
 int interrupt_control;
-unsigned int dispatch_constant;
+uint32_t dispatch_constant;
 
 ucw_t prom_ucode[512];
 
@@ -68,9 +68,9 @@ int
 read_prom(char *file, char *symfile)
 {
 	int fd;
-	unsigned int code;
-	unsigned int start;
-	unsigned int size;
+	uint32_t code;
+	uint32_t start;
+	uint32_t size;
 
 	fd = open(file, O_RDONLY | O_BINARY);
 	if (fd < 0) {
@@ -84,11 +84,11 @@ read_prom(char *file, char *symfile)
 	printf("prom (%s): code: %d, start: %d, size: %d\n", file, code, start, size);
 
 	int loc = start;
-	for (unsigned int i = 0; i < size; i++) {
-		unsigned int w1;
-		unsigned int w2;
-		unsigned int w3;
-		unsigned int w4;
+	for (uint32_t i = 0; i < size; i++) {
+		uint32_t w1;
+		uint32_t w2;
+		uint32_t w3;
+		uint32_t w4;
 
 		w1 = read16(fd);
 		w2 = read16(fd);
@@ -155,7 +155,7 @@ deassert_xbus_interrupt(void)
 // ---!!! read_mem, write_mem: Document each address.
 
 void
-unibus_read(int offset, unsigned int *pv)
+unibus_read(int offset, uint32_t *pv)
 {
 	switch (offset) {
 	case 040:
@@ -174,9 +174,9 @@ unibus_read(int offset, unsigned int *pv)
 
 // Read virtual memory, returns -1 on fault and 0 if OK.
 int
-read_mem(int vaddr, unsigned int *pv)
+read_mem(int vaddr, uint32_t *pv)
 {
-	unsigned int map;
+	uint32_t map;
 	int pn;
 	int offset;
 	struct page_s *page;
@@ -257,7 +257,7 @@ read_mem(int vaddr, unsigned int *pv)
 }
 
 void
-unibus_write(int offset, unsigned int v)
+unibus_write(int offset, uint32_t v)
 {
 	switch (offset) {
 	case 012:
@@ -298,9 +298,9 @@ unibus_write(int offset, unsigned int v)
 
 // Write virtual memory.
 int
-write_mem(int vaddr, unsigned int v)
+write_mem(int vaddr, uint32_t v)
 {
-	unsigned int map;
+	uint32_t map;
 	int pn;
 	int offset;
 	struct page_s *page;
@@ -387,22 +387,22 @@ write_mem(int vaddr, unsigned int v)
 	return 0;
 }
 
-unsigned int a_memory[1024];
-unsigned int m_memory[32];
+uint32_t a_memory[1024];
+uint32_t m_memory[32];
 
 void
-write_a_mem(int loc, unsigned int v)
+write_a_mem(int loc, uint32_t v)
 {
 	a_memory[loc] = v;
 }
 
-unsigned int
+uint32_t
 read_a_mem(int loc)
 {
 	return a_memory[loc];
 }
 
-unsigned int
+uint32_t
 read_m_mem(int loc)
 {
 	if (loc > 32) {
@@ -413,20 +413,20 @@ read_m_mem(int loc)
 }
 
 void
-write_m_mem(int loc, unsigned int v)
+write_m_mem(int loc, uint32_t v)
 {
 	m_memory[loc] = v;
 	a_memory[loc] = v;
 }
 
-unsigned int pdl_memory[1024];
+uint32_t pdl_memory[1024];
 int pdl_ptr;
 int pdl_index;
 
 #define USE_PDL_PTR 1
 #define USE_PDL_INDEX 2
 
-unsigned int
+uint32_t
 read_pdl_mem(int which)
 {
 	switch (which) {
@@ -445,7 +445,7 @@ read_pdl_mem(int which)
 }
 
 void
-write_pdl_mem(int which, unsigned int v)
+write_pdl_mem(int which, uint32_t v)
 {
 	switch (which) {
 	case USE_PDL_PTR:
@@ -478,7 +478,7 @@ push_spc(int pc)
 int
 pop_spc(void)
 {
-	unsigned int v;
+	uint32_t v;
 
 	v = spc_stack[spc_stack_ptr];
 	spc_stack_ptr = (spc_stack_ptr - 1) & 037;
@@ -537,7 +537,7 @@ advance_lc(int *ppc)
 
 // Write value to decoded destination.
 void
-write_dest(int dest, unsigned int out_bus)
+write_dest(int dest, uint32_t out_bus)
 {
 	if (dest & 04000) {
 		write_a_mem(dest & 03777, out_bus);
@@ -654,7 +654,7 @@ write_dest(int dest, unsigned int out_bus)
 			int l1_index;
 			int l1_data;
 			int l2_index;
-			unsigned int l2_data;
+			uint32_t l2_data;
 
 			l1_index = (md >> 13) & 03777;
 			l1_data = l1_map[l1_index];
@@ -703,10 +703,10 @@ write_dest(int dest, unsigned int out_bus)
 	out = (a) - (b) - ((ci) ? 0 : 1);		\
 	co = (unsigned)(out) < (unsigned)(a) ? 1 : 0;
 
-unsigned int
-rotate_left(unsigned int value, int bitstorotate)
+uint32_t
+rotate_left(uint32_t value, int bitstorotate)
 {
-	unsigned int tmp;
+	uint32_t tmp;
 	int mask;
 
 	// Determine which bits will be impacted by the rotate.
@@ -755,10 +755,10 @@ run(void)
 		int widthm1;
 		int pos;
 		int mr_sr_bits;
-		unsigned int left_mask;
-		unsigned int right_mask;
-		unsigned int mask;
-		unsigned int old_q;
+		uint32_t left_mask;
+		uint32_t right_mask;
+		uint32_t mask;
+		uint32_t old_q;
 		int left_mask_index;
 		int right_mask_index;
 		int disp_const;
@@ -769,7 +769,7 @@ run(void)
 		int carry_in;
 		int do_add;
 		int do_sub;
-		unsigned int out_bus;
+		uint32_t out_bus;
 		int64_t lv;
 		ucw_t u;
 		ucw_t w;
@@ -850,8 +850,8 @@ run(void)
 
 		// Calculate M source value.
 		if (m_src & 040) {
-			unsigned int l2_data;
-			unsigned int l1_data;
+			uint32_t l2_data;
+			uint32_t l1_data;
 
 			l1_data = 0;
 
@@ -937,27 +937,27 @@ run(void)
 				break;
 			case 021:
 				lv = (long long) (m_src_value & a_src_value) - (carry_in ? 0 : 1);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 022:
 				lv = (long long) (m_src_value & ~a_src_value) - (carry_in ? 0 : 1);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 023:
 				lv = (long long) m_src_value - (carry_in ? 0 : 1);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 024:
 				lv = (long long) (m_src_value | ~a_src_value) + (carry_in ? 1 : 0);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 025:
 				lv = (long long) (m_src_value | ~a_src_value) + (m_src_value & a_src_value) + (carry_in ? 1 : 0);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 026: // [M-A-1] [SUB]
@@ -965,12 +965,12 @@ run(void)
 				break;
 			case 027:
 				lv = (long long) (m_src_value | ~a_src_value) + m_src_value + (carry_in ? 1 : 0);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 030:
 				lv = (long long) (m_src_value | a_src_value) + (carry_in ? 1 : 0);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 031: // [ADD] [M+A+1]
@@ -978,12 +978,12 @@ run(void)
 				break;
 			case 032:
 				lv = (long long) (m_src_value | a_src_value) + (m_src_value & ~a_src_value) + (carry_in ? 1 : 0);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 033:
 				lv = (long long) (m_src_value | a_src_value) + m_src_value + (carry_in ? 1 : 0);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 034: // [M+1]
@@ -994,12 +994,12 @@ run(void)
 				break;
 			case 035:
 				lv = (long long) m_src_value + (m_src_value & a_src_value) + (carry_in ? 1 : 0);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 036:
 				lv = (long long) m_src_value + (m_src_value | ~a_src_value) + (carry_in ? 1 : 0);
-				alu_out = (unsigned int) lv;
+				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 037: // [M+M] [M+M+1]
@@ -1207,7 +1207,7 @@ run(void)
 			}
 			// P & R & jump-inst -> write ucode.
 			if (p_bit && r_bit && op_code == 1) {
-				w = ((ucw_t) (a_src_value & 0177777) << 32) | (unsigned int) m_src_value;
+				w = ((ucw_t) (a_src_value & 0177777) << 32) | (uint32_t) m_src_value;
 				tracef("u-code write; %Lo @ %o\n", w, new_pc);
 				ucode[new_pc] = w;
 			}

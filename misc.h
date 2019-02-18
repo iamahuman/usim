@@ -1,8 +1,10 @@
 #ifndef USIM_MISC_H
 #define USIM_MISC_H
 
-extern unsigned int read16(int fd);
-extern unsigned int read32(int fd);
+#include <stdint.h>
+
+extern uint32_t read16(int fd);
+extern uint32_t read32(int fd);
 
 extern unsigned long str4(char *s);
 extern char *unstr4(unsigned long s);

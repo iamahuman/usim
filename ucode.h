@@ -12,8 +12,8 @@ extern int read_prom(char *promfn, char *promsymfn);
 
 extern int run(void);
 
-extern void write_a_mem(int loc, unsigned int v);
-extern unsigned int read_a_mem(int loc);
+extern void write_a_mem(int loc, uint32_t v);
+extern uint32_t read_a_mem(int loc);
 
 extern void assert_unibus_interrupt(int vector);
 extern void deassert_unibus_interrupt(void);

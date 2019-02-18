@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <fcntl.h>
 #include <string.h>
 #include <strings.h>
@@ -13,7 +14,7 @@
 struct sym_s {
 	LIST_ENTRY(sym_s) next;
 	char *name;
-	unsigned int v;
+	uint32_t v;
 	int mtype;
 };
 
@@ -27,7 +28,7 @@ struct symtab_s sym_prom;
 struct symtab_s sym_mcr;
 
 static void
-_sym_add(struct symtab_s *tab, int memory, char *name, unsigned int v)
+_sym_add(struct symtab_s *tab, int memory, char *name, uint32_t v)
 {
 	struct sym_s *s;
 
@@ -46,7 +47,7 @@ _sym_add(struct symtab_s *tab, int memory, char *name, unsigned int v)
 }
 
 static char *
-_sym_find_by_val(struct symtab_s *tab, int memory, unsigned int v)
+_sym_find_by_val(struct symtab_s *tab, int memory, uint32_t v)
 {
 	struct sym_s *s;
 

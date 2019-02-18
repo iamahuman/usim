@@ -25,7 +25,7 @@
 #include "mouse.h"
 #include "chaos.h"
 
-unsigned int iob_csr;
+uint32_t iob_csr;
 
 void tv_post_60hz_interrupt(void);
 
@@ -57,20 +57,20 @@ get_us_clock(void)
 
 static unsigned long cv;
 
-unsigned int
+uint32_t
 get_us_clock_low(void)
 {
 	cv = get_us_clock();
 	return cv & 0xffff;
 }
 
-unsigned int
+uint32_t
 get_us_clock_high(void)
 {
-	return (unsigned int) (cv >> 16);
+	return (uint32_t) (cv >> 16);
 }
 
-unsigned int
+uint32_t
 get_60hz_clock(void)
 {
 	return 0;

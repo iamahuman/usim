@@ -1,16 +1,16 @@
 #ifndef USIM_TV_H
 #define USIM_TV_H
 
-extern unsigned int tv_bitmap[(768 * 1024)];
-extern unsigned int tv_width;
-extern unsigned int tv_height;
+extern uint32_t tv_bitmap[(768 * 1024)];
+extern uint32_t tv_width;
+extern uint32_t tv_height;
 
 extern void tv_init(void);
 extern void tv_poll(void);
-extern void tv_write(unsigned int offset, unsigned int bits);
-extern void tv_read(unsigned int offset, unsigned int *pv);
+extern void tv_write(uint32_t offset, uint32_t bits);
+extern void tv_read(uint32_t offset, uint32_t *pv);
 
-extern void tv_xbus_read(unsigned int offset, unsigned int *pv);
-extern void tv_xbus_write(unsigned int offset, unsigned int v);
+extern void tv_xbus_read(uint32_t offset, uint32_t *pv);
+extern void tv_xbus_write(uint32_t offset, uint32_t v);
 
 #endif

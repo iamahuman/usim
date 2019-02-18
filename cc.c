@@ -33,7 +33,7 @@ bool batch = false;
 uint32_t PC;
 
 ///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in CC.
-unsigned int
+uint32_t
 read_virt(int a)
 {
 	return -1;
@@ -918,7 +918,7 @@ main(int argc, char **argv)
 
 // Dummy stuff; not used.
 
-unsigned int a_memory[1024];
+uint32_t a_memory[1024];
 int disk_fd;
 int alt_prom_flag;
 
@@ -930,7 +930,7 @@ sym_find_by_type_val(int mcr, int t, int v)
 }
 
 int
-read_mem(int vaddr, unsigned int *pv)
+read_mem(int vaddr, uint32_t *pv)
 {
 	// Dummy.
 	return 0;
