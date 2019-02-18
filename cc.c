@@ -31,13 +31,6 @@ bool debug = false;
 bool batch = false;
 
 uint32_t PC;
-
-///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in CC.
-uint32_t
-read_virt(int a)
-{
-	return -1;
-}
 
 size_t
 cc_send(const void *b, size_t len)
@@ -916,28 +909,9 @@ main(int argc, char **argv)
 	exit(0);
 }
 
-// Dummy stuff; not used.
-
-uint32_t a_memory[1024];
-int disk_fd;
-int alt_prom_flag;
-
-char *
-sym_find_by_type_val(int mcr, int t, int v)
+///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in CC.
+uint32_t
+read_virt(int a)
 {
-	// Dummy.
-	return NULL;
-}
-
-int
-read_mem(int vaddr, uint32_t *pv)
-{
-	// Dummy.
-	return 0;
-}
-
-void
-read_promsym_file(void)
-{
-	// Dummy.
+	return -1;
 }
