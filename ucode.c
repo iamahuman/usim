@@ -95,10 +95,10 @@ read_prom(char *file, char *symfile)
 		w3 = read16(fd);
 		w4 = read16(fd);
 		prom_ucode[loc] =
-			((unsigned long long) w1 << 48) |
-			((unsigned long long) w2 << 32) |
-			((unsigned long long) w3 << 16) |
-			((unsigned long long) w4 << 0);
+			((uint64_t) w1 << 48) |
+			((uint64_t) w2 << 32) |
+			((uint64_t) w3 << 16) |
+			((uint64_t) w4 << 0);
 
 		loc++;
 	}
