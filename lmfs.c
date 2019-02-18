@@ -673,17 +673,10 @@ main(int argc, char *argv[])
 
 	if (do_dir) {
 		lmfs_show_dir("");
-		exit(0);
-	}
-
-	if (do_read) {
+	} else if (do_read) {
 		lmfs_read_file(path);
-		exit(0);
-	}
-
-	if (do_write) {
+	} if (do_write) {
 		lmfs_write_file(path);
-		exit(0);
 	}
 
 	exit(0);
