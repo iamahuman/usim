@@ -936,27 +936,27 @@ run(void)
 				alu_carry = 0;
 				break;
 			case 021:
-				lv = (long long) (m_src_value & a_src_value) - (carry_in ? 0 : 1);
+				lv = (int64_t) (m_src_value & a_src_value) - (carry_in ? 0 : 1);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 022:
-				lv = (long long) (m_src_value & ~a_src_value) - (carry_in ? 0 : 1);
+				lv = (int64_t) (m_src_value & ~a_src_value) - (carry_in ? 0 : 1);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 023:
-				lv = (long long) m_src_value - (carry_in ? 0 : 1);
+				lv = (int64_t) m_src_value - (carry_in ? 0 : 1);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 024:
-				lv = (long long) (m_src_value | ~a_src_value) + (carry_in ? 1 : 0);
+				lv = (int64_t) (m_src_value | ~a_src_value) + (carry_in ? 1 : 0);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 025:
-				lv = (long long) (m_src_value | ~a_src_value) + (m_src_value & a_src_value) + (carry_in ? 1 : 0);
+				lv = (int64_t) (m_src_value | ~a_src_value) + (m_src_value & a_src_value) + (carry_in ? 1 : 0);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
@@ -964,12 +964,12 @@ run(void)
 				sub32(m_src_value, a_src_value, carry_in, alu_out, alu_carry);
 				break;
 			case 027:
-				lv = (long long) (m_src_value | ~a_src_value) + m_src_value + (carry_in ? 1 : 0);
+				lv = (int64_t) (m_src_value | ~a_src_value) + m_src_value + (carry_in ? 1 : 0);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 030:
-				lv = (long long) (m_src_value | a_src_value) + (carry_in ? 1 : 0);
+				lv = (int64_t) (m_src_value | a_src_value) + (carry_in ? 1 : 0);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
@@ -977,12 +977,12 @@ run(void)
 				add32(m_src_value, a_src_value, carry_in, alu_out, alu_carry);
 				break;
 			case 032:
-				lv = (long long) (m_src_value | a_src_value) + (m_src_value & ~a_src_value) + (carry_in ? 1 : 0);
+				lv = (int64_t) (m_src_value | a_src_value) + (m_src_value & ~a_src_value) + (carry_in ? 1 : 0);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 033:
-				lv = (long long) (m_src_value | a_src_value) + m_src_value + (carry_in ? 1 : 0);
+				lv = (int64_t) (m_src_value | a_src_value) + m_src_value + (carry_in ? 1 : 0);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
@@ -993,12 +993,12 @@ run(void)
 					alu_carry = 1;
 				break;
 			case 035:
-				lv = (long long) m_src_value + (m_src_value & a_src_value) + (carry_in ? 1 : 0);
+				lv = (int64_t) m_src_value + (m_src_value & a_src_value) + (carry_in ? 1 : 0);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
 			case 036:
-				lv = (long long) m_src_value + (m_src_value | ~a_src_value) + (carry_in ? 1 : 0);
+				lv = (int64_t) m_src_value + (m_src_value | ~a_src_value) + (carry_in ? 1 : 0);
 				alu_out = (uint32_t) lv;
 				alu_carry = (lv >> 32) ? 1 : 0;
 				break;
