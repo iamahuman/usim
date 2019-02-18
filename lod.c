@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "usim.h"
-#include "macroops.h"
+#include "disass.h"
 #include "misc.h"
 
 int show_comm;
@@ -16,7 +16,7 @@ int show_initial_fef;
 int show_fef;
 int show_initial_sg;
 int show_memory;
-int set_wide;
+int width = 24;
 
 int lodfd;
 
@@ -99,7 +99,7 @@ struct {
 };
 
 unsigned int
-read_virt(int fd, int addr)
+_read_virt(int fd, int addr)
 {
 	int b;
 	off_t offset;
@@ -128,12 +128,19 @@ read_virt(int fd, int addr)
 	return buf[addr % 256];
 }
 
+///---!!! For DISASSEMBLE_INSTRUCTION.
 unsigned int
-_show(int fd, int a, int cr)
+read_virt(int a)
+{
+	return _read_virt(lodfd, a);
+}
+
+unsigned int
+show(int a, int cr)
 {
 	unsigned int v;
 
-	v = read_virt(fd, a);
+	v = read_virt(a);
 	printf("%011o %011o (0x%08x)", a, v, v);
 	if (cr)
 		printf("\n");
@@ -142,186 +149,14 @@ _show(int fd, int a, int cr)
 }
 
 unsigned int
-_get(int fd, int a)
-{
-	unsigned int v;
-
-	v = read_virt(fd, a);
-
-	return v;
-}
-
-unsigned int
-get(int a)
-{
-	return _get(lodfd, a);
-}
-
-unsigned int
-show(int a, int cr)
-{
-	return _show(lodfd, a, cr);
-}
-
-unsigned int
 showlabel(char *l, int a, int cr)
 {
 	printf("%s: ", l);
-	return _show(lodfd, a, cr);
-}
-
-void
-showstr(int a, int cr)
-{
-	int t;
-	int j;
-	char s[256];
-
-	t = get(a) & 0xff;
-	j = 0;
-	for (int i = 0; i < t; i += 4) {
-		unsigned int n;
-
-		n = get(a + 1 + (i / 4));
-		s[j++] = n >> 0;
-		s[j++] = n >> 8;
-		s[j++] = n >> 16;
-		s[j++] = n >> 24;
-	}
-	s[t] = 0;
-	printf("'%s' ", s);
-	if (cr)
-		printf("\n");
-}
-
-void
-show_fef_func_name(unsigned int fefptr, unsigned int width)
-{
-	unsigned int n;
-	unsigned int v;
-	int tag;
-
-	n = get(fefptr + 2);
-	printf(" ");
-	v = get(n);
-	tag = (v >> width) & 037;
-	if (tag == 3) {
-		v = get(v);
-		tag = (v >> width) & 037;
-	}
-	if (tag == 4) {
-		printf(" ");
-		showstr(v, 0);
-	}
-}
-
-void
-disass(unsigned int fefptr, unsigned int loc, int even, unsigned int inst, unsigned int width)
-{
-	int op;
-	int dest;
-	int reg;
-	int delta;
-	int adr;
-	int to;
-	unsigned int nlc;
-
-	if (!misc_inst_vector_setup) {
-		for (int i = 0; i < 1024; i++) {
-					int index;
-
-			if (misc_inst[i].name == 0)
-				break;
-			index = misc_inst[i].value;
-			misc_inst_vector[index] = i;
-		}
-		misc_inst_vector_setup = 1;
-	}
-	op = (inst >> 011) & 017;
-	dest = (inst >> 015) & 07;
-	reg = (inst >> 6) & 07;
-	delta = (inst >> 0) & 077;
-	printf("%011o%c %06o %s ", loc, even ? 'e' : 'o', inst, op_names[op]);
-
-	switch (op) {
-	case 0:		// CALL
-		printf("reg %s, ", reg_names[reg]);
-		printf("dest %s, ", dest_names[dest]);
-		printf("delta %o ", delta);
-		{
-			unsigned int v;
-			unsigned int tag;
-
-			v = get(fefptr + delta);
-			tag = (v >> width) & 037;
-			switch (tag) {
-			case 3:
-				v = get(v);
-				showstr(v, 0);
-				break;
-			case 4:
-				showstr(v, 0);
-				break;
-			case 027:
-				break;
-			default:
-				v = get(v);
-				show_fef_func_name(v, width);
-			}
-		}
-		break;
-	case 2:		// MOVE.
-	case 3:		// CAR
-	case 4:		// CDR.
-	case 5:		// CADR.
-		printf("reg %s, ", reg_names[reg]);
-		printf("dest %s, ", dest_names[dest]);
-		printf("delta %o ", delta);
-		break;
-	case 011:		// ND1.
-		printf("%s ", nd1_names[dest]);
-		break;
-	case 012:		// ND2.
-		printf("%s ", nd2_names[dest]);
-		break;
-	case 013:		// ND3.
-		printf("%s ", nd3_names[dest]);
-		break;
-	case 014:		// BRANCH.
-		printf("type %s, ", branch_names[dest]);
-
-		to = (inst & 03777) << 1;
-		to |= (inst & 0x8000) ? 1 : 0;
-
-		if (inst & 0400) {
-			to = inst & 01777;
-			to |= 03000;
-			to |= ~01777;
-		}
-
-		nlc = (loc * 2 + (even ? 0 : 1)) + to;
-
-		if (to > 0) {
-			printf("+%o; %o%c ", to, nlc / 2, (nlc & 1) ? 'o' : 'e');
-		} else {
-			printf("-%o; %o%c ", -to, nlc / 2, (nlc & 1) ? 'o' : 'e');
-		}
-		break;
-	case 015:		// MISC.
-		adr = inst & 0777;
-		if (adr < 1024 && misc_inst_vector[adr]) {
-			printf("%s ", misc_inst[misc_inst_vector[adr]].name);
-		} else {
-			printf("%o ", adr);
-		}
-		printf("dest %s, ", dest_names[dest]);
-		break;
-	}
-	printf("\n");
+	return show(a, cr);
 }
 
 int
-find_and_dump_fef(unsigned int pc)
+find_and_dump_fef(unsigned int pc, int width)
 {
 	unsigned int addr;
 	unsigned int v;
@@ -332,16 +167,14 @@ find_and_dump_fef(unsigned int pc)
 	int icount;
 	unsigned int max;
 	unsigned short ib[512];
-	unsigned int width;
 
 	printf("\n");
-	width = set_wide ? 25 : 24;
 	addr = pc >> 2;
 	printf("pc %o, addr %o\n", pc, addr);
 
 	// Find FEF.
 	for (int i = 0; i < 512; i--) {
-		n = get(addr);
+		n = read_virt(addr);
 		tag = (n >> width) & 037;
 		if (tag == 7)
 			break;
@@ -352,11 +185,11 @@ find_and_dump_fef(unsigned int pc)
 		return -1;
 	}
 
-	n = get(addr);
+	n = read_virt(addr);
 	o = n & 0777;
 	printf("code offset %o\n", o);
 
-	max = get(addr + 1) & 07777;
+	max = read_virt(addr + 1) & 07777;
 	icount = (max - o / 2) * 2;
 
 	j = 0;
@@ -365,7 +198,7 @@ find_and_dump_fef(unsigned int pc)
 		unsigned int inst;
 
 		loc = addr + i;
-		inst = get(loc);
+		inst = read_virt(loc);
 		ib[j++] = inst;
 		ib[j++] = inst >> 16;
 		if (i < o / 2) {
@@ -386,7 +219,8 @@ find_and_dump_fef(unsigned int pc)
 			}
 			if (tag == 4) {
 				printf(" ");
-				showstr(v, 1);
+				showstr(v);
+				printf("\n");
 			}
 			break;
 		}
@@ -396,7 +230,7 @@ find_and_dump_fef(unsigned int pc)
 		unsigned int loc;
 
 		loc = addr + i / 2;
-		disass(addr, loc, (i % 2) ? 0 : 1, ib[i], width);
+		disassemble_instruction(addr, loc, (i % 2) ? 0 : 1, ib[i], width);
 	}
 
 	return 0;
@@ -454,7 +288,7 @@ main(int argc, char *argv[])
 			show_memory++;
 			break;
 		case 'w':
-			set_wide++;
+			width = 25;
 			break;
 		case 'h':
 			usage();
@@ -511,11 +345,11 @@ main(int argc, char *argv[])
 		sv[0].a = 01000 + 0;
 		sv[0].v = showlabel(sv[0].name, sv[0].a, 1);
 		v = show(sv[0].v, 1);
-		find_and_dump_fef(v << 2);
+		find_and_dump_fef(v << 2, width);
 	}
 
 	if (show_fef) {
-		find_and_dump_fef(pc);
+		find_and_dump_fef(pc, width);
 	}
 
 	if (show_initial_sg) {

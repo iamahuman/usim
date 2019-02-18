@@ -18,43 +18,8 @@
 #include "syms.h"
 #include "misc.h"
 
-char *alu_bool_op[] = {
-	"SETZ",
-	"AND",
-	"ANDCA",
-	"SETM",
-	"ANDCM",
-	"SETA",
-	"XOR",
-	"IOR",
-	"ANDCB",
-	"EQV",
-	"SETCA",
-	"ORCA",
-	"SETCM",
-	"ORCM",
-	"ORCB",
-	"SETO"
-};
-
-char *alu_arith_op[] = {
-	"-1",
-	"(M&A)-1",
-	"(M&~A)-1",
-	"M-1",
-	"M|~A",
-	"(M|~A)+(M&A)",
-	"M-A-1 [M-A-1]",
-	"(M|~A)+M",
-	"M|A",
-	"M+A [ADD]",
-	"(M|A)+(M&~A)",
-	"(M|A)+M",
-	"M",
-	"M+(M&A)",
-	"M+(M|~A)",
-	"M+M"
-};
+#include "macroops.h"
+#include "microops.h"
 
 void
 disassemble_m_src(ucw_t u, int m_src)
@@ -378,4 +343,138 @@ disassemble_ucode_loc(ucw_t u)
 
 done:
 	printf("\n");
+}
+
+void
+disassemble_instruction(unsigned int fefptr, unsigned int loc, int even, unsigned int inst, unsigned int width)
+{
+	int op;
+	int dest;
+	int reg;
+	int delta;
+	int adr;
+	int to;
+	unsigned int nlc;
+
+	op = (inst >> 011) & 017;
+	dest = (inst >> 015) & 07;
+	reg = (inst >> 6) & 07;
+	delta = (inst >> 0) & 077;
+	printf("%011o%c %06o %s ", loc, even ? 'e' : 'o', inst, op_names[op]);
+
+	switch (op) {
+	case 0:		// CALL
+		printf("reg %s, ", reg_names[reg]);
+		printf("dest %s, ", dest_names[dest]);
+		printf("delta %o ", delta);
+		{
+			unsigned int v;
+			unsigned int tag;
+
+			v = read_virt(fefptr + delta);
+			tag = (v >> width) & 037;
+			switch (tag) {
+			case 3:
+				v = read_virt(v);
+				showstr(v);
+				break;
+			case 4:
+				showstr(v);
+				break;
+			case 027:
+				break;
+			default:
+				v = read_virt(v);
+				show_fef_func_name(v, width);
+				break;
+			}
+		}
+		break;
+	case 2:		// MOVE.
+	case 3:		// CAR
+	case 4:		// CDR.
+	case 5:		// CADR.
+		printf("reg %s, ", reg_names[reg]);
+		printf("dest %s, ", dest_names[dest]);
+		printf("delta %o ", delta);
+		break;
+	case 011:		// ND1.
+		printf("%s ", nd1_names[dest]);
+		break;
+	case 012:		// ND2.
+		printf("%s ", nd2_names[dest]);
+		break;
+	case 013:		// ND3.
+		printf("%s ", nd3_names[dest]);
+		break;
+	case 014:		// BRANCH.
+		printf("type %s, ", branch_names[dest]);
+
+		to = (inst & 03777) << 1;
+		to |= (inst & 0x8000) ? 1 : 0;
+
+		if (inst & 0400) {
+			to = inst & 01777;
+			to |= 03000;
+			to |= ~01777;
+		}
+
+		nlc = (loc * 2 + (even ? 0 : 1)) + to;
+
+		if (to > 0) {
+			printf("+%o; %o%c ", to, nlc / 2, (nlc & 1) ? 'o' : 'e');
+		} else {
+			printf("-%o; %o%c ", -to, nlc / 2, (nlc & 1) ? 'o' : 'e');
+		}
+		break;
+	case 015:		// MISC.
+		adr = inst & 0777;
+		printf("%o ", adr);
+		printf("dest %s, ", dest_names[dest]);
+		break;
+	}
+	printf("\n");
+}
+
+void
+showstr(int a)
+{
+	int t;
+	int j;
+	char s[256];
+
+	t = read_virt(a) & 0xff;
+	j = 0;
+	for (int i = 0; i < t; i += 4) {
+		unsigned int n;
+
+		n = read_virt(a + 1 + (i / 4));
+		s[j++] = n >> 0;
+		s[j++] = n >> 8;
+		s[j++] = n >> 16;
+		s[j++] = n >> 24;
+	}
+	s[t] = 0;
+	printf("'%s' ", s);
+}
+
+void
+show_fef_func_name(unsigned int fefptr, unsigned int width)
+{
+	unsigned int n;
+	unsigned int v;
+	int tag;
+
+	n = read_virt(fefptr + 2);
+	printf(" ");
+	v = read_virt(n);
+	tag = (v >> width) & 037;
+	if (tag == 3) {
+		v = read_virt(v);
+		tag = (v >> width) & 037;
+	}
+	if (tag == 4) {
+		printf(" ");
+		showstr(v);
+	}
 }

@@ -17,6 +17,13 @@ bool debug;
 bool needswap;
 int skip;
 
+///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in readmcr.
+unsigned int
+read_virt(int a)
+{
+	return -1;
+}
+
 void
 dump_i_mem(int fd, int start, int size)
 {

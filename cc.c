@@ -31,6 +31,13 @@ bool debug = false;
 bool batch = false;
 
 uint32_t PC;
+
+///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in CC.
+unsigned int
+read_virt(int a)
+{
+	return -1;
+}
 
 size_t
 cc_send(const void *b, size_t len)
