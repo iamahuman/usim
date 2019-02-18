@@ -29,14 +29,14 @@ uint32_t iob_csr;
 
 void tv_post_60hz_interrupt(void);
 
-unsigned long
+uint32_t
 get_us_clock(void)
 {
-	unsigned long v;
+	uint32_t v;
 	static struct timeval tv;
 	struct timeval tv2;
-	unsigned long ds;
-	unsigned long du;
+	uint32_t ds;
+	uint32_t du;
 
 	if (tv.tv_sec == 0) {
 		gettimeofday(&tv, 0);
@@ -55,7 +55,7 @@ get_us_clock(void)
 	return v;
 }
 
-static unsigned long cv;
+static uint32_t cv;
 
 uint32_t
 get_us_clock_low(void)
