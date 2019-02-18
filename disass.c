@@ -1,4 +1,4 @@
-// decode.c --- ---!!!
+// disass.c --- ---!!!
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +14,7 @@
 
 #include "usim.h"
 #include "ucode.h"
-#include "decode.h"
+#include "disass.h"
 #include "syms.h"
 #include "misc.h"
 

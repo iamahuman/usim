@@ -1,5 +1,5 @@
-#ifndef USIM_DECODE_H
-#define USIM_DECODE_H
+#ifndef USIM_DISASS_H
+#define USIM_DISASS_H
 
 extern void disassemble_m_src(ucw_t u, int m_src);
 extern void disassemble_dest(int dest);

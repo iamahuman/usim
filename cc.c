@@ -12,7 +12,7 @@
 #include <inttypes.h>
 
 #include "ucode.h"
-#include "decode.h"
+#include "disass.h"
 #include "cc.h"
 
 #include "lcadrd.h"

@@ -19,7 +19,7 @@
 #include "disk.h"
 
 #include "syms.h"
-#include "decode.h"
+#include "disass.h"
 
 char *disk_filename = "disk.img";
 char *mcrsym_filename = "../bands/ucadr.sym.841";
