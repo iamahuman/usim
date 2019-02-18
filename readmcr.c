@@ -9,6 +9,7 @@
 
 #include "usim.h"
 #include "ucode.h"
+#include "disass.h"
 #include "misc.h"
 
 bool showmcr;
@@ -40,8 +41,10 @@ dump_i_mem(int fd, int start, int size)
 			((ucw_t) w3 << 16) |
 			((ucw_t) w4 << 0);
 
-		if (showmcr)
-			printf("%03o %016" PRIo64 "\n", loc, ll);
+		if (showmcr) {
+			printf("%03o %016" PRIo64 ":\t", loc, ll);
+			disassemble_ucode_loc(ll);
+		}
 
 		loc++;
 	}
