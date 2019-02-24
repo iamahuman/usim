@@ -1,4 +1,4 @@
-// mem.c --- ---!!!
+// mem.c --- CADR memory routines
 
 #include <stdio.h>
 #include <stdlib.h>
