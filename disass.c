@@ -1,4 +1,4 @@
-// disass.c --- ---!!!
+// disass.c --- macrocode/microcode disassembler routines
 
 #include <stdio.h>
 #include <stdlib.h>
