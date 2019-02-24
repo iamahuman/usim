@@ -12,7 +12,7 @@ int do_dir;
 int do_read;
 int do_write;
 
-char *img_filename;
+char *img_filename = "FILE";
 char *path;
 
 struct baccess {
@@ -572,34 +572,25 @@ lmfs_write_file(char *path)
 void
 usage(void)
 {
-	fprintf(stderr, "usage: lmfs [OPTION]...\n");
+	fprintf(stderr, "usage: lmfs [OPTION]... [LMFS-FILE}\n");
 	fprintf(stderr, "LMFS file extract\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "  -f FILE        LMFS image\n");
 	fprintf(stderr, "  -d DIR         show files in directory\n");
 	fprintf(stderr, "  -r FILE        read file\n");
 	fprintf(stderr, "  -w FILE        write file\n");
-	exit(1);
+	fprintf(stderr, "  -h             help message\n");
 }
-
-extern char *optarg;
 
 int
 main(int argc, char *argv[])
 {
 	int c;
 
-	if (argc <= 1)
-		usage();
-
-	while ((c = getopt(argc, argv, "d:f:r:w:")) != -1) {
+	while ((c = getopt(argc, argv, "d:r:w:h")) != -1) {
 		switch (c) {
 		case 'd':
 			do_dir++;
 			path = strdup(optarg);
-			break;
-		case 'f':
-			img_filename = strdup(optarg);
 			break;
 		case 'r':
 			do_read++;
@@ -609,13 +600,24 @@ main(int argc, char *argv[])
 			do_write++;
 			path = strdup(optarg);
 			break;
+		case 'h':
+			usage();
+			exit(0);
 		default:
 			usage();
+			exit(1);
 		}
 	}
 
-	if (img_filename == 0) {
-		img_filename = strdup("FILE");
+	argc -= optind;
+	argv += optind;
+
+	if (argc > 0)
+		img_filename = strdup(argv[0]);
+
+	if (argc > 1) {
+		usage();
+		exit(1);
 	}
 
 	lmfs_open(img_filename, 0);
