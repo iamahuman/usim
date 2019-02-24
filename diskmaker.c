@@ -1,4 +1,4 @@
-// diskmaker --- manage disk packs (Trident T-300 & T-80) for CADR
+// diskmaker --- manage Trident T-300 & T-80 packs
 
 #include <stdio.h>
 #include <stdlib.h>
