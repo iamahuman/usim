@@ -1,4 +1,4 @@
-// lcadrd.c --- ---!!!
+// lcadrd.c --- low-level CADR-munging routines for CC
 //
 // See SYS;LCADR:LCADRD LISP and SYS;LCADR:LCADMC LISP for the
 // canonical definition.
