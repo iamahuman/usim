@@ -55,7 +55,7 @@ dumpmem(char *ptr, int len)
 	}
 }
 
-uint32_t
+uint16_t
 read16(int fd)
 {
 	unsigned char b[2];
@@ -80,7 +80,10 @@ read32(int fd)
 		fprintf(stderr, "read error; ret %d, size %d\n", (int) ret, 4);
 		exit(1);
 	}
-	return (b[1] << 24) | (b[0] << 16) | (b[3] << 8) | b[2];
+	return ((uint32_t) b[1] << 24 |
+		(uint32_t) b[0] << 16 |
+		(uint32_t) b[3] << 8  |
+		(uint32_t) b[2] << 0);
 }
 
 unsigned long

@@ -5,7 +5,7 @@
 
 extern void dumpmem(char *ptr, int len);
 
-extern uint32_t read16(int fd);
+extern uint16_t read16(int fd);
 extern uint32_t read32(int fd);
 
 extern unsigned long str4(char *s);
