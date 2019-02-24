@@ -303,7 +303,8 @@ kbd_init(void)
 
 	// Walk unshifted old keyboard table.
 	for (int i = 0; i < 64; i++) {
-		char k;
+		unsigned char k;
+
 		k = kb_old_table[i][0];
 		okb_to_scancode[(int) k][0] = i;
 	}
