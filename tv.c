@@ -1,4 +1,4 @@
-// tv.c --- ---!!!
+// tv.c --- TV interface
 
 #include <stdio.h>
 #include <signal.h>
