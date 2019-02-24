@@ -85,10 +85,10 @@ read_prom(char *file, char *symfile)
 
 	int loc = start;
 	for (uint32_t i = 0; i < size; i++) {
-		uint32_t w1;
-		uint32_t w2;
-		uint32_t w3;
-		uint32_t w4;
+		uint16_t w1;
+		uint16_t w2;
+		uint16_t w3;
+		uint16_t w4;
 
 		w1 = read16(fd);
 		w2 = read16(fd);
@@ -697,7 +697,7 @@ write_dest(int dest, uint32_t out_bus)
 // (1 << 32) - 1.  If B is any larger, then a carry will be generated
 // from the top bit.
 #define add32(a, b, ci, out, co)					\
-	out = (a) + (b) + ((ci) ? 1 : 0);				\
+	out = ((uint32_t) a) + (b) + ((ci) ? 1 : 0);			\
 	co = (ci) ? (((b) >= ~(a)) ? 0:1) : (((b) > ~(a)) ? 0:1) ;
 #define sub32(a, b, ci, out, co)			\
 	out = (a) - (b) - ((ci) ? 0 : 1);		\
@@ -715,7 +715,7 @@ rotate_left(uint32_t value, int bitstorotate)
 	else
 		mask = (int) 0x80000000 >> bitstorotate;
 	// Save off the affected bits.
-	tmp = (value & mask) >> (32 - bitstorotate);
+	tmp = (uint64_t) (value & mask) >> (32 - bitstorotate);
 	// Perform the actual rotate, and add the rotated bits back in
 	// (in the proper location).
 	return (value << bitstorotate) | tmp;
@@ -883,7 +883,7 @@ run(void)
 				break;
 			case 011:
 				l2_data = map_vtop(md, (int *) &l1_data, (int *) 0);
-				m_src_value = (write_fault_bit << 31) | (access_fault_bit << 30) | ((l1_data & 037) << 24) | (l2_data & 077777777);
+				m_src_value = ((uint32_t) write_fault_bit << 31) | ((uint32_t) access_fault_bit << 30) | ((l1_data & 037) << 24) | (l2_data & 077777777);
 				break;
 			case 012:
 				m_src_value = md;
