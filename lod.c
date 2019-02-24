@@ -21,12 +21,13 @@ int width = 24;
 int lodfd;
 
 int bnum = -1;
+unsigned int bbuf[256] = { 0 };
 
 struct {
 	char *name;
 	uint32_t a;
 	uint32_t v;
-} sys_com[] = {
+} sc[] = {
 	{"%SYS-COM-AREA-ORIGIN-PNTR", 0400, 0},
 	{"%SYS-COM-VALID-SIZE", 0401, 0},
 	{"%SYS-COM-PAGE-TABLE-PNTR", 0402, 0},
@@ -36,13 +37,24 @@ struct {
 	{"%SYS-COM-ETHER-TRANSMIT-LIST", 0406, 0},
 	{"%SYS-COM-ETHER-RECEIVE-LIST", 0407, 0},
 	{"%SYS-COM-BAND-FORMAT", 0410, 0},
-	{"%SYS-COM-SPARE-2", 0411, 0},
+	{"%SYS-COM-GC-GENERATION-NUMBER", 0411, 0},
 	{"%SYS-COM-UNIBUS-INTERRUPT-LIST", 0412, 0},
 	{"%SYS-COM-TEMPORARY", 0413, 0},
 	{"%SYS-COM-FREE-AREA/#-LIST", 0414, 0},
 	{"%SYS-COM-FREE-REGION/#-LIST", 0415, 0},
 	{"%SYS-COM-MEMORY-SIZE", 0416, 0},
 	{"%SYS-COM-WIRED-SIZE", 0417, 0},
+	{"%SYS-COM-CHAOS-FREE-LIST", 0420, 0},
+	{"%SYS-COM-CHAOS-TRANSMIT-LIST", 0421, 0},
+	{"%SYS-COM-CHAOS-RECEIVE-LIST", 0422, 0},
+	{"%SYS-COM-DEBUGGER-REQUESTS", 0423, 0},
+	{"%SYS-COM-DEBUGGER-KEEP-ALIVE", 0424, 0},
+	{"%SYS-COM-DEBUGGER-DATA-1", 0425, 0},
+	{"%SYS-COM-DEBUGGER-DATA-2", 0426, 0},
+	{"%SYS-COM-MAJOR-VERSION", 0427, 0},
+	{"%SYS-COM-DESIRED-MICROCODE-VERSION", 0430, 0},
+	{"%SYS-COM-HIGHEST-VIRTUAL-ADDRESS", 0431, 0},
+	{"%SYS-COM-POINTER-WIDTH", 0432, 0},
 	{(char *) 0, 0, 0},
 };
 
@@ -55,21 +67,20 @@ struct {
 	{"A-V-SYSTEM-COMMUNICATION-AREA", 0, 0},
 	{"A-V-SCRATCH-PAD-INIT-AREA", 0, 0},
 	{"A-V-MICRO-CODE-SYMBOL-AREA", 0, 0},
-	{"A-V-PAGE-TABLE-AREA", 0, 0},
-	{"A-V-PHYSICAL-PAGE-DATA", 0, 0},
 	{"A-V-REGION-ORIGIN", 0, 0},
 	{"A-V-REGION-LENGTH", 0, 0},
 	{"A-V-REGION-BITS", 0, 0},
-	{"A-V-ADDRESS-SPACE-MAP", 0, 0},
 	{"A-V-REGION-FREE-POINTER", 0, 0},
+	{"A-V-PAGE-TABLE-AREA", 0, 0},
+	{"A-V-PHYSICAL-PAGE-DATA", 0, 0},
+	{"A-V-ADDRESS-SPACE-MAP", 0, 0},
 	{"A-V-REGION-GC-POINTER", 0, 0},
 	{"A-V-REGION-LIST-THREAD", 0, 0},
 	{"A-V-AREA-NAME", 0, 0},
 	{"A-V-AREA-REGION-LIST", 0, 0},
+	{"A-V-AREA-REGION-BITS", 0, 0},
 	{"A-V-AREA-REGION-SIZE", 0, 0},
 	{"A-V-AREA-MAXIMUM-SIZE", 0, 0},
-	{"A-V-AREA-SWAP-RECOMMENDATIONS", 0, 0},
-	{"A-V-GC-TABLE-AREA", 0, 0},
 	{"A-V-SUPPORT-ENTRY-VECTOR", 0, 0},
 	{"A-V-CONSTANTS-AREA", 0, 0},
 	{"A-V-EXTRA-PDL-AREA", 0, 0},
@@ -77,6 +88,8 @@ struct {
 	{"A-V-MICRO-CODE-ENTRY-NAME-AREA", 0, 0},
 	{"A-V-MICRO-CODE-ENTRY-ARGS-INFO-AREA", 0, 0},
 	{"A-V-MICRO-CODE-ENTRY-MAX-PDL-USAGE", 0, 0},
+	{"A-V-MICRO-CODE-PAGING-AREA", 0, 0},
+	{"A-V-PAGE-GC-BITS", 0, 0},
 	{"A-V-MICRO-CODE-ENTRY-ARGLIST-AREA", 0, 0},
 	{"A-V-MICRO-CODE-SYMBOL-NAME-AREA", 0, 0},
 	{"A-V-LINEAR-PDL-AREA", 0, 0},
@@ -98,12 +111,13 @@ struct {
 	{(char *) 0, 0, 0}
 };
 
+
+///---!!! For DISASSEMBLE_INSTRUCTION.
 uint32_t
-_read_virt(int fd, int addr)
+read_virt(int addr)
 {
 	int b;
 	off_t offset;
-	uint32_t buf[256];
 
 	addr &= 077777777;
 	b = addr / 256;
@@ -114,25 +128,18 @@ _read_virt(int fd, int addr)
 		off_t ret;
 
 		bnum = b;
-		ret = lseek(fd, offset, SEEK_SET);
+		ret = lseek(lodfd, offset, SEEK_SET);
 		if (ret != offset) {
 			perror("seek");
 		}
 
-		ret = read(fd, buf, BLOCKSZ);
+		ret = read(lodfd, bbuf, BLOCKSZ);
 		if (ret != BLOCKSZ) {
 			perror("read");
 		}
 	}
 
-	return buf[addr % 256];
-}
-
-///---!!! For DISASSEMBLE_INSTRUCTION.
-uint32_t
-read_virt(int a)
-{
-	return _read_virt(lodfd, a);
+	return bbuf[addr % 256];
 }
 
 uint32_t
@@ -226,6 +233,8 @@ find_and_dump_fef(uint32_t pc, int width)
 		}
 	}
 
+	printf("\n");
+
 	for (uint32_t i = o; i < o + icount; i++) {
 		uint32_t loc;
 
@@ -315,8 +324,12 @@ main(int argc, char *argv[])
 
 	com = showlabel("%SYS-COM-AREA-ORIGIN-PNTR", 0400, 1);
 	showlabel("%SYS-COM-BAND-FORMAT", 0410, 1);
+	showlabel("%SYS-COM-POINTER-WIDTH", 0432, 1);
+	showlabel("%SYS-COM-MAJOR-VERSION", 0427, 1);
+	showlabel("%SYS-COM-DESIRED-MICROCODE-VERSION", 0430, 1);
 
 	if (show_comm) {
+		printf("\nsystem communication area:\n");
 		for (int i = 0; cv[i].name; i++) {
 			printf("%s ", cv[i].name);
 			cv[i].a = com + i;
@@ -328,7 +341,7 @@ main(int argc, char *argv[])
 	}
 
 	if (show_scratch) {
-		printf("scratch-pad\n");
+		printf("\nscratch-pad:\n");
 		for (int i = 0; sv[i].name; i++) {
 			printf("%s ", sv[i].name);
 			sv[i].a = 01000 + i;
@@ -342,13 +355,16 @@ main(int argc, char *argv[])
 	if (show_initial_fef) {
 		uint32_t v;
 
+		printf("\ninitial fef:\n");
 		sv[0].a = 01000 + 0;
 		sv[0].v = showlabel(sv[0].name, sv[0].a, 1);
 		v = show(sv[0].v, 1);
+		printf("\n");
 		find_and_dump_fef(v << 2, width);
 	}
 
 	if (show_fef) {
+		printf("\nfef @ %o\n", pc);
 		find_and_dump_fef(pc, width);
 	}
 
