@@ -389,10 +389,10 @@ disk_init(char *filename)
 		exit(1);
 	}
 
-	struct stat s;
-	fstat(disk_fd, &s);
-	printf("disk: size: %zd bytes\n", s.st_size);
-	disk_mm = mmap(NULL, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, disk_fd, 0);
+	struct stat st;
+	fstat(disk_fd, &st);
+	printf("disk: size: %zd bytes\n", st.st_size);
+	disk_mm = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, disk_fd, 0);
 
 	ret = _disk_read(0, label);
 	if (ret < 0 || label[0] != LABEL_LABL) {
