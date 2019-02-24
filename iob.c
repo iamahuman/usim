@@ -27,8 +27,6 @@
 
 uint32_t iob_csr;
 
-void tv_post_60hz_interrupt(void);
-
 uint32_t
 get_us_clock(void)
 {
