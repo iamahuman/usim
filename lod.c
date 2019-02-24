@@ -1,4 +1,4 @@
-// lod --- ---!!!
+// lod --- dump a load band (LOD) file
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -158,8 +158,12 @@ show(int a, int cr)
 uint32_t
 showlabel(char *l, int a, int cr)
 {
+	unsigned int v;
+
 	printf("%s: ", l);
-	return show(a, cr);
+	v = show(a, cr);
+
+	return v;
 }
 
 int
@@ -187,6 +191,7 @@ find_and_dump_fef(uint32_t pc, int width)
 			break;
 		addr--;
 	}
+
 	if (tag != 7) {
 		printf("couldn't not find FEF\n");
 		return -1;
@@ -208,9 +213,11 @@ find_and_dump_fef(uint32_t pc, int width)
 		inst = read_virt(loc);
 		ib[j++] = inst;
 		ib[j++] = inst >> 16;
+
 		if (i < o / 2) {
 			show(loc, 1);
 		}
+
 		switch (i) {
 		case 1:
 			break;
@@ -218,18 +225,19 @@ find_and_dump_fef(uint32_t pc, int width)
 			printf(" ");
 			v = show(inst, 0);
 			tag = (v >> width) & 037;
-			if (tag == 3) {
+			switch (tag) {
+			case 3:
 				printf("\n");
 				printf(" ");
 				v = show(v, 0);
 				tag = (v >> 24) & 037;
-			}
-			if (tag == 4) {
+				break;
+			case 4:
 				printf(" ");
 				showstr(v);
 				printf("\n");
+				break;
 			}
-			break;
 		}
 	}
 
@@ -250,6 +258,7 @@ usage(void)
 {
 	fprintf(stderr, "usage: lod FILE [OPTION]...\n");
 	fprintf(stderr, "\n");
+	fprintf(stderr, "  -A             dump everything\n");
 	fprintf(stderr, "  -c             dump system communication area\n");
 	fprintf(stderr, "  -s             dump scratch-pad area\n");
 	fprintf(stderr, "  -f             find and disassemble initial FEF\n");
@@ -269,8 +278,14 @@ main(int argc, char *argv[])
 	uint32_t pc = 0;
 	uint32_t addr = 0;
 
-	while ((c = getopt(argc, argv, "csfgp:a:m:wh")) != -1) {
+	while ((c = getopt(argc, argv, "Acsfgp:a:m:wh")) != -1) {
 		switch (c) {
+		case 'A':
+			show_comm++;
+			show_scratch++;
+			show_initial_fef++;
+			show_initial_sg++;
+			break;
 		case 'c':
 			show_comm++;
 			break;
@@ -315,7 +330,6 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-
 	lodfd = open(argv[0], O_RDONLY);
 	if (lodfd < 0) {
 		perror(argv[0]);
@@ -337,44 +351,46 @@ main(int argc, char *argv[])
 			printf("; ");
 			show(cv[i].v, 1);
 		}
-		printf("\n");
 	}
 
 	if (show_scratch) {
 		printf("\nscratch-pad:\n");
 		for (int i = 0; sv[i].name; i++) {
-			printf("%s ", sv[i].name);
 			sv[i].a = 01000 + i;
-			sv[i].v = show(sv[i].a, 0);
+			sv[i].v = showlabel(sv[i].name, sv[i].a, 0);
 			printf("; ");
 			show(sv[i].v, 1);
 		}
-		printf("\n");
 	}
 
 	if (show_initial_fef) {
 		uint32_t v;
 
 		printf("\ninitial fef:\n");
+
 		sv[0].a = 01000 + 0;
-		sv[0].v = showlabel(sv[0].name, sv[0].a, 1);
+		sv[0].v = showlabel(sv[0].name, sv[0].a, 0);
+		printf("; ");
 		v = show(sv[0].v, 1);
-		printf("\n");
 		find_and_dump_fef(v << 2, width);
 	}
 
 	if (show_fef) {
-		printf("\nfef @ %o\n", pc);
+		printf("\nfef @ %o:\n", pc);
 		find_and_dump_fef(pc, width);
 	}
 
 	if (show_initial_sg) {
 		uint32_t a;
 
+		printf("\ninitial sg:\n");
+
 		sv[3].a = 01000 + 3;
 		sv[3].v = showlabel(sv[3].name, sv[3].a, 1);
+		printf("\n");
+
 		a = sv[3].v & 0x00ffffff;
-		printf("\ninitial sg:\n");
+
 		for (int i = 10; i >= 0; i--) {
 			char b[16];
 
