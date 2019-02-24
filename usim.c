@@ -69,11 +69,14 @@ main(int argc, char *argv[])
 		case 'A':
 			if (optarg != NULL) {
 				char *end;
-				chaos_addr = (int)strtoul (optarg, &end, 8);
-				if (*end != 0 || chaos_addr > 0177777) {
+				int addr;
+				
+				addr = (int)strtoul (optarg, &end, 8);
+				if (*end != 0 || addr > 0177777) {
 					fprintf (stderr, "Chaosnet address must be a 16-bit octal number\n");
 					exit(1);
 				}
+				chaos_set_addr(addr);
 			}
 			break;
 		case 'h':

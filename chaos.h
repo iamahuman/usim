@@ -9,6 +9,7 @@ extern int chaos_poll(void);
 extern void chaos_reconnect(void);
 
 extern int chaos_get_addr(void);
+extern void chaos_set_addr(int addr);
 extern int chaos_get_csr(void);
 extern void chaos_set_csr(int v);
 extern int chaos_get_rcv_buffer(void);
@@ -16,7 +17,5 @@ extern int chaos_get_bit_count(void);
 
 extern void chaos_put_xmit_buffer(int v);
 extern void chaos_xmit_pkt(void);
-
-extern int chaos_addr;
 
 #endif
