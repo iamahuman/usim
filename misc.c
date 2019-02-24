@@ -13,8 +13,8 @@ read16(int fd)
 	int ret;
 
 	ret = read(fd, b, 2);
-	if (ret < 2) {
-		printf("eof!\n");
+	if (ret != 2) {
+		fprintf(stderr, "read error; ret %d, size %d\n", (int) ret, 2);
 		exit(1);
 	}
 	return (b[1] << 8) | b[0];
@@ -27,8 +27,8 @@ read32(int fd)
 	int ret;
 
 	ret = read(fd, b, 4);
-	if (ret < 4) {
-		printf("eof!\n");
+	if (ret != 4) {
+		fprintf(stderr, "read error; ret %d, size %d\n", (int) ret, 4);
 		exit(1);
 	}
 	return (b[1] << 24) | (b[0] << 16) | (b[3] << 8) | b[2];
@@ -70,7 +70,7 @@ read_block(int fd, int block_no, unsigned char *buf)
 	size = BLOCKSZ;
 	ret = read(fd, buf, size);
 	if (ret != size) {
-		printf("disk read error; ret %d, size %d\n", (int) ret, size);
+		fprintf(stderr, "disk read error; ret %d, size %d\n", (int) ret, size);
 		perror("read");
 		return -1;
 	}
@@ -95,7 +95,7 @@ write_block(int fd, int block_no, unsigned char *buf)
 	size = BLOCKSZ;
 	ret = write(fd, buf, size);
 	if (ret != size) {
-		printf("disk write error; ret %d, size %d\n", (int) ret, size);
+		fprintf(stderr, "disk write error; ret %d, size %d\n", (int) ret, size);
 		perror("write");
 		return -1;
 	}
