@@ -12,10 +12,9 @@
 #include "disass.h"
 #include "misc.h"
 
-bool showmcr;
-bool debug;
-bool needswap;
-int skip;
+bool showmcr = false;
+bool debug = false;
+int skip = 0;
 
 ///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in readmcr.
 uint32_t
@@ -72,15 +71,7 @@ dump_a_mem(int fd, int start, int size)
 {
 	printf("a-memory; start %o, size %o\n", start, size);
 	for (int i = 0; i < size; i++) {
-		uint32_t v;
-
-		v = read32(fd);
-
-		if ((i >= 0347 && i <= 0400) |
-		    (i >= 0600 && i <= 0610) |
-		    (i < 010)) {
-			printf("%o <- %" PRIo32 "\n", i, v);
-		}
+		read32(fd);
 	}
 }
 
@@ -98,7 +89,6 @@ usage(void)
 	fprintf(stderr, "usage: readmcr FILE\n");
 	fprintf(stderr, "dump a microcode file\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "  -b             swap bytes\n");
 	fprintf(stderr, "  -d             extra debug info\n");
 	fprintf(stderr, "  -s N           skip N * 32-bit values\n");
 	fprintf(stderr, "  -m             show microcode\n");
@@ -113,14 +103,10 @@ main(int argc, char *argv[])
 	bool done;
 
 	showmcr = false;
-	needswap = true;
 	skip = false;
 
-	while ((c = getopt(argc, argv, "bds:mh")) != -1) {
+	while ((c = getopt(argc, argv, "ds:mh")) != -1) {
 		switch (c) {
-		case 'b':
-			needswap = false;
-			break;
 		case 'd':
 			debug = true;
 			break;
@@ -152,7 +138,7 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if (skip) {
+	if (skip != 0) {
 		while (skip--)
 			read32(fd);
 	}
