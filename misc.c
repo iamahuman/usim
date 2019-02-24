@@ -1,4 +1,4 @@
-// misc.c --- ---!!!
+// misc.c --- random utilities
 
 #include <stdio.h>
 #include <stdlib.h>
