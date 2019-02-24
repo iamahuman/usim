@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+extern void dumpmem(char *ptr, int len);
+
 extern uint32_t read16(int fd);
 extern uint32_t read32(int fd);
 

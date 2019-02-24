@@ -6,6 +6,55 @@
 
 #include "misc.h"
 
+static char
+tohex(char b)
+{
+	b = b & 0xf;
+	if (b < 10)
+		return '0' + b;
+	return 'a' + (b - 10);
+}
+
+void
+dumpmem(char *ptr, int len)
+{
+	char line[80];
+	char chars[80];
+	char *p;
+	char b;
+	char *c;
+	char *end;
+	int j;
+	int offset;
+
+	end = ptr + len;
+	offset = 0;
+	while (ptr < end) {
+		p = line;
+		c = chars;
+		printf("%04x ", offset);
+		*p++ = ' ';
+		for (j = 0; j < 16; j++) {
+			if (ptr < end) {
+				b = *ptr++;
+				*p++ = tohex(b >> 4);
+				*p++ = tohex(b);
+				*p++ = ' ';
+				*c++ = ' ' <= b && b <= '~' ? b : '.';
+			} else {
+				*p++ = 'x';
+				*p++ = 'x';
+				*p++ = ' ';
+				*c++ = 'x';
+			}
+		}
+		*p = 0;
+		*c = 0;
+		printf("%s %s\n", line, chars);
+		offset += 16;
+	}
+}
+
 uint32_t
 read16(int fd)
 {
