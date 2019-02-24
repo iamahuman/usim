@@ -1,7 +1,7 @@
 #ifndef USIM_LCADMC_H
 #define USIM_LCADMC_H
 
-// See SYS:LCADR;LCADMC LISP canonical version.
+// See SYS:LCADR;LCADMC LISP for the canonical definition.
 
 // IR FIELDS
 #define CONS_IR_OP 05302

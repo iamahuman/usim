@@ -1,6 +1,7 @@
 // lcadrd.c --- ---!!!
 //
-// See SYS; LCADR: LCADRD LISP and SYS;LCADR:LCADMC LISP for details.
+// See SYS;LCADR:LCADRD LISP and SYS;LCADR:LCADMC LISP for the
+// canonical definition.
 
 #include <stdio.h>
 #include <stdint.h>
