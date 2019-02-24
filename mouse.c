@@ -1,4 +1,4 @@
-// mouse.c --- ---!!!
+// mouse.c --- mouse interface
 
 #include <stdio.h>
 
