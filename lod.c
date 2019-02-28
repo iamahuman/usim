@@ -257,7 +257,7 @@ find_and_dump_fef(uint32_t pc, int width)
 void
 usage(void)
 {
-	fprintf(stderr, "usage: lod FILE [OPTION]...\n");
+	fprintf(stderr, "usage: lod FILE [OPTION]... FILE\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -A             dump everything\n");
 	fprintf(stderr, "  -c             dump system communication area\n");
