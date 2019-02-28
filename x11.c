@@ -283,11 +283,11 @@ x11_init(void)
 		exit(-1);
 	}
 
-	if (!XStringListToTextProperty((char **) &window_name, 1, pWindowName)) {
+	if (!XStringListToTextProperty(&window_name, 1, pWindowName)) {
 		pWindowName = NULL;
 	}
 
-	if (!XStringListToTextProperty((char **) &icon_name, 1, pIconName)) {
+	if (!XStringListToTextProperty(&icon_name, 1, pIconName)) {
 		pIconName = NULL;
 	}
 
