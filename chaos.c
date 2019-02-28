@@ -508,6 +508,8 @@ chaos_init(void)
 
 	chaos_rcv_buffer_empty = 1;
 
+	printf("my chaos address: %o\n", chaos_get_addr());
+
 	return 0;
 }
 
