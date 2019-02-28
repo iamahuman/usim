@@ -26,11 +26,8 @@ char *mcrsym_filename = "../bands/ucadr.sym.841";
 char *prommcr_filename = "../bands/promh.mcr.9";
 char *promsym_filename = "../bands/promh.sym.9";
 
-bool run_ucode_flag = true;
 bool save_state_flag = false;
 bool warm_boot_flag = false;
-bool stop_after_prom_flag = false;
-bool prom_enabled_flag = true;
 
 void
 usage(void)
@@ -39,9 +36,9 @@ usage(void)
 	fprintf(stderr, "CADR simulator\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -i FILE        set disk image\n");
-	fprintf(stderr, "  -S             save state\n");
-	fprintf(stderr, "  -s             halt after prom runs\n");
+	fprintf(stderr, "  -s             save state\n");
 	fprintf(stderr, "  -w             warm boot\n");
+	fprintf(stderr, "  -A CHADDR      my chaos address\n");
 	fprintf(stderr, "  -h             help message\n");
 }
 
@@ -52,16 +49,13 @@ main(int argc, char *argv[])
 
 	printf("CADR emulator v0.9\n");
 
-	while ((c = getopt(argc, argv, "i:Sswl::hA:")) != -1) {
+	while ((c = getopt(argc, argv, "i:swA:h")) != -1) {
 		switch (c) {
 		case 'i':
 			disk_filename = strdup(optarg);
 			break;
-		case 'S':
-			save_state_flag = true;
-			break;
 		case 's':
-			stop_after_prom_flag = true;
+			save_state_flag = true;
 			break;
 		case 'w':
 			warm_boot_flag = true;

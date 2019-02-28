@@ -25,6 +25,8 @@
 #include "misc.h"
 #include "syms.h"
 
+bool run_ucode_flag = true;
+
 ucw_t prom_ucode[512];
 
 ucw_t ucode[16 * 1024];
@@ -65,6 +67,7 @@ int interrupt_control;
 uint32_t dispatch_constant;
 
 ucw_t prom_ucode[512];
+bool prom_enabled_flag = true;
 
 int
 read_prom(char *file, char *symfile)
