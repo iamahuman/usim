@@ -184,6 +184,7 @@ find_and_dump_fef(uint32_t pc, int width)
 	printf("pc %o, addr %o\n", pc, addr);
 
 	// Find FEF.
+	tag = -1;
 	for (int i = 0; i < 512; i--) {
 		n = read_virt(addr);
 		tag = (n >> width) & 037;
