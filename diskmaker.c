@@ -307,34 +307,6 @@ parse_template(char *template)
 }
 
 int
-fillout_image_file(int fd)
-{
-	int last_block_no;
-	int ret;
-	off_t offset;
-
-	// Find highest block number + 1.
-	last_block_no = 0;
-	for (uint32_t i = 0; i < part_count; i++) {
-		int last = parts[i].start + parts[i].size;
-		if (last > last_block_no)
-			last_block_no = last;
-	}
-
-	offset = (last_block_no + 1) * BLOCKSZ;
-
-	ret = ftruncate(fd, offset - 1);
-	if (ret) {
-		perror("ftruncate");
-		return -1;
-	}
-
-	lseek(fd, (off_t) 0, SEEK_SET);
-
-	return 0;
-}
-
-int
 create_disk(char *template)
 {
 	int fd;
@@ -856,8 +828,6 @@ usage(void)
 	fprintf(stderr, "  -d             output debug information\n");
 	exit(1);
 }
-
-extern char *optarg;
 
 int
 main(int argc, char *argv[])
