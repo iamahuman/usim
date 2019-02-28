@@ -16,4 +16,9 @@ extern char *unstr4(unsigned long s);
 extern int read_block(int fd, int block_no, unsigned char *buf);
 extern int write_block(int fd, int block_no, unsigned char *buf);
 
+extern uint32_t load_byte(uint32_t w, int p, int s);
+extern uint32_t deposit_byte(uint32_t w, int p, int s, uint32_t v);
+extern uint32_t ldb(int ppss, uint32_t w);
+extern uint32_t dpb(uint32_t v, int ppss, uint32_t w);
+
 #endif

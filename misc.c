@@ -154,3 +154,28 @@ write_block(int fd, int block_no, unsigned char *buf)
 
 	return 0;
 }
+
+uint32_t
+load_byte(uint32_t w, int p, int s)
+{
+	return (w >> p & (1 << s) - 1);
+}
+
+uint32_t
+deposit_byte(uint32_t w, int p, int s, uint32_t v)
+{
+	uint32_t m = ((1 << s) - 1 << p);
+	return (w & ~m | v << p & m);
+}
+
+uint32_t
+ldb(int ppss, uint32_t w)
+{
+	return load_byte(w, ppss >> 6 & 077, ppss & 077);
+}
+
+uint32_t
+dpb(uint32_t v, int ppss, uint32_t w)
+{
+	return deposit_byte(w, ppss >> 6 & 077, ppss & 077, v);
+}
