@@ -63,7 +63,7 @@ read16(int fd)
 
 	ret = read(fd, b, 2);
 	if (ret != 2) {
-		fprintf(stderr, "read error; ret %d, size %d\n", (int) ret, 2);
+		fprintf(stderr, "read error; ret %d, size %d\n", ret, 2);
 		exit(1);
 	}
 	return (b[1] << 8) | b[0];
@@ -77,7 +77,7 @@ read32(int fd)
 
 	ret = read(fd, b, 4);
 	if (ret != 4) {
-		fprintf(stderr, "read error; ret %d, size %d\n", (int) ret, 4);
+		fprintf(stderr, "read error; ret %d, size %d\n", ret, 4);
 		exit(1);
 	}
 	return ((uint32_t) b[1] << 24 |
