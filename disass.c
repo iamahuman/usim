@@ -21,6 +21,9 @@
 #include "macroops.h"
 #include "microops.h"
 
+int misc_inst_vector[1024];
+bool misc_inst_vector_setup = false;
+
 void
 disassemble_m_src(ucw_t u, int m_src)
 {
@@ -349,66 +352,72 @@ void
 disassemble_instruction(uint32_t fefptr, uint32_t loc, int even, uint32_t inst, uint32_t width)
 {
 	int op;
+	int subop;
 	int dest;
 	int reg;
-	int delta;
+	int disp;
 	int adr;
 	int to;
 	uint32_t nlc;
 
-	op = (inst >> 011) & 017;
-	dest = (inst >> 015) & 07;
-	reg = (inst >> 6) & 07;
-	delta = (inst >> 0) & 077;
-	printf("%011o%c %06o %s ", loc, even ? 'e' : 'o', inst, op_names[op]);
+	op = ldb(01104, inst);
+	subop = ldb(01503, inst);
+	dest = ldb(01602, inst);
+	disp = ldb(00011, inst);
+	reg = ldb(00603, inst);
+
+	printf("%011o%c %06o ", loc, even ? 'e' : 'o', inst);
+
+	if (misc_inst_vector_setup == false) {
+		for (int i = 0; i < 1024; i++) {
+			int index;
+
+			if (misc_inst[i].name == NULL)
+				break;
+			index = misc_inst[i].value;
+			misc_inst_vector[index] = i;
+		}
+		misc_inst_vector_setup = true;
+	}
 
 	switch (op) {
-	case 0:		// CALL
-		printf("reg %s, ", reg_names[reg]);
-		printf("dest %s, ", dest_names[dest]);
-		printf("delta %o ", delta);
-		{
-			uint32_t v;
-			uint32_t tag;
-
-			v = read_virt(fefptr + delta);
-			tag = (v >> width) & 037;
-			switch (tag) {
-			case 3:
-				v = read_virt(v);
-				showstr(v);
-				break;
-			case 4:
-				showstr(v);
-				break;
-			case 027:
-				break;
-			default:
-				v = read_virt(v);
-				show_fef_func_name(v, width);
-				break;
-			}
-		}
-		break;
-	case 2:		// MOVE.
-	case 3:		// CAR
-	case 4:		// CDR.
-	case 5:		// CADR.
-		printf("reg %s, ", reg_names[reg]);
-		printf("dest %s, ", dest_names[dest]);
-		printf("delta %o ", delta);
+	case 00:		// DEST/ADDR
+	case 01:
+	case 02:
+	case 03:
+	case 04:
+	case 05:
+	case 06:
+	case 07:
+	case 010:
+		printf("%s ", op_names[op]);
+		printf("%s ", dest_names[dest]);
+		if (reg < 4)
+			printf("FEF|%d", disp);
+		else if (reg == 4)
+			//---!!! Decode value at DISP.
+			printf("'%d", disp);
+		else if (reg == 5)
+			printf("LOCAL|%d", disp);
+		else if (reg == 6)
+			printf("ARG|%d", disp);
+		else
+			printf("PDL|%d (undefined)", disp);
 		break;
 	case 011:		// ND1.
-		printf("%s ", nd1_names[dest]);
+		printf("%s ", op_names[op]);
+		printf("%s ", nd1_names[subop]);
 		break;
 	case 012:		// ND2.
-		printf("%s ", nd2_names[dest]);
+		printf("%s ", op_names[op]);
+		printf("%s ", nd2_names[subop]);
 		break;
 	case 013:		// ND3.
-		printf("%s ", nd3_names[dest]);
+		printf("%s ", op_names[op]);
+		printf("%s ", nd3_names[subop]);
 		break;
 	case 014:		// BRANCH.
-		printf("type %s, ", branch_names[dest]);
+		printf("%s ", branch_names[subop]);
 
 		to = (inst & 03777) << 1;
 		to |= (inst & 0x8000) ? 1 : 0;
@@ -422,15 +431,57 @@ disassemble_instruction(uint32_t fefptr, uint32_t loc, int even, uint32_t inst, 
 		nlc = (loc * 2 + (even ? 0 : 1)) + to;
 
 		if (to > 0) {
-			printf("+%o; %o%c ", to, nlc / 2, (nlc & 1) ? 'o' : 'e');
+			printf("+%o;\t%o%c ", to, nlc / 2, (nlc & 1) ? 'o' : 'e');
 		} else {
-			printf("-%o; %o%c ", -to, nlc / 2, (nlc & 1) ? 'o' : 'e');
+			printf("-%o;\t%o%c ", -to, nlc / 2, (nlc & 1) ? 'o' : 'e');
 		}
 		break;
 	case 015:		// MISC.
+		printf("(%s) ", op_names[op]);
 		adr = inst & 0777;
-		printf("%o ", adr);
-		printf("dest %s, ", dest_names[dest]);
+		if (adr < 1024 && misc_inst_vector[adr]) {
+			printf("%s ", misc_inst[misc_inst_vector[adr]].name);
+		} else {
+			printf("%o ", adr);
+		}
+		printf("%s ", dest_names[dest]);
+		break;
+	case 016:		// ND4.
+		switch (subop) {
+		case 0:		// STACK-CLOSURE-DISCONNECT
+		case 2:		// MAKE-STACK-CLOSURE
+		case 4:		// STACK-CLOSURE-DISCONNECT-FIRST
+			printf("%s", nd4_names[subop]);
+			printf("  local slot %d", disp);
+			break;
+		case 1:		// STACK-CLOSURE-UNSHARE
+		case 5:		// PUSH-CDR-IF-CAR-EQUAL
+		case 6:		// PUSH-CDR-STORE-CAR-IF-CONS
+			printf("%s", nd4_names[subop]);
+			printf(" %d", disp);
+			break;
+		case 3:		// PUSH-NUMBER
+			printf("%s", nd4_names[subop]);
+			printf(" %d", disp);
+			break;
+		default:
+			printf("UNDEF-ND4-%d %d", subop, disp);
+			break;
+		}
+		break;
+	case 020:		// AREFI
+		switch (reg) {
+		case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+			printf("%s (?)", arefi_names[reg]);
+			printf(" %s ", dest_names[dest]);
+			break;
+		default:
+			printf("UNDEF-AREFI-%d", reg);
+			break;
+		}
+		break;
+	default:
+		printf("UNDEF-%d", op);
 		break;
 	}
 	printf("\n");
