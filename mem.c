@@ -187,7 +187,8 @@ write_phy_mem(int paddr, uint32_t v)
 }
 
 #define PAGES_TO_SAVE 8192
-int restored;
+
+bool restored = false;
 
 int
 restore_state(void)
@@ -196,9 +197,9 @@ restore_state(void)
 	ssize_t ret;
 	unsigned char version[2];
 
-	if (restored)
+	if (restored == true)
 		return 0;
-	restored = 1;
+	restored = true;
 
 	fd = open("usim.state", O_RDONLY);
 	if (fd < 0)
