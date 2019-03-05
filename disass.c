@@ -22,6 +22,7 @@
 #include "microops.h"
 
 int misc_inst_vector[1024];
+int misc_inst_size = sizeof misc_inst / sizeof misc_inst[0];
 bool misc_inst_vector_setup = false;
 
 void
@@ -369,7 +370,7 @@ disassemble_instruction(uint32_t fefptr, uint32_t loc, int even, uint32_t inst, 
 	printf("%011o%c %06o ", loc, even ? 'e' : 'o', inst);
 
 	if (misc_inst_vector_setup == false) {
-		for (int i = 0; i < 1024; i++) {
+		for (int i = 0; i < misc_inst_size; i++) {
 			int index;
 
 			if (misc_inst[i].name == NULL)
