@@ -449,19 +449,19 @@ cc_pipe2(void)
 }
 
 uint64_t setup_map_inst[] = {
-	04000000000110003, // (alu) SETZ a=0 m=0 m[0] C=0 alu-> Q-R -><none>,m[2]
-	00000000000150173, // (alu) SETO a=0 m=0 m[0] C=0 alu-> Q-R -><none>,m[3]
-	00600101602370010, // (byte) a=2 m=m[3] dpb pos=10, width=1 ->a_mem[47]
+	04000000000110003UL, // (alu) SETZ a=0 m=0 m[0] C=0 alu-> Q-R -><none>,m[2]
+	00000000000150173UL, // (alu) SETO a=0 m=0 m[0] C=0 alu-> Q-R -><none>,m[3]
+	00600101602370010UL, // (byte) a=2 m=m[3] dpb pos=10, width=1 ->a_mem[47]
 
-	04600101446230166, // (byte) a=2 m=m[3] dpb pos=26, width=4 ->VMA,write-map ,m[4]
-	04600201400270400, // (byte) a=4 m=m[3] dpb pos=0, width=11 -><none>,m[5]
-	00002340060010050, // (alu) SETA a=47 m=0 m[0] C=0 alu-> ->MD ,m[0]
-	00600241446030152, // (byte) a=5 m=m[3] dpb pos=12, width=4 ->VMA,write-map ,m[0]
-	00002365060010310, // (alu) M+A [ADD] a=47 m=52 MD C=0 alu-> ->MD ,m[0]
-	00600201400270041, // (byte) a=4 m=m[3] dpb pos=1, width=2 -><none>,m[5]
-	04600241446030444, // (byte) a=5 m=m[3] dpb pos=4, width=12 ->VMA,write-map ,m[0]
-	00002365060010310, // (alu) M+A [ADD] a=47 m=52 MD C=0 alu-> ->MD ,m[0]
-	04600201446030000, // (byte) a=4 m=m[3] dpb pos=0, width=1 ->VMA,write-map ,m[0]
+	04600101446230166UL, // (byte) a=2 m=m[3] dpb pos=26, width=4 ->VMA,write-map ,m[4]
+	04600201400270400UL, // (byte) a=4 m=m[3] dpb pos=0, width=11 -><none>,m[5]
+	00002340060010050UL, // (alu) SETA a=47 m=0 m[0] C=0 alu-> ->MD ,m[0]
+	00600241446030152UL, // (byte) a=5 m=m[3] dpb pos=12, width=4 ->VMA,write-map ,m[0]
+	00002365060010310UL, // (alu) M+A [ADD] a=47 m=52 MD C=0 alu-> ->MD ,m[0]
+	00600201400270041UL, // (byte) a=4 m=m[3] dpb pos=1, width=2 -><none>,m[5]
+	04600241446030444UL, // (byte) a=5 m=m[3] dpb pos=4, width=12 ->VMA,write-map ,m[0]
+	00002365060010310UL, // (alu) M+A [ADD] a=47 m=52 MD C=0 alu-> ->MD ,m[0]
+	04600201446030000UL, // (byte) a=4 m=m[3] dpb pos=0, width=1 ->VMA,write-map ,m[0]
 	0
 };
 
@@ -493,15 +493,15 @@ cc_report_ide_regs(void)
 		uint32_t v;
 
 		cc_write_a_mem(1, i | 020);
-		cc_execute_r(0000040060010050);	// alu seta a=1 ->md
-		cc_execute_r(0000140044010050);	// alu seta a=3 alu-> ->vma+write
+		cc_execute_r(0000040060010050UL);	// alu seta a=1 ->md
+		cc_execute_r(0000140044010050UL);	// alu seta a=3 alu-> ->vma+write
 
-		cc_execute_w(0000100060010050);	// alu seta a=2 ->md
-		cc_execute_w(0000200044010050);	// alu seta a=4 alu-> ->vma+write
+		cc_execute_w(0000100060010050UL);	// alu seta a=2 ->md
+		cc_execute_w(0000200044010050UL);	// alu seta a=4 alu-> ->vma+write
 
-		cc_execute_w(0000240044010050);	// alu seta a=5 alu-> ->vma+write
+		cc_execute_w(0000240044010050UL);	// alu seta a=5 alu-> ->vma+write
 
-		cc_execute_w(0000140042010050);	// alu seta a=3 alu-> ->vma+read */
+		cc_execute_w(0000140042010050UL);	// alu seta a=3 alu-> ->vma+read */
 		v = cc_read_md();
 		printf("ide[%d] = 0x%08x 0x%02x\n", i, v, v & 0xff);
 	}
@@ -605,10 +605,10 @@ cc_test_ir(void)
 {
 	_test_ir(0);
 	_test_ir(1);
-	_test_ir(0x000022220000);
-	_test_ir(0x011133332222);
+	_test_ir(0x000022220000UL);
+	_test_ir(0x011133332222UL);
 	_test_ir(2);
-	_test_ir(0x011155552222);
+	_test_ir(0x011155552222UL);
 }
 
 void
