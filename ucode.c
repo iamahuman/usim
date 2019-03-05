@@ -452,19 +452,16 @@ read_pdl_mem(int which)
 void
 write_pdl_mem(int which, uint32_t v)
 {
+	if (pdl_index >= 1024) {
+		printf("pdl ptr %o!\n", pdl_index);
+		return;
+	}
+
 	switch (which) {
 	case USE_PDL_PTR:
-		if (pdl_ptr > 1024) {
-			printf("pdl ptr %o!\n", pdl_ptr);
-			return;
-		}
 		pdl_memory[pdl_ptr] = v;
 		break;
 	case USE_PDL_INDEX:
-		if (pdl_index > 1024) {
-			printf("pdl ptr %o!\n", pdl_index);
-			return;
-		}
 		pdl_memory[pdl_index] = v;
 		break;
 	}
