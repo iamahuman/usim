@@ -855,7 +855,7 @@ int
 main(int argc, char **argv)
 {
 	int c;
-	FILE *f;
+	FILE *f = NULL;
 
 	yyin = stdin;
 
