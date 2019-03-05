@@ -834,9 +834,8 @@ cmd_read_a_mem(int adr)
 void
 prompt(void)
 {
-	const char *ps = "(cc) ";
 	if (batch == false)
-		printf(ps);
+		printf("(cc) ");
 }
 
 char *serial_devicename = "/dev/ttyUSB1";
