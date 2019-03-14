@@ -1,6 +1,7 @@
 // readmcr --- dump a microcode (MCR) file
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <fcntl.h>
@@ -10,17 +11,34 @@
 #include "usim.h"
 #include "ucode.h"
 #include "disass.h"
+#include "syms.h"
 #include "misc.h"
 
-bool showmcr = false;
-bool debug = false;
-int skip = 0;
+bool showimem = false;
+bool showamem = false;
+bool showdmem = false;
+char *symfn = NULL;
 
 ///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in readmcr.
 uint32_t
 read_virt(int a)
 {
 	return -1;
+}
+
+char *
+getlbl(int type, int loc)
+{
+	char *lbl;
+
+	if (symfn == NULL)
+		return "";
+
+	lbl = sym_find_by_type_val(0, type, loc);
+	if (lbl == NULL)
+		return "";
+
+	return lbl;
 }
 
 void
@@ -47,7 +65,11 @@ dump_i_mem(int fd, int start, int size)
 			((ucw_t) w3 << 16) |
 			((ucw_t) w4 << 0);
 
-		if (showmcr) {
+		if (showimem) {
+			char *l = getlbl(1, loc);
+			if (strcmp(l, "") != 0)
+				printf("%s:\n", l);
+
 			printf("%03o %016" PRIo64 ":\t", loc, ll);
 			disassemble_ucode_loc(ll);
 		}
@@ -60,18 +82,17 @@ void
 dump_d_mem(int fd, int start, int size)
 {
 	printf("d-memory; start %o, size %o\n", start, size);
-	for (int i = 0; i < size; i++) {
-		read16(fd);
-		read16(fd);
-	}
-}
 
-void
-dump_a_mem(int fd, int start, int size)
-{
-	printf("a-memory; start %o, size %o\n", start, size);
+	if (size < 04000)
+		fprintf(stderr, "WARNING: D-MEM is less than 04000 words\n");
+
 	for (int i = 0; i < size; i++) {
-		read32(fd);
+		unsigned int v;
+
+		v = read32(fd);
+
+		if (showdmem == true)
+			printf("%o <- %o\t%s\n", i, v, getlbl(2, i));
 	}
 }
 
@@ -84,14 +105,29 @@ dump_main_mem(int fd, int start, int size)
 }
 
 void
+dump_a_mem(int fd, int start, int size)
+{
+	printf("a-memory; start %o, size %o\n", start, size);
+	for (int i = 0; i < size; i++) {
+		unsigned int v;
+
+		v = read32(fd);
+
+		if (showamem == true)
+			printf("%o <- %o\t%s %s\n", i, v, getlbl(4, i), getlbl(5, i));
+	}
+}
+
+void
 usage(void)
 {
 	fprintf(stderr, "usage: readmcr FILE\n");
 	fprintf(stderr, "dump a microcode file\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "  -d             extra debug info\n");
-	fprintf(stderr, "  -s N           skip N * 32-bit values\n");
-	fprintf(stderr, "  -m             show microcode\n");
+	fprintf(stderr, "  -i             show I memory (microcode) section\n");
+	fprintf(stderr, "  -a             show A memory section\n");
+	fprintf(stderr, "  -d             show D memory section\n");
+	fprintf(stderr, "  -s FILE	  decode labels from a symbol file\n");
 	fprintf(stderr, "  -h             show help message\n");
 }
 
@@ -102,19 +138,25 @@ main(int argc, char *argv[])
 	int fd;
 	bool done;
 
-	showmcr = false;
-	skip = false;
+	showimem = false;
+	showamem = false;
+	showdmem = false;
+	symfn = NULL;
 
-	while ((c = getopt(argc, argv, "ds:mh")) != -1) {
+	while ((c = getopt(argc, argv, "iads:h")) != -1) {
 		switch (c) {
+		case 'i':
+			showimem = true;
+			break;
+		case 'a':
+			showamem = true;
+			break;
 		case 'd':
-			debug = true;
+			showdmem = true;
 			break;
 		case 's':
-			skip = atoi(optarg);
-			break;
-		case 'm':
-			showmcr = true;
+			symfn = optarg;
+			sym_read_file(0, symfn);
 			break;
 		case 'h':
 			usage();
@@ -136,11 +178,6 @@ main(int argc, char *argv[])
 	if (fd == -1) {
 		fprintf(stderr, "%s: no such file or directory\n", argv[0]);
 		exit(1);
-	}
-
-	if (skip != 0) {
-		while (skip--)
-			read32(fd);
 	}
 
 	done = false;
