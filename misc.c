@@ -2,9 +2,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 #include "misc.h"
+
+bool
+streq(const char *a, const char *b)
+{
+	return strcmp(a, b) == 0;
+}
 
 static char
 tohex(char b)
@@ -54,7 +62,7 @@ dumpmem(char *ptr, int len)
 		offset += 16;
 	}
 }
-
+
 uint16_t
 read16(int fd)
 {
@@ -85,7 +93,7 @@ read32(int fd)
 		(uint32_t) b[3] << 8  |
 		(uint32_t) b[2] << 0);
 }
-
+
 unsigned long
 str4(char *s)
 {

@@ -1,11 +1,14 @@
 #ifndef USIM_MISC_H
 #define USIM_MISC_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
+
+extern bool streq(const char *a, const char *b);
 
 extern void dumpmem(char *ptr, int len);
 
