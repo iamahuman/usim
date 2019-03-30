@@ -313,7 +313,7 @@ cc_report_pc_and_ir(uint32_t *ppc)
 	PC = cc_read_pc();
 	ir = cc_read_ir();
 	printf("PC=%011o (%08x) ir=%" PRIu64 " ", PC, PC, ir);
-	disassemble_ucode_loc(ir);
+	printf("%s\n", uinst_desc(ir, NULL));
 	*ppc = PC;
 }
 
@@ -328,7 +328,7 @@ cc_report_pc_md_ir(uint32_t *ppc)
 	MD = cc_read_md();
 	ir = cc_read_ir();
 	printf("PC=%011o MD=%011o (%08x) ir=%" PRIu64 " ", PC, MD, MD, ir);
-	disassemble_ucode_loc(ir);
+	printf("%s\n", uinst_desc(ir, NULL));
 	*ppc = PC;
 }
 
@@ -379,7 +379,7 @@ cc_pipe(void)
 			ir_pair(CONS_IR_ALUF, CONS_ALU_SETM) |
 			ir_pair(CONS_IR_OB, CONS_OB_ALU);
 		printf("%" PRIu64 " ", isn);
-		disassemble_ucode_loc(isn);
+		printf("%s\n", uinst_desc(isn, NULL));
 
 		cc_write_diag_ir(isn);
 		cc_noop_debug_clock();
@@ -418,7 +418,7 @@ cc_pipe2(void)
 			ir_pair(CONS_IR_OB, CONS_OB_ALU) |
 			ir_pair(CONS_IR_M_MEM_DEST, i);
 		printf("%" PRIu64 " ", isn);
-		disassemble_ucode_loc(isn);
+		printf("%s\n", uinst_desc(isn, NULL));
 		cc_write_diag_ir(isn);
 
 		cc_noop_debug_clock();

@@ -10,14 +10,16 @@
 
 #include "usim.h"
 #include "ucode.h"
-#include "disass.h"
 #include "syms.h"
+#include "disass.h"
 #include "misc.h"
 
 static bool showimem = false;
 static bool showamem = false;
 static bool showdmem = false;
 static char *symfn = NULL;
+
+static symtab_t symmcr;
 
 static char *
 getlbl(int type, int loc)
@@ -27,7 +29,7 @@ getlbl(int type, int loc)
 	if (symfn == NULL)
 		return "";
 
-	lbl = sym_find_by_type_val(0, type, loc);
+	lbl = sym_find_by_type_val(&symmcr, type, loc);
 	if (lbl == NULL)
 		return "";
 
@@ -63,8 +65,7 @@ dump_i_mem(int fd, int start, int size)
 			if (strcmp(l, "") != 0)
 				printf("%s:\n", l);
 
-			printf("%03o %016" PRIo64 ":\t", loc, ll);
-			disassemble_ucode_loc(ll);
+			printf("%03o %016" PRIo64 ":\t %s\n", loc, ll, uinst_desc(ll, &symmcr));
 		}
 
 		loc++;
@@ -120,7 +121,7 @@ usage(void)
 	fprintf(stderr, "  -i             show I memory (microcode) section\n");
 	fprintf(stderr, "  -a             show A memory section\n");
 	fprintf(stderr, "  -d             show D memory section\n");
-	fprintf(stderr, "  -s FILE	  decode labels from a symbol file\n");
+	fprintf(stderr, "  -s FILE        decode labels from a symbol file\n");
 	fprintf(stderr, "  -h             show help message\n");
 }
 
@@ -149,7 +150,7 @@ main(int argc, char *argv[])
 			break;
 		case 's':
 			symfn = optarg;
-			sym_read_file(0, symfn);
+			sym_read_file(&symmcr, symfn);
 			break;
 		case 'h':
 			usage();
@@ -166,6 +167,9 @@ main(int argc, char *argv[])
 		usage();
 		exit(1);
 	}
+
+	if (symfn != NULL)
+		sym_read_file(&symmcr, symfn);
 
 	fd = open(argv[0], O_RDONLY);
 	if (fd == -1) {
