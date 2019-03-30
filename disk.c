@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 
 #include "usim.h"
+#include "ucfg.h"
 #include "ucode.h"
 #include "mem.h"
 #include "misc.h"
@@ -420,7 +421,7 @@ disk_init(char *filename)
 		s = strstr(fn, ".mcr.");
 		if (s)
 			memcpy(s, ".sym.", 5);
-		mcrsym_filename = strdup(fn);
+		ucfg.ucode_mcrsym_filename = strdup(fn);
 	}
 
 	return 0;

@@ -18,16 +18,11 @@
 #include "chaos.h"
 #include "disk.h"
 
+#include "ucfg.h"
 #include "syms.h"
 #include "disass.h"
 
-char *disk_filename = "disk.img";
-char *mcrsym_filename = "../bands/ucadr.sym.841";
-static char *prommcr_filename = "../bands/promh.mcr.9";
-char *promsym_filename = "../bands/promh.sym.9";
-
-bool save_state_flag = false;
-bool warm_boot_flag = false;
+char *config_filename;
 
 symtab_t sym_mcr;
 symtab_t sym_prom;
@@ -38,10 +33,7 @@ usage(void)
 	fprintf(stderr, "usage: usim [OPTION]...\n");
 	fprintf(stderr, "CADR simulator\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "  -i FILE        set disk image\n");
-	fprintf(stderr, "  -s             save state\n");
-	fprintf(stderr, "  -w             warm boot\n");
-	fprintf(stderr, "  -A CHADDR      my chaos address\n");
+	fprintf(stderr, "  -c FILE        configuration file (default: %s)\n", config_filename);
 	fprintf(stderr, "  -h             help message\n");
 }
 
@@ -52,30 +44,11 @@ main(int argc, char *argv[])
 
 	printf("CADR emulator v" VERSION "\n");
 
-	while ((c = getopt(argc, argv, "i:swA:h")) != -1) {
-		switch (c) {
-		case 'i':
-			disk_filename = strdup(optarg);
-			break;
-		case 's':
-			save_state_flag = true;
-			break;
-		case 'w':
-			warm_boot_flag = true;
-			break;
-		case 'A':
-			if (optarg != NULL) {
-				char *end;
-				int addr;
+	config_filename = "usim.ini";
 
-				addr = (int)strtoul (optarg, &end, 8);
-				if (*end != 0 || addr > 0177777) {
-					fprintf(stderr, "Chaosnet address must be a 16-bit octal number\n");
-					exit(1);
-				}
-				chaos_set_addr(addr);
-			}
-			break;
+	while ((c = getopt(argc, argv, "c:h")) != -1) {
+		switch (c) {
+		case 'c': config_filename = strdup(optarg); break;
 		case 'h':
 			usage();
 			exit(0);
@@ -92,12 +65,15 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	read_prom(prommcr_filename);
-	sym_read_file(&sym_prom, promsym_filename);
+	if (ini_parse(config_filename, ucfg_handler, &ucfg) < 0)
+		fprintf(stderr, "Can't load '%s', using defaults\n", config_filename);
+
+	read_prom(ucfg.ucode_prommcr_filename);
+	sym_read_file(&sym_prom, ucfg.ucode_promsym_filename);
 
 	tv_init();
-	disk_init(disk_filename);
-	sym_read_file(&sym_mcr, mcrsym_filename);
+	disk_init(ucfg.usim_disk_filename);
+	sym_read_file(&sym_mcr, ucfg.ucode_mcrsym_filename);
 	iob_init();
 	chaos_init();
 

@@ -12,5 +12,6 @@ readmcr
 usim
 
 *.img
+*.ini
 
 TAGS

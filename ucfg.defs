@@ -1,0 +1,9 @@
+// X(section, name, default)
+
+X(ucode, promsym_filename, "promh.sym.9")
+X(ucode, prommcr_filename, "promh.mcr.9")
+X(ucode, mcrsym_filename, "ucadr.sym.841")
+
+X(usim, disk_filename, "disk.img")
+
+X(chaos, myaddr, "0404")
