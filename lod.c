@@ -10,55 +10,20 @@
 #include "disass.h"
 #include "misc.h"
 
-int show_comm;
-int show_scratch;
-int show_initial_fef;
-int show_fef;
-int show_initial_sg;
-int show_memory;
-int width = 24;
+static int show_comm;
+static int show_scratch;
+static int show_initial_fef;
+static int show_fef;
+static int show_initial_sg;
+static int show_memory;
+static int width = 24;
 
-int lodfd;
+static int lodfd;
 
-int bnum = -1;
-unsigned int bbuf[256] = { 0 };
+static int bnum = -1;
+static unsigned int bbuf[256] = { 0 };
 
-struct {
-	char *name;
-	uint32_t a;
-	uint32_t v;
-} sc[] = {
-	{"%SYS-COM-AREA-ORIGIN-PNTR", 0400, 0},
-	{"%SYS-COM-VALID-SIZE", 0401, 0},
-	{"%SYS-COM-PAGE-TABLE-PNTR", 0402, 0},
-	{"%SYS-COM-PAGE-TABLE-SIZE", 0403, 0},
-	{"%SYS-COM-OBARRAY-PNTR", 0404, 0},
-	{"%SYS-COM-ETHER-FREE-LIST", 0405, 0},
-	{"%SYS-COM-ETHER-TRANSMIT-LIST", 0406, 0},
-	{"%SYS-COM-ETHER-RECEIVE-LIST", 0407, 0},
-	{"%SYS-COM-BAND-FORMAT", 0410, 0},
-	{"%SYS-COM-GC-GENERATION-NUMBER", 0411, 0},
-	{"%SYS-COM-UNIBUS-INTERRUPT-LIST", 0412, 0},
-	{"%SYS-COM-TEMPORARY", 0413, 0},
-	{"%SYS-COM-FREE-AREA/#-LIST", 0414, 0},
-	{"%SYS-COM-FREE-REGION/#-LIST", 0415, 0},
-	{"%SYS-COM-MEMORY-SIZE", 0416, 0},
-	{"%SYS-COM-WIRED-SIZE", 0417, 0},
-	{"%SYS-COM-CHAOS-FREE-LIST", 0420, 0},
-	{"%SYS-COM-CHAOS-TRANSMIT-LIST", 0421, 0},
-	{"%SYS-COM-CHAOS-RECEIVE-LIST", 0422, 0},
-	{"%SYS-COM-DEBUGGER-REQUESTS", 0423, 0},
-	{"%SYS-COM-DEBUGGER-KEEP-ALIVE", 0424, 0},
-	{"%SYS-COM-DEBUGGER-DATA-1", 0425, 0},
-	{"%SYS-COM-DEBUGGER-DATA-2", 0426, 0},
-	{"%SYS-COM-MAJOR-VERSION", 0427, 0},
-	{"%SYS-COM-DESIRED-MICROCODE-VERSION", 0430, 0},
-	{"%SYS-COM-HIGHEST-VIRTUAL-ADDRESS", 0431, 0},
-	{"%SYS-COM-POINTER-WIDTH", 0432, 0},
-	{(char *) 0, 0, 0},
-};
-
-struct {
+static struct {
 	char *name;
 	uint32_t a;
 	uint32_t v;
@@ -99,7 +64,7 @@ struct {
 	{(char *) 0, 0, 0}
 };
 
-struct {
+static struct {
 	char *name;
 	uint32_t a;
 	uint32_t v;
@@ -142,7 +107,7 @@ read_virt(int addr)
 	return bbuf[addr % 256];
 }
 
-uint32_t
+static uint32_t
 show(int a, int cr)
 {
 	uint32_t v;
@@ -155,7 +120,7 @@ show(int a, int cr)
 	return v;
 }
 
-uint32_t
+static uint32_t
 showlabel(char *l, int a, int cr)
 {
 	unsigned int v;
@@ -166,7 +131,7 @@ showlabel(char *l, int a, int cr)
 	return v;
 }
 
-int
+static int
 find_and_dump_fef(uint32_t pc, int width)
 {
 	uint32_t addr;
@@ -253,8 +218,8 @@ find_and_dump_fef(uint32_t pc, int width)
 
 	return 0;
 }
-
-void
+
+static void
 usage(void)
 {
 	fprintf(stderr, "usage: lod FILE [OPTION]... FILE\n");

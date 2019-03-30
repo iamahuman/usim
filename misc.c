@@ -104,7 +104,7 @@ unstr4(unsigned long s)
 	b[4] = 0;
 	return b;
 }
-
+
 int
 read_block(int fd, int block_no, unsigned char *buf)
 {
@@ -154,7 +154,7 @@ write_block(int fd, int block_no, unsigned char *buf)
 
 	return 0;
 }
-
+
 uint32_t
 load_byte(uint32_t w, int p, int s)
 {

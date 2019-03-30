@@ -29,42 +29,42 @@ bool run_ucode_flag = true;
 
 ucw_t prom_ucode[512];
 
-ucw_t ucode[16 * 1024];
-uint32_t dispatch_memory[2048];
+static ucw_t ucode[16 * 1024];
+static uint32_t dispatch_memory[2048];
 
-size_t cycles;
+static size_t cycles;
 
-int u_pc;
+static int u_pc;
 
-int page_fault_flag;
-int interrupt_pending_flag;
-int interrupt_status_reg;
+static int page_fault_flag;
+static int interrupt_pending_flag;
+static int interrupt_status_reg;
 
-int sequence_break_flag;
-int interrupt_enable_flag;
-int bus_reset_flag;
+static int sequence_break_flag;
+static int interrupt_enable_flag;
+static int bus_reset_flag;
 
-uint32_t md;
-uint32_t vma;
-uint32_t q;
-uint32_t opc;
+static uint32_t md;
+static uint32_t vma;
+static uint32_t q;
+static uint32_t opc;
 
-uint32_t new_md;
-int new_md_delay;
+static uint32_t new_md;
+static int new_md_delay;
 
-int write_fault_bit;
-int access_fault_bit;
+static int write_fault_bit;
+static int access_fault_bit;
 
-int alu_carry;
-uint32_t alu_out;
+static int alu_carry;
+static uint32_t alu_out;
 
-uint32_t oa_reg_lo;
-uint32_t oa_reg_hi;
-int oa_reg_lo_set;
-int oa_reg_hi_set;
+static uint32_t oa_reg_lo;
+static uint32_t oa_reg_hi;
+static int oa_reg_lo_set;
+static int oa_reg_hi_set;
 
-int interrupt_control;
-uint32_t dispatch_constant;
+static int interrupt_control;
+static uint32_t dispatch_constant;
 
 ucw_t prom_ucode[512];
 bool prom_enabled_flag = true;
@@ -113,7 +113,7 @@ read_prom(char *file, char *symfile)
 	return 0;
 }
 
-void
+static void
 set_interrupt_status_reg(int new)
 {
 	interrupt_status_reg = new;
@@ -159,7 +159,7 @@ deassert_xbus_interrupt(void)
 
 // ---!!! read_mem, write_mem: Document each address.
 
-void
+static void
 unibus_read(int offset, uint32_t *pv)
 {
 	switch (offset) {
@@ -178,7 +178,7 @@ unibus_read(int offset, uint32_t *pv)
 }
 
 // Read virtual memory, returns -1 on fault and 0 if OK.
-int
+static int
 read_mem(int vaddr, uint32_t *pv)
 {
 	uint32_t map;
@@ -261,7 +261,7 @@ read_mem(int vaddr, uint32_t *pv)
 	return 0;
 }
 
-void
+static void
 unibus_write(int offset, uint32_t v)
 {
 	switch (offset) {
@@ -302,7 +302,7 @@ unibus_write(int offset, uint32_t v)
 }
 
 // Write virtual memory.
-int
+static int
 write_mem(int vaddr, uint32_t v)
 {
 	uint32_t map;
@@ -392,8 +392,8 @@ write_mem(int vaddr, uint32_t v)
 	return 0;
 }
 
-uint32_t a_memory[1024];
-uint32_t m_memory[32];
+static uint32_t a_memory[1024];
+static uint32_t m_memory[32];
 
 void
 write_a_mem(int loc, uint32_t v)
@@ -407,7 +407,7 @@ read_a_mem(int loc)
 	return a_memory[loc];
 }
 
-uint32_t
+static uint32_t
 read_m_mem(int loc)
 {
 	if (loc > 32) {
@@ -417,21 +417,21 @@ read_m_mem(int loc)
 	return m_memory[loc];
 }
 
-void
+static void
 write_m_mem(int loc, uint32_t v)
 {
 	m_memory[loc] = v;
 	a_memory[loc] = v;
 }
 
-uint32_t pdl_memory[1024];
-int pdl_ptr;
-int pdl_index;
+static uint32_t pdl_memory[1024];
+static int pdl_ptr;
+static int pdl_index;
 
 #define USE_PDL_PTR 1
 #define USE_PDL_INDEX 2
 
-uint32_t
+static uint32_t
 read_pdl_mem(int which)
 {
 	switch (which) {
@@ -449,7 +449,7 @@ read_pdl_mem(int which)
 	return -1;		///---!! Not reachable.
 }
 
-void
+static void
 write_pdl_mem(int which, uint32_t v)
 {
 	if (pdl_index >= 1024) {
@@ -467,17 +467,17 @@ write_pdl_mem(int which, uint32_t v)
 	}
 }
 
-int spc_stack[32];
-int spc_stack_ptr;
+static int spc_stack[32];
+static int spc_stack_ptr;
 
-void
+static void
 push_spc(int pc)
 {
 	spc_stack_ptr = (spc_stack_ptr + 1) & 037;
 	spc_stack[spc_stack_ptr] = pc;
 }
 
-int
+static int
 pop_spc(void)
 {
 	uint32_t v;
@@ -487,12 +487,12 @@ pop_spc(void)
 	return v;
 }
 
-int lc;
-int lc_byte_mode_flag;
+static int lc;
+static int lc_byte_mode_flag;
 
 // Advance the LC register, following the rules; will read next VMA if
 // needed.
-void
+static void
 advance_lc(int *ppc)
 {
 	int old_lc;
@@ -538,7 +538,7 @@ advance_lc(int *ppc)
 }
 
 // Write value to decoded destination.
-void
+static void
 write_dest(int dest, uint32_t out_bus)
 {
 	if (dest & 04000) {
@@ -705,7 +705,7 @@ write_dest(int dest, uint32_t out_bus)
 	out = (a) - (b) - ((ci) ? 0 : 1);		\
 	co = (unsigned)(out) < (unsigned)(a) ? 1 : 0;
 
-uint32_t
+static uint32_t
 rotate_left(uint32_t value, int bitstorotate)
 {
 	uint32_t tmp;

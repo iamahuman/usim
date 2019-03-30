@@ -14,7 +14,7 @@
 //
 // Keyboard translate table is a 3 X 64 array.
 // 3 entries for each of 100 keys.  First is vanilla, second shift, third top.
-unsigned char kb_old_table[64][3] = {
+static unsigned char kb_old_table[64][3] = {
 	{LM_K_BREAK, LM_K_BREAK, LM_K_NETWORK},
 	{LM_K_ESC, LM_K_ESC, LM_K_SYSTEM},
 	{'1', '!', '!'},
@@ -94,126 +94,6 @@ unsigned char kb_old_table[64][3] = {
 	// #\RIGHT-META
 };
 
-// The second dimension is 200 long and indexed by keycode.
-// The first dimension is the shifts:
-//  0 unshifted
-//  1 shift
-//  2 top
-//  3 greek
-//  4 shift greek
-// Elements in the table are 16-bit unsigned numbers.
-// Bit 15 on and bit 14 on means undefined code, ignore and beep.
-// Bit 15 on and bit 14 off means low bits are shift for bit in KBD-SHIFTS
-//    (40 octal for right-hand key of a pair)
-// Bit 15 off is ordinary code.
-unsigned char kb_new_table[128][4] = {
-	// #\BACK-NEXT                           ;100 macro
-	// #\ESC                                 ;40 terminal
-	// #\QUOTE                               ;120 Quote
-	// #\BS                                  ;160 Overstrike
-	// #\CLEAR                               ;110 Clear Input
-	// #\FORM                                ;50 clear screen
-	// #\HOLD-OUTPUT                         ;30 hold output
-	// #\STOP-OUTPUT                         ;170 Stop Output
-	// #\ABORT                               ;67 Abort
-	// #\BREAK                               ;167 Break
-	// #\RESUME                              ;47 resume
-	// #\CALL                                ;107 Call
-
-	// #\ROMAN-I                             ;101 Roman I
-	// #\ROMAN-II                            ;1 Roman II
-	// #\SYSTEM                              ;141 system
-	// (#/: 14 14)                           ;21 plus-minus
-	// (#/1 #/! #/!)                         ;121 One
-	// (#/2 #/@ #/@)                         ;61 Two
-	// (#/3 #/# #/#)                         ;161 Three
-	// (#/4 #/$ #/$)                         ;11 Four
-	// (#/5 #/% #/%)                         ;111 Five
-	// (#/6 #/^ #/^)                         ;51 Six
-	// (#/7 #/& #/&)                         ;151 Seven
-	// (#/8 #/* #/*)                         ;31 Eight
-	// (#/9 #/( #/( )                        ;71 Nine
-	// (#/0 #/) #/))                         ;171 Zero
-	// (#/- #/_ #/_)                         ;131 Minus
-	// (#/= #/+ #/+)                         ;126 Equals
-	// (#/{ 140000 140000)                   ;166 {
-	// (#/} 140000 140000)                   ;146 }
-	// #\STATUS                              ;46 status
-	// #\HAND-UP                             ;106 Up Thumb
-	// (#\HAND-DOWN #\HAND-DOWN #\HAND-DOWN #/  #/) ;176 Down Thumb
-
-	// #\ROMAN-III                           ;102 Roman III
-	// #\ROMAN-IV                            ;2 Roman IV
-	// #\NETWORK                             ;42 network
-	// #\TAB                                 ;22 tab
-	// (#/q #/Q #/)                        ;122 Q
-	// (#/w #/W #/)                        ;62 W
-	// (#/e #/E #/ #/)                   ;162 E
-	// (#/r #/R #/)                        ;12 R
-	// (#/t #/T #/)                        ;112 T
-	// (#/y #/Y #/)                        ;52 Y
-	// (#/u #/U #/)                        ;152 U
-	// (#/i #/I #/)                        ;32 I
-	// (#/o #/O #/)                        ;72 O
-	// (#/p #/P #/ #/)                   ;172 P
-	// (#/( #/[ #/[)                         ;132 Open parenthesis
-	// (#/) #/] #/])                         ;137 Close parenthesis
-	// (#/` #/~ #/~ #/)                    ;77 back quote
-	// (#/\ #/| #/|)                         ;37 Backslash
-	// #\DELETE                              ;157 Delete
-	// (#\HAND-LEFT #\HAND-LEFT #\HAND-LEFT #/ #/) ;117 Hand Left
-	// #\HAND-RIGHT                          ;17 Hand Right
-
-	// 100011                                ;3 Mode lock
-	// #/                                  ;143 Alt Mode
-	// #\RUBOUT                              ;23 rubout
-	// (#/a #/A 140000 #/)                 ;123 A
-	// (#/s #/S)                             ;63 S
-	// (#/d #/D 140000 12)                   ;163 D/delta
-	// (#/f #/F)                             ;13 F
-	// (#/g #/G #/ 11)                     ;113 G/gamma
-	// (#/h #/H #/)                        ;53 H
-	// (#/j #/J #/)                        ;153 J
-	// (#/k #/K #/)                        ;33 K
-	// (#/l #/L #/ 10)                     ;73 L/lambda
-	// (#/; #/: #/:)                         ;173 Semicolon
-	// (#/' #/" #/" 0)                       ;133 Apostrophe/center-dot
-	// #\CR                                  ;136 Return
-	// #\LINE                                ;36 Line
-	// #\END                                 ;156 End
-	// #\HELP                                ;116 Help
-
-	// 100003                                ;125 Caps Lock
-	// 100002                                ;104 Left Top
-	// 100001                                ;44 Left Greek
-	// 100000                                ;24 Left Shift
-	// (#/z #/Z)                             ;124 Z
-	// (#/x #/X)                             ;64 X
-	// (#/c #/C #/)                        ;164 C
-	// (#/v #/V)                             ;14 V
-	// (#/b #/B #/ #/)                   ;114 B
-	// (#/n #/N #/)                        ;54 N
-	// (#/m #/M #/)                        ;154 M
-	// (#/, #/< #/<)                         ;34 comma
-	// (#/. #/> #/>)                         ;74 period
-	// (#// #/? #/? 177)                     ;174 Question/Integral
-	// 100040                                ;25 Right Shift
-	// 100041                                ;35 Right Greek
-	// 100042                                ;155 Right Top
-	// ()                                    ;115 Repeat
-	// 100008                                ;15 Alt Lock
-
-	// 100007                                ;145 Left Hyper
-	// 100006                                ;5 Left super
-	// 100005                                ;45 Left Meta
-	// 100004                                ;20 Left control
-	// #\SP                                  ;134 Space
-	// 100044                                ;26 Right control
-	// 100045                                ;165 Right Meta
-	// 100046                                ;65 Right Super
-	// 100047                                ;175 Right Hyper
-};
-
 uint32_t kbd_key_scan;
 
 unsigned short okb_to_scancode[256][4];
@@ -225,7 +105,7 @@ static int key_queue_optr = 0;
 static int key_queue_iptr = 0;
 static int key_queue_free = KEY_QUEUE_LEN;
 
-void
+static void
 queue_key_event(int ev)
 {
 	int v;
@@ -248,7 +128,7 @@ queue_key_event(int ev)
 }
 
 void
-dequeue_key_event(void)
+kbd_dequeue_key_event(void)
 {
 	if (iob_csr & (1 << 5))	// Already something to be read.
 		return;
@@ -266,7 +146,7 @@ dequeue_key_event(void)
 		}
 	}
 }
-
+
 void
 kbd_key_event(int code, int keydown)
 {

@@ -1,5 +1,7 @@
-#ifndef USIM_MACROOPS_H
-#define USIM_MACROOPS_H
+#ifndef USIM_DEFMIC_H
+#define USIM_DEFMIC_H
+
+// See SYS;COLD:DEFMIC LISP for the canonical definition.
 
 char *op_names[16] = {
 	"CALL",

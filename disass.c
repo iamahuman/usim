@@ -18,14 +18,10 @@
 #include "syms.h"
 #include "misc.h"
 
-#include "macroops.h"
+#include "defmic.h"
 #include "microops.h"
 
-int misc_inst_vector[1024];
-int misc_inst_size = sizeof misc_inst / sizeof misc_inst[0];
-bool misc_inst_vector_setup = false;
-
-void
+static void
 disassemble_m_src(ucw_t u, int m_src)
 {
 	if (m_src & 040) {
@@ -78,7 +74,7 @@ disassemble_m_src(ucw_t u, int m_src)
 	}
 }
 
-void
+static void
 disassemble_dest(int dest)
 {
 	if (dest & 04000) {
@@ -349,6 +345,10 @@ done:
 	printf("\n");
 }
 
+static int misc_inst_vector[1024];
+static int misc_inst_size = sizeof misc_inst / sizeof misc_inst[0];
+static bool misc_inst_vector_setup = false;
+
 void
 disassemble_instruction(uint32_t fefptr, uint32_t loc, int even, uint32_t inst, uint32_t width)
 {

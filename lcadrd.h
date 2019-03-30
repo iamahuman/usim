@@ -9,7 +9,7 @@ enum {				// Reading
 	SPY_IR_LOW      = 000,
 	SPY_IR_MED      = 001,
 	SPY_IR_HIGH     = 002,
-	SPY_SCRATCH     = 003,	///---!!!
+	SPY_SCRATCH     = 003, ///---!!!
 	SPY_OPC         = 004,
 	SPY_PC          = 005,
 	SPY_OB_LOW      = 006,
@@ -23,12 +23,12 @@ enum {				// Reading
 	SPY_STAT_LOW    = 016,
 	SPY_STAT_HIGH   = 017,
 
-	SPY_MD_LOW      = 020,	///---!!!
-	SPY_MD_HIGH     = 021,	///---!!!
-	SPY_VMA_LOW     = 022,	///---!!!
-	SPY_VMA_HIGH    = 023,	///---!!!
-	SPY_DISK        = 026,	///---!!!
-	SPY_BD          = 027,	///---!!!
+	SPY_MD_LOW      = 020, ///---!!!
+	SPY_MD_HIGH     = 021, ///---!!!
+	SPY_VMA_LOW     = 022, ///---!!!
+	SPY_VMA_HIGH    = 023, ///---!!!
+	SPY_DISK        = 026, ///---!!!
+	SPY_BD          = 027, ///---!!!
 };
 
 enum {				// WRITING
@@ -40,16 +40,16 @@ enum {				// WRITING
 	SPY_MODE        = 5,
 };
 
-#define w32(high,low) ((high << 16) | low)
-#define w64(high,med,low) ((high << 32) | (med << 16) | low)
+#define w32(high, low) ((high << 16) | low)
+#define w64(high, med, low) ((high << 32) | (med << 16) | low)
 
 extern uint16_t spy_read (int regn);
 #define spy_read16(regn) spy_read(regn)
 extern uint32_t spy_read32(int high, int low);
-extern uint64_t spy_read64(int high,int med,int low);
+extern uint64_t spy_read64(int high, int med, int low);
 
 extern void spy_write (int regn, int val);
-#define spy_write16(regn,val) spy_write(regn, val)
+#define spy_write16(regn, val) spy_write(regn, val)
 extern void spy_write32(int high, int low, uint32_t val);
 extern void spy_write64(int high, int med, int low, uint64_t val);
 

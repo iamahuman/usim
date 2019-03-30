@@ -23,14 +23,16 @@ extern int yylex(void);
 extern int yyerror(const char *);
 extern FILE *yyin;
 
-int fd;
-char *file = NULL;
+static int fd;
+static char *file = NULL;
 
-int verbose;
-bool debug = false;
-bool batch = false;
+static int verbose;
+static bool debug = false;
+static bool batch = false;
 
-uint32_t PC;
+static uint32_t PC;
+
+static char *serial_devicename = "/dev/ttyUSB1";
 
 size_t
 cc_send(const void *b, size_t len)
@@ -38,7 +40,7 @@ cc_send(const void *b, size_t len)
 	int ret;
 
 	ret = -1;
-	
+
 	// Send slowly so as not to confuse hardware.
 	for (size_t i = 0; i < len; i++) {
 		ret = write(fd, b + i, 1);
@@ -54,7 +56,7 @@ cc_send(const void *b, size_t len)
 	return ret;
 }
 
-uint16_t
+static uint16_t
 reg_get(int base, int reg)
 {
 	unsigned char buffer[64];
@@ -141,7 +143,7 @@ again:
 	return 0;
 }
 
-int
+static int
 reg_set(int base, int reg, int v)
 {
 	unsigned char buffer[64];
@@ -181,31 +183,31 @@ cc_set(int reg, int v)
 	return reg_set(0xa0, reg, v);
 }
 
-uint16_t
+static uint16_t
 mmc_get(int reg)
 {
 	return reg_get(0xc0, reg);
 }
 
-int
+static int
 mmc_set(int reg, int v)
 {
 	return reg_set(0xd0, reg, v);
 }
 
-uint32_t
+static uint32_t
 cc_read_obus_(void)
 {
 	return spy_read32(025, 024);
 }
 
-uint16_t
+static uint16_t
 cc_read_scratch(void)
 {
 	return cc_get(SPY_SCRATCH);
 }
 
-uint32_t
+static uint32_t
 bitmask(int wid)
 {
 	uint32_t m;
@@ -240,19 +242,19 @@ ir_pair(int field, uint32_t val)
 	return ir;
 }
 
-void
+static void
 cc_write_md_1s(void)
 {
 	cc_write_md(0xffffffff);
 }
 
-void
+static void
 cc_write_md_0s(void)
 {
 	cc_write_md(0x00000000);
 }
 
-void
+static void
 cc_report_basic_regs(void)
 {
 	uint32_t A;
@@ -292,7 +294,7 @@ cc_report_basic_regs(void)
 	}
 }
 
-void
+static void
 cc_report_pc(uint32_t *ppc)
 {
 	uint32_t PC;
@@ -302,19 +304,7 @@ cc_report_pc(uint32_t *ppc)
 	*ppc = PC;
 }
 
-void
-cc_report_pc_and_md(uint32_t *ppc)
-{
-	uint32_t PC;
-	uint32_t MD;
-
-	PC = cc_read_pc();
-	MD = cc_read_md();
-	printf("PC=%011o (%08x) MD=%011o (%08x)\n", PC, PC, MD, MD);
-	*ppc = PC;
-}
-
-void
+static void
 cc_report_pc_and_ir(uint32_t *ppc)
 {
 	uint32_t PC;
@@ -327,7 +317,7 @@ cc_report_pc_and_ir(uint32_t *ppc)
 	*ppc = PC;
 }
 
-void
+static void
 cc_report_pc_md_ir(uint32_t *ppc)
 {
 	uint32_t PC;
@@ -342,7 +332,7 @@ cc_report_pc_md_ir(uint32_t *ppc)
 	*ppc = PC;
 }
 
-void
+static void
 cc_report_status(void)
 {
 	uint32_t s;
@@ -377,7 +367,7 @@ cc_report_status(void)
 	printf(") ");
 }
 
-void
+static void
 cc_pipe(void)
 {
 	uint64_t isn;
@@ -409,7 +399,7 @@ cc_pipe(void)
 	}
 }
 
-void
+static void
 cc_pipe2(void)
 {
 	uint64_t isn;
@@ -448,7 +438,7 @@ cc_pipe2(void)
 	}
 }
 
-uint64_t setup_map_inst[] = {
+static uint64_t setup_map_inst[] = {
 	04000000000110003UL, // (alu) SETZ a=0 m=0 m[0] C=0 alu-> Q-R -><none>,m[2]
 	00000000000150173UL, // (alu) SETO a=0 m=0 m[0] C=0 alu-> Q-R -><none>,m[3]
 	00600101602370010UL, // (byte) a=2 m=m[3] dpb pos=10, width=1 ->a_mem[47]
@@ -465,7 +455,7 @@ uint64_t setup_map_inst[] = {
 	0
 };
 
-void
+static void
 cc_setup_map(void)
 {
 	for (int i = 0; 1; i++) {
@@ -477,7 +467,7 @@ cc_setup_map(void)
 	}
 }
 
-void
+static void
 cc_report_ide_regs(void)
 {
 	printf("setting up map...\n");
@@ -514,8 +504,8 @@ cc_report_ide_regs(void)
 	printf("a[6]=%0o\n", cc_read_a_mem(6));
 }
 
-int
-_test_scratch(uint16_t v)
+static int
+test_scratch(uint16_t v)
 {
 	uint16_t s1;
 	uint16_t s2;
@@ -552,22 +542,22 @@ _test_scratch(uint16_t v)
 	return 0;
 }
 
-int vv = 0;
+static int vv = 0;
 
-void
+static void
 cc_test_scratch(void)
 {
-	_test_scratch(01234);
-	_test_scratch(04321);
-	_test_scratch(0);
-	_test_scratch(07777);
-	_test_scratch(0123456);
-	_test_scratch(0x2222);
-	_test_scratch(++vv);
+	test_scratch(01234);
+	test_scratch(04321);
+	test_scratch(0);
+	test_scratch(07777);
+	test_scratch(0123456);
+	test_scratch(0x2222);
+	test_scratch(++vv);
 }
 
-int
-_test_ir(uint64_t isn)
+static int
+test_ir(uint64_t isn)
 {
 	uint64_t iv;
 
@@ -600,15 +590,15 @@ _test_ir(uint64_t isn)
 	return 0;
 }
 
-void
+static void
 cc_test_ir(void)
 {
-	_test_ir(0);
-	_test_ir(1);
-	_test_ir(0x000022220000UL);
-	_test_ir(0x011133332222UL);
-	_test_ir(2);
-	_test_ir(0x011155552222UL);
+	test_ir(0);
+	test_ir(1);
+	test_ir(0x000022220000UL);
+	test_ir(0x011133332222UL);
+	test_ir(2);
+	test_ir(0x011155552222UL);
 }
 
 void
@@ -832,15 +822,13 @@ cmd_read_a_mem(int adr)
 }
 
 void
-prompt(void)
+cmd_prompt(void)
 {
 	if (batch == false)
 		printf("(cc) ");
 }
 
-char *serial_devicename = "/dev/ttyUSB1";
-
-void
+static void
 usage(void)
 {
 	fprintf(stderr, "usage: cc [OPTION]... [DEVICE]\n");
@@ -896,7 +884,7 @@ main(int argc, char **argv)
 		yyin = f;
 	}
 
-	prompt();
+	cmd_prompt();
 	do {
 		yyparse();
 	} while (!feof(yyin));

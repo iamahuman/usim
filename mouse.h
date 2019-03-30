@@ -10,7 +10,7 @@ extern int mouse_rawx;
 extern int mouse_rawy;
 extern int mouse_poll_delay;
 
-extern void iob_mouse_event(int x, int y, int buttons);
-extern void mouse_sync_init(void);
+extern void mouse_event(int x, int y, int buttons);
+extern void mouse_init(void);
 
 #endif

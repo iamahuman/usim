@@ -14,10 +14,10 @@
 #include "syms.h"
 #include "misc.h"
 
-bool showimem = false;
-bool showamem = false;
-bool showdmem = false;
-char *symfn = NULL;
+static bool showimem = false;
+static bool showamem = false;
+static bool showdmem = false;
+static char *symfn = NULL;
 
 ///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in readmcr.
 uint32_t
@@ -26,7 +26,7 @@ read_virt(int a)
 	return -1;
 }
 
-char *
+static char *
 getlbl(int type, int loc)
 {
 	char *lbl;
@@ -41,7 +41,7 @@ getlbl(int type, int loc)
 	return lbl;
 }
 
-void
+static void
 dump_i_mem(int fd, int start, int size)
 {
 	int loc;
@@ -78,7 +78,7 @@ dump_i_mem(int fd, int start, int size)
 	}
 }
 
-void
+static void
 dump_d_mem(int fd, int start, int size)
 {
 	printf("d-memory; start %o, size %o\n", start, size);
@@ -96,7 +96,7 @@ dump_d_mem(int fd, int start, int size)
 	}
 }
 
-void
+static void
 dump_main_mem(int fd, int start, int size)
 {
 	printf("main-memory; start %d, size %d\n", start, size);
@@ -104,7 +104,7 @@ dump_main_mem(int fd, int start, int size)
 	lseek(fd, 0, SEEK_CUR);
 }
 
-void
+static void
 dump_a_mem(int fd, int start, int size)
 {
 	printf("a-memory; start %o, size %o\n", start, size);
@@ -117,8 +117,8 @@ dump_a_mem(int fd, int start, int size)
 			printf("%o <- %o\t%s %s\n", i, v, getlbl(4, i), getlbl(5, i));
 	}
 }
-
-void
+
+static void
 usage(void)
 {
 	fprintf(stderr, "usage: readmcr FILE\n");

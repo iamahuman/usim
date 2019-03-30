@@ -24,11 +24,11 @@
 
 extern uint32_t kbd_key_scan;
 
-extern unsigned char kb_old_table[64][3];
 extern unsigned short okb_to_scancode[256][4];
 
-extern void kbd_key_event(int code, int keydown);
 extern void kbd_init(void);
 extern void kbd_warm_boot_key(void);
+extern void kbd_key_event(int code, int keydown);
+extern void kbd_dequeue_key_event(void);
 
 #endif

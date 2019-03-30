@@ -10,30 +10,30 @@
 #include "usim.h"
 #include "misc.h"
 
-char *template_filename;
-char *img_filename;
-int cyls;
-int heads;
-int blocks_per_track;
-char *mcr_name;
-char *lod_name;
-char *part_name;
-char *brand;
-char *text;
-char *comment;
-char *boot_name;
-char *boot_mcr_name;
+static char *template_filename;
+static char *img_filename;
+static int cyls;
+static int heads;
+static int blocks_per_track;
+static char *mcr_name;
+static char *lod_name;
+static char *part_name;
+static char *brand;
+static char *text;
+static char *comment;
+static char *boot_name;
+static char *boot_mcr_name;
 
-int boot;
-int boot_mcr;
-int debug;
-int create;
-int show;
-int extract;
-int modify;
-int label;
+static int boot;
+static int boot_mcr;
+static int debug;
+static int create;
+static int show;
+static int extract;
+static int modify;
+static int label;
 
-uint32_t buffer[256];
+static uint32_t buffer[256];
 
 #define MAX_PARTITIONS 32
 
@@ -61,7 +61,7 @@ swapwords(uint32_t *buf)
 	}
 }
 
-int
+static int
 add_partition(char *name, int start, int size, int ptype, char *label, char *filename)
 {
 	struct part_s *p = &parts[part_count++];
@@ -86,7 +86,7 @@ add_partition(char *name, int start, int size, int ptype, char *label, char *fil
 	return 0;
 }
 
-int
+static int
 make_labl(int fd)
 {
 	printf("making LABL...\n");
@@ -149,7 +149,7 @@ make_labl(int fd)
 	return 0;
 }
 
-int
+static int
 make_one_partition(int fd, int index)
 {
 	int ret;
@@ -217,7 +217,7 @@ make_one_partition(int fd, int index)
 	return 0;
 }
 
-void
+static void
 make_partitions(int fd)
 {
 	for (uint32_t i = 0; i < part_count; i++) {
@@ -226,7 +226,7 @@ make_partitions(int fd)
 }
 
 // Read template file describing disk layout.
-int
+static int
 parse_template(char *template)
 {
 	FILE *f;
@@ -306,7 +306,7 @@ parse_template(char *template)
 	return 0;
 }
 
-int
+static int
 create_disk(char *template)
 {
 	int fd;
@@ -338,7 +338,7 @@ create_disk(char *template)
 // This is dangerous, and generally will only work if you modify the
 // last partition.  But it can be useful if you want to change the
 // size of a partition and not loose some existing info.
-int
+static int
 modify_disk(char *template, char *img_filename, char *part_name)
 {
 	uint32_t i;
@@ -390,7 +390,7 @@ modify_disk(char *template, char *img_filename, char *part_name)
 	return 0;
 }
 
-int
+static int
 modify_labl(char *template, char *img_filename)
 {
 	int fd;
@@ -423,7 +423,7 @@ modify_labl(char *template, char *img_filename)
 	return 0;
 }
 
-void
+static void
 default_template(void)
 {
 	if (img_filename == NULL)
@@ -469,7 +469,7 @@ default_template(void)
 }
 
 // Read disk image and dump info.
-int
+static int
 show_partition_info(char *filename)
 {
 	int fd;
@@ -557,7 +557,7 @@ show_partition_info(char *filename)
 	return 0;
 }
 
-int
+static int
 extract_partition(char *filename, char *extract_filename, char *part_name)
 {
 	int fd;
@@ -665,7 +665,7 @@ extract_partition(char *filename, char *extract_filename, char *part_name)
 	return result;
 }
 
-int
+static int
 read_labl(const char *filename)
 {
 	ssize_t ret;
@@ -731,7 +731,7 @@ read_labl(const char *filename)
 	return 0;
 }
 
-int
+static int
 set_current_band(const char *filename, const char *partition_name)
 {
 	int fd;
@@ -771,7 +771,7 @@ set_current_band(const char *filename, const char *partition_name)
 }
 
 // ---!!! This is a straight duplicate of set_current_band.
-int
+static int
 set_current_mcr(const char *filename, const char *partition_name)
 {
 	int fd;
@@ -809,8 +809,8 @@ set_current_mcr(const char *filename, const char *partition_name)
 
 	return 0;
 }
-
-void
+
+static void
 usage(void)
 {
 	fprintf(stderr, "usage: diskmaker [OPTION]...\n");

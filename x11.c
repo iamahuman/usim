@@ -23,13 +23,13 @@ typedef struct DisplayState {
 	int height;
 } DisplayState;
 
-Display *display;
-Window window;
-int bitmap_order;
-int color_depth;
-Visual *visual = NULL;
-GC gc;
-XImage *ximage;
+static Display *display;
+static Window window;
+static int bitmap_order;
+static int color_depth;
+static Visual *visual = NULL;
+static GC gc;
+static XImage *ximage;
 
 #define USIM_EVENT_MASK ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask
 
@@ -43,16 +43,16 @@ XImage *ximage;
 #define X_ALT 8
 #define X_META 16
 
-unsigned long Black;
-unsigned long White;
+static unsigned long Black;
+static unsigned long White;
 
-int old_run_state;
+static int old_run_state;
 
-XComposeStatus status;
+static XComposeStatus status;
 
 // Takes E, converts it into a LM keycode and sends it to the
 // IOB KBD.
-void
+static void
 process_key(XEvent *e, int keydown)
 {
 	KeySym keysym;
@@ -147,7 +147,7 @@ process_key(XEvent *e, int keydown)
 			break;
 		default:
 			if (keysym > 255) {
-				printf("unknown keycode: %lu\n", keysym);
+				fprintf(stderr, "unknown keycode: %lu\n", keysym);
 				return;
 			}
 			lmcode = okb_to_scancode[keysym][(extra & (3 << 6)) ? 1 : 0];
@@ -168,47 +168,11 @@ process_key(XEvent *e, int keydown)
 		kbd_key_event(lmcode, keydown);
 	}
 }
-
-void
-x11_event(void)
-{
-	XEvent e;
-	void send_accumulated_updates(void);
-	void dequeue_key_event(void);
-
-	send_accumulated_updates();
-	dequeue_key_event();
-
-	while (XCheckWindowEvent(display, window, USIM_EVENT_MASK, &e)) {
-		switch (e.type) {
-		case Expose:
-			XPutImage(display, window, gc, ximage, 0, 0, 0, 0, tv_width, tv_height);
-			XFlush(display);
-			break;
-		case KeyPress:
-			process_key(&e, 1);
-			break;
-		case KeyRelease:
-			process_key(&e, 0);
-			break;
-		case MotionNotify:
-		case ButtonPress:
-		case ButtonRelease:
-			iob_mouse_event(e.xbutton.x, e.xbutton.y, e.xbutton.button);
-			break;
-		default:
-			break;
-		}
-	}
-	if (old_run_state != run_ucode_flag) {
-		old_run_state = run_ucode_flag;
-	}
-}
-
-int u_minh = 0x7fffffff;
-int u_maxh;
-int u_minv = 0x7fffffff;
-int u_maxv;
+
+static int u_minh = 0x7fffffff;
+static int u_maxh;
+static int u_minv = 0x7fffffff;
+static int u_maxv;
 
 void
 accumulate_update(int h, int v, int hs, int vs)
@@ -240,6 +204,40 @@ send_accumulated_updates(void)
 	u_maxh = 0;
 	u_minv = 0x7fffffff;
 	u_maxv = 0;
+}
+
+void
+x11_event(void)
+{
+	XEvent e;
+
+	send_accumulated_updates();
+	kbd_dequeue_key_event();
+
+	while (XCheckWindowEvent(display, window, USIM_EVENT_MASK, &e)) {
+		switch (e.type) {
+		case Expose:
+			XPutImage(display, window, gc, ximage, 0, 0, 0, 0, tv_width, tv_height);
+			XFlush(display);
+			break;
+		case KeyPress:
+			process_key(&e, 1);
+			break;
+		case KeyRelease:
+			process_key(&e, 0);
+			break;
+		case MotionNotify:
+		case ButtonPress:
+		case ButtonRelease:
+			mouse_event(e.xbutton.x, e.xbutton.y, e.xbutton.button);
+			break;
+		default:
+			break;
+		}
+	}
+	if (old_run_state != run_ucode_flag) {
+		old_run_state = run_ucode_flag;
+	}
 }
 
 void

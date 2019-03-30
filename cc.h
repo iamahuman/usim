@@ -8,7 +8,7 @@ extern uint16_t cc_get(int reg);
 extern size_t cc_send(const void *b, size_t len);
 extern uint64_t ir_pair(int field, uint32_t val);
 
-extern void prompt(void);
+extern void cmd_prompt(void);
 
 extern void cmd_start(int q);
 extern void cmd_stop(void);

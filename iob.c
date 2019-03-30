@@ -26,8 +26,9 @@
 #include "chaos.h"
 
 uint32_t iob_csr;
+static uint32_t cv;
 
-uint32_t
+static uint32_t
 get_us_clock(void)
 {
 	uint32_t v;
@@ -53,27 +54,25 @@ get_us_clock(void)
 	return v;
 }
 
-static uint32_t cv;
-
-uint32_t
+static uint32_t
 get_us_clock_low(void)
 {
 	cv = get_us_clock();
 	return cv & 0xffff;
 }
 
-uint32_t
+static uint32_t
 get_us_clock_high(void)
 {
 	return (uint32_t) (cv >> 16);
 }
 
-uint32_t
+static uint32_t
 get_60hz_clock(void)
 {
 	return 0;
 }
-
+
 void
 iob_unibus_read(int offset, int *pv)
 {
@@ -220,5 +219,5 @@ void
 iob_init(void)
 {
 	kbd_init();
-	mouse_sync_init();
+	mouse_init();
 }

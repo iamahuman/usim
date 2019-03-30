@@ -24,11 +24,11 @@ struct symtab_s {
 	LIST_HEAD(syms, sym_s) syms;
 };
 
-struct symtab_s sym_prom;
-struct symtab_s sym_mcr;
+static struct symtab_s sym_prom;
+static struct symtab_s sym_mcr;
 
 static void
-_sym_add(struct symtab_s *tab, int memory, char *name, uint32_t v)
+sym_add(struct symtab_s *tab, int memory, char *name, uint32_t v)
 {
 	struct sym_s *s;
 
@@ -116,7 +116,7 @@ _sym_read_file(struct symtab_s *tab, const char *filename)
 			else
 				printf("? %s", symtype);
 
-			_sym_add(tab, type, sym, loc);
+			sym_add(tab, type, sym, loc);
 		}
 	}
 

@@ -85,10 +85,10 @@ map_vtop(uint32_t virt, int *pl1_map, int *poffset)
 	return l2;
 }
 
-char *page_block;
-int page_block_count;
+static char *page_block;
+static int page_block_count;
 
-struct page_s *
+static struct page_s *
 new_page(void)
 {
 	struct page_s *page;
@@ -188,7 +188,7 @@ write_phy_mem(int paddr, uint32_t v)
 
 #define PAGES_TO_SAVE 8192
 
-bool restored = false;
+static bool restored = false;
 
 int
 restore_state(void)

@@ -8,12 +8,12 @@
 
 #include "misc.h"
 
-int do_dir;
-int do_read;
-int do_write;
+static int do_dir;
+static int do_read;
+static int do_write;
 
-char *img_filename = "FILE";
-char *path;
+static char *img_filename = "FILE";
+static char *path;
 
 struct baccess {
 	unsigned char buffer[8192];
@@ -24,7 +24,7 @@ struct baccess {
 	int fd;
 };
 
-void
+static void
 init_access(struct baccess *pb, int fd)
 {
 	pb->base = pb->buffer;
@@ -33,7 +33,7 @@ init_access(struct baccess *pb, int fd)
 	pb->fd = fd;
 }
 
-void *
+static void *
 ensure_access(struct baccess *pb, int offset, int size)
 {
 	unsigned char *ptr;
@@ -62,7 +62,7 @@ ensure_access(struct baccess *pb, int offset, int size)
 	return ptr;
 }
 
-void *
+static void *
 advance_access(struct baccess *pb, int size)
 {
 	unsigned char *ptr;
@@ -98,7 +98,7 @@ advance_access(struct baccess *pb, int size)
 	return ptr;
 }
 
-int
+static int
 remaining_access(struct baccess *pb)
 {
 	int boff;
@@ -109,7 +109,7 @@ remaining_access(struct baccess *pb)
 	return left;
 }
 
-int
+static int
 remaining_buffer(struct baccess *pb)
 {
 	return (1008 * 4) - pb->offset;
@@ -242,7 +242,7 @@ struct file_header {
 	struct fh_element parts_array[8];
 };
 
-int
+static int
 read_record(struct baccess *pb, int record_no)
 {
 	int i;
@@ -266,7 +266,7 @@ read_record(struct baccess *pb, int record_no)
 #define STANDARD_BLOCK_SIZE 256
 #define STANDARD_BLOCKS_PER_RECORD 4
 
-int
+static int
 show_file(int fd, struct directory_entry *de, int record_no)
 {
 	struct baccess b;
@@ -356,7 +356,7 @@ show_file(int fd, struct directory_entry *de, int record_no)
 	return 0;
 }
 
-int
+static int
 show_de(int fd, int record_no)
 {
 	struct baccess b;
@@ -445,7 +445,7 @@ show_de(int fd, int record_no)
 	return 0;
 }
 
-int
+static int
 lmfs_open(char *img_filename, int offset)
 {
 	int fd;
@@ -551,25 +551,25 @@ lmfs_open(char *img_filename, int offset)
 	return 0;
 }
 
-int
+static int
 lmfs_show_dir(char *path)
 {
 	return 0;
 }
 
-int
+static int
 lmfs_read_file(char *path)
 {
 	return 0;
 }
 
-int
+static int
 lmfs_write_file(char *path)
 {
 	return 0;
 }
-
-void
+
+static void
 usage(void)
 {
 	fprintf(stderr, "usage: lmfs [OPTION]... [LMFS-FILE}\n");

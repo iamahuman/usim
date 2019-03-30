@@ -17,33 +17,41 @@ uint32_t tv_height = 897;
 
 uint32_t tv_bitmap[(768 * 1024)];
 
-int tv_csr;
+static int tv_csr;
 
-void
-tv_xbus_read(uint32_t offset, uint32_t *pv)
-{
-	*pv = tv_csr;
-}
-
-void
-tv_xbus_write(uint32_t offset, uint32_t v)
-{
-	tv_csr = v;
-	tv_csr &= ~(1 << 4);
-	deassert_xbus_interrupt();
-}
-
-void
+static void
 tv_post_60hz_interrupt(void)
 {
 	tv_csr |= 1 << 4;
 	assert_xbus_interrupt();
 }
 
-void
+static void
 sigalrm_handler(int arg)
 {
 	tv_post_60hz_interrupt();
+}
+
+void
+tv_read(uint32_t offset, uint32_t *pv)
+{
+	unsigned long bits;
+
+	offset *= 32;
+
+	if (offset > tv_width * tv_height) {
+		printf("tv: tv_read past end; " "offset %o\n", offset);
+		*pv = 0;
+		return;
+	}
+
+	bits = 0;
+	for (int i = 0; i < 32; i++) {
+		if (tv_bitmap[offset + i] == Black)
+			bits |= 1UL << i;
+	}
+
+	*pv = bits;
 }
 
 void
@@ -66,31 +74,23 @@ tv_write(uint32_t offset, uint32_t bits)
 }
 
 void
-tv_poll(void)
+tv_xbus_read(uint32_t offset, uint32_t *pv)
 {
-	x11_event();
+	*pv = tv_csr;
 }
 
 void
-tv_read(uint32_t offset, uint32_t *pv)
+tv_xbus_write(uint32_t offset, uint32_t v)
 {
-	unsigned long bits;
+	tv_csr = v;
+	tv_csr &= ~(1 << 4);
+	deassert_xbus_interrupt();
+}
 
-	offset *= 32;
-
-	if (offset > tv_width * tv_height) {
-		printf("tv: tv_read past end; " "offset %o\n", offset);
-		*pv = 0;
-		return;
-	}
-
-	bits = 0;
-	for (int i = 0; i < 32; i++) {
-		if (tv_bitmap[offset + i] == Black)
-			bits |= 1UL << i;
-	}
-
-	*pv = bits;
+void
+tv_poll(void)
+{
+	x11_event();
 }
 
 void

@@ -46,7 +46,8 @@ spy_read64(int high,int med,int low)
 	return w64(h, m, l);
 }
 
-void spy_write (int regn, int val)
+void
+spy_write (int regn, int val)
 {
 	cc_set(regn, val);
 }

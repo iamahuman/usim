@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 extern void dumpmem(char *ptr, int len);
 
 extern uint16_t read16(int fd);

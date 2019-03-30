@@ -21,26 +21,28 @@
 #define LABEL_LABL 011420440514ULL
 #define LABEL_BLANK 020020020020ULL
 
-int disk_fd;
-uint8_t *disk_mm;
+static int disk_fd;
+static uint8_t *disk_mm;
 
-int disk_status = 1;
-int disk_cmd;
-int disk_clp;
-int disk_ma;
-int disk_ecc;
-int disk_da;
+static int disk_status = 1;
+static int disk_cmd;
+static int disk_clp;
+static int disk_ma;
+static int disk_ecc;
+static int disk_da;
 
-int cyls;
-int heads;
-int blocks_per_track;
-int cur_unit;
-int cur_cyl;
-int cur_head;
-int cur_block;
+static int cyls;
+static int heads;
+static int blocks_per_track;
+static int cur_unit;
+static int cur_cyl;
+static int cur_head;
+static int cur_block;
 
-int
-_disk_read(int block_no, uint32_t *buffer)
+static int disk_interrupt_delay;
+
+static int
+disk_read(int block_no, uint32_t *buffer)
 {
 	off_t offset;
 	int size;
@@ -55,8 +57,8 @@ _disk_read(int block_no, uint32_t *buffer)
 	return 0;
 }
 
-int
-_disk_write(int block_no, uint32_t *buffer)
+static int
+disk_write(int block_no, uint32_t *buffer)
 {
 	off_t offset;
 	int size;
@@ -71,14 +73,14 @@ _disk_write(int block_no, uint32_t *buffer)
 	return 0;
 }
 
-int
+static int
 disk_read_block(uint32_t vma, int unit, int cyl, int head, int block)
 {
 	int block_no;
 	uint32_t buffer[256];
 
 	block_no = (cyl * blocks_per_track * heads) + (head * blocks_per_track) + block;
-	if (_disk_read(block_no, buffer) < 0) {
+	if (disk_read(block_no, buffer) < 0) {
 		printf("disk_read_block: error reading block_no %d\n", block_no);
 		return -1;
 	}
@@ -88,7 +90,7 @@ disk_read_block(uint32_t vma, int unit, int cyl, int head, int block)
 	return 0;
 }
 
-int
+static int
 disk_write_block(uint32_t vma, int unit, int cyl, int head, int block)
 {
 	int block_no;
@@ -99,12 +101,12 @@ disk_write_block(uint32_t vma, int unit, int cyl, int head, int block)
 	for (int i = 0; i < 256; i++) {
 		read_phy_mem(vma + i, &buffer[i]);
 	}
-	_disk_write(block_no, buffer);
+	disk_write(block_no, buffer);
 
 	return 0;
 }
 
-void
+static void
 disk_throw_interrupt(void)
 {
 	tracedio("disk: throw interrupt\n");
@@ -112,32 +114,20 @@ disk_throw_interrupt(void)
 	assert_xbus_interrupt();
 }
 
-int disk_interrupt_delay;
-
-void
+static void
 disk_future_interrupt(void)
 {
 	disk_interrupt_delay = 100;
 	disk_interrupt_delay = 2500;
 }
 
-void
-disk_poll(void)
-{
-	if (disk_interrupt_delay) {
-		if (--disk_interrupt_delay == 0) {
-			disk_throw_interrupt();
-		}
-	}
-}
-
-void
+static void
 disk_show_cur_addr(void)
 {
 	tracedio("disk: unit %d, CHB %o/%o/%o\n", cur_unit, cur_cyl, cur_head, cur_block);
 }
 
-void
+static void
 disk_decode_addr(void)
 {
 	cur_unit = (disk_da >> 28) & 07;
@@ -146,7 +136,7 @@ disk_decode_addr(void)
 	cur_block = disk_da & 0377;
 }
 
-void
+static void
 disk_undecode_addr(void)
 {
 	disk_da =
@@ -156,7 +146,7 @@ disk_undecode_addr(void)
 		((cur_block & 0377));
 }
 
-void
+static void
 disk_incr_block(void)
 {
 	cur_block++;
@@ -170,7 +160,7 @@ disk_incr_block(void)
 	}
 }
 
-void
+static void
 disk_start_read(void)
 {
 	uint32_t ccw;
@@ -215,7 +205,7 @@ disk_start_read(void)
 	}
 }
 
-void
+static void
 disk_start_read_compare(void)
 {
 	printf("disk_start_read_compare!\n");
@@ -223,7 +213,7 @@ disk_start_read_compare(void)
 	disk_show_cur_addr();
 }
 
-void
+static void
 disk_start_write(void)
 {
 	uint32_t ccw;
@@ -267,7 +257,7 @@ disk_start_write(void)
 	}
 }
 
-int
+static int
 disk_start(void)
 {
 	tracedio("disk: start, cmd (%o) ", disk_cmd);
@@ -298,39 +288,7 @@ disk_start(void)
 
 	return 0;
 }
-
-void
-disk_xbus_write(int offset, uint32_t v)
-{
-	tracef("disk register write, offset %o <- %o\n", offset, v);
-
-	switch (offset) {
-	case 0370:
-		tracedio("disk: load status %o\n", v);
-		break;
-	case 0374:
-		disk_cmd = v;
-		if ((disk_cmd & 06000) == 0)
-			deassert_xbus_interrupt();
-		tracedio("disk: load cmd %o\n", v);
-		break;
-	case 0375:
-		tracedio("disk: load clp %o (phys page %o)\n", v, v << 8);
-		disk_clp = v;
-		break;
-	case 0376:
-		disk_da = v;
-		tracef("disk: load da %o\n", v);
-		break;
-	case 0377:
-		disk_start();
-		break;
-	default:
-		tracedio("disk: unknown reg write %o\n", offset);
-		break;
-	}
-}
-
+
 void
 disk_xbus_read(int offset, uint32_t *pv)
 {
@@ -372,6 +330,48 @@ disk_xbus_read(int offset, uint32_t *pv)
 	}
 }
 
+void
+disk_xbus_write(int offset, uint32_t v)
+{
+	tracef("disk register write, offset %o <- %o\n", offset, v);
+
+	switch (offset) {
+	case 0370:
+		tracedio("disk: load status %o\n", v);
+		break;
+	case 0374:
+		disk_cmd = v;
+		if ((disk_cmd & 06000) == 0)
+			deassert_xbus_interrupt();
+		tracedio("disk: load cmd %o\n", v);
+		break;
+	case 0375:
+		tracedio("disk: load clp %o (phys page %o)\n", v, v << 8);
+		disk_clp = v;
+		break;
+	case 0376:
+		disk_da = v;
+		tracef("disk: load da %o\n", v);
+		break;
+	case 0377:
+		disk_start();
+		break;
+	default:
+		tracedio("disk: unknown reg write %o\n", offset);
+		break;
+	}
+}
+
+void
+disk_poll(void)
+{
+	if (disk_interrupt_delay) {
+		if (--disk_interrupt_delay == 0) {
+			disk_throw_interrupt();
+		}
+	}
+}
+
 int
 disk_init(char *filename)
 {
@@ -394,7 +394,7 @@ disk_init(char *filename)
 	printf("disk: size: %zd bytes\n", st.st_size);
 	disk_mm = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, disk_fd, 0);
 
-	ret = _disk_read(0, label);
+	ret = disk_read(0, label);
 	if (ret < 0 || label[0] != LABEL_LABL) {
 		printf("disk: invalid pack label - disk image ignored\n");
 		printf("label %o\n", label[0]);

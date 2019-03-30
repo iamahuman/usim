@@ -26,14 +26,14 @@ input:
 ;
 
 line:
-  LNL		{ prompt(); }
-| exp LNL	{ prompt(); }
-| oexp LNL 	{ prompt(); }
-| error LNL	{ prompt(); yyerrok; }
+  LNL		{ cmd_prompt(); }
+| exp LNL	{ cmd_prompt(); }
+| oexp LNL	{ cmd_prompt(); }
+| error LNL	{ cmd_prompt(); yyerrok; }
 ;
 
 exp:
-          LCTRL_R	{ cmd_reset(); }
+	  LCTRL_R	{ cmd_reset(); }
 | LNUMBER LSP LFOOBAR	{ cmd_start($1); }
 |         LCTRL_S	{ cmd_stop(); }
 |         LCTRL_N	{ cmd_step_once(); }

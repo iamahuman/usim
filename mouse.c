@@ -15,14 +15,13 @@ int mouse_middle;
 int mouse_tail;
 int mouse_rawx;
 int mouse_rawy;
-int mouse_poll_delay;
 
 // Location in A memory of microcode mouse state.
-static int mouse_sync_amem_x;
-static int mouse_sync_amem_y;
+static int mouse_amem_x;
+static int mouse_amem_y;
 
 void
-iob_mouse_event(int x, int y, int buttons)
+mouse_event(int x, int y, int buttons)
 {
 	iob_csr |= 1 << 4;
 	assert_unibus_interrupt(0264);
@@ -33,8 +32,8 @@ iob_mouse_event(int x, int y, int buttons)
 	int dx;
 	int dy;
 
-	mcx = read_a_mem(mouse_sync_amem_x);
-	mcy = read_a_mem(mouse_sync_amem_y);
+	mcx = read_a_mem(mouse_amem_x);
+	mcy = read_a_mem(mouse_amem_y);
 
 	dx = x - mcx;
 	dy = y - mcy;
@@ -50,21 +49,21 @@ iob_mouse_event(int x, int y, int buttons)
 }
 
 void
-mouse_sync_init(void)
+mouse_init(void)
 {
 	int val;
 
 	// Defaults if we cannot find them in the symbol table.
-	mouse_sync_amem_x = 334;	// A-MOUSE-CURSOR-X
-	mouse_sync_amem_y = 335;	// A-MOUSE-CURSOR-Y
+	mouse_amem_x = 334;	// A-MOUSE-CURSOR-X
+	mouse_amem_y = 335;	// A-MOUSE-CURSOR-Y
 
 	if (sym_find(1, "A-MOUSE-CURSOR-X", &val)) {
 		printf("can't find A-MOUSE-CURSOR-X in microcode symbols\n");
 	} else
-		mouse_sync_amem_x = val;
+		mouse_amem_x = val;
 
 	if (sym_find(1, "A-MOUSE-CURSOR-Y", &val)) {
 		printf("can't find A-MOUSE-CURSOR-Y in microcode symbols\n");
 	} else
-		mouse_sync_amem_y = val;
+		mouse_amem_y = val;
 }

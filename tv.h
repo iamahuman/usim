@@ -1,7 +1,7 @@
 #ifndef USIM_TV_H
 #define USIM_TV_H
 
-extern uint32_t tv_bitmap[(768 * 1024)];
+extern uint32_t tv_bitmap[768 * 1024];
 extern uint32_t tv_width;
 extern uint32_t tv_height;
 

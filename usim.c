@@ -23,13 +23,13 @@
 
 char *disk_filename = "disk.img";
 char *mcrsym_filename = "../bands/ucadr.sym.841";
-char *prommcr_filename = "../bands/promh.mcr.9";
+static char *prommcr_filename = "../bands/promh.mcr.9";
 char *promsym_filename = "../bands/promh.sym.9";
 
 bool save_state_flag = false;
 bool warm_boot_flag = false;
-
-void
+
+static void
 usage(void)
 {
 	fprintf(stderr, "usage: usim [OPTION]...\n");
@@ -47,7 +47,7 @@ main(int argc, char *argv[])
 {
 	int c;
 
-	printf("CADR emulator v0.9\n");
+	printf("CADR emulator v" VERSION "\n");
 
 	while ((c = getopt(argc, argv, "i:swA:h")) != -1) {
 		switch (c) {
@@ -64,10 +64,10 @@ main(int argc, char *argv[])
 			if (optarg != NULL) {
 				char *end;
 				int addr;
-				
+
 				addr = (int)strtoul (optarg, &end, 8);
 				if (*end != 0 || addr > 0177777) {
-					fprintf (stderr, "Chaosnet address must be a 16-bit octal number\n");
+					fprintf(stderr, "Chaosnet address must be a 16-bit octal number\n");
 					exit(1);
 				}
 				chaos_set_addr(addr);
