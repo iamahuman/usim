@@ -3,9 +3,6 @@
 
 #include "ini.h"
 
-extern bool save_state_flag;
-extern bool warm_boot_flag;
-
 typedef struct {
 #define X(s, n, default) char *s##_##n;
 #include "ucfg.defs"

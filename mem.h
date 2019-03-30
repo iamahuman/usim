@@ -22,7 +22,7 @@ extern int write_phy_mem(int paddr, uint32_t v);
 extern int add_new_page_no(int pn);
 extern int read_phy_mem(int paddr, uint32_t *pv);
 
-extern int restore_state(void);
-extern int save_state(void);
+extern int restore_state(char *fn);
+extern int save_state(char *fn);
 
 #endif

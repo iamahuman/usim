@@ -12,6 +12,7 @@
 
 #include "usim.h"
 #include "ucode.h"
+#include "mem.h"
 #include "iob.h"
 #include "tv.h"
 #include "kbd.h"
@@ -22,11 +23,18 @@
 #include "syms.h"
 #include "disass.h"
 
-char *config_filename;
+static char *config_filename;
+bool warm_boot_flag = false;
 
 symtab_t sym_mcr;
 symtab_t sym_prom;
-
+
+static void
+sigusr1_handler(int arg)
+{
+	save_state(ucfg.usim_state_filename);
+}
+
 static void
 usage(void)
 {
@@ -34,6 +42,7 @@ usage(void)
 	fprintf(stderr, "CADR simulator\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -c FILE        configuration file (default: %s)\n", config_filename);
+	fprintf(stderr, "  -w             warm boot\n");
 	fprintf(stderr, "  -h             help message\n");
 }
 
@@ -45,10 +54,12 @@ main(int argc, char *argv[])
 	printf("CADR emulator v" VERSION "\n");
 
 	config_filename = "usim.ini";
+	warm_boot_flag = false;
 
-	while ((c = getopt(argc, argv, "c:h")) != -1) {
+	while ((c = getopt(argc, argv, "c:wh")) != -1) {
 		switch (c) {
 		case 'c': config_filename = strdup(optarg); break;
+		case 'w': warm_boot_flag = true; break;
 		case 'h':
 			usage();
 			exit(0);
@@ -68,6 +79,8 @@ main(int argc, char *argv[])
 	if (ini_parse(config_filename, ucfg_handler, &ucfg) < 0)
 		fprintf(stderr, "Can't load '%s', using defaults\n", config_filename);
 
+	signal(SIGUSR1, sigusr1_handler);
+
 	read_prom(ucfg.ucode_prommcr_filename);
 	sym_read_file(&sym_prom, ucfg.ucode_promsym_filename);
 
@@ -77,11 +90,11 @@ main(int argc, char *argv[])
 	iob_init();
 	chaos_init();
 
-	if (warm_boot_flag == true)
+	if (warm_boot_flag == true) {
 		kbd_warm_boot_key();
+	}
 
-	while (run())
-		;
+	run();
 
 	exit(0);
 }

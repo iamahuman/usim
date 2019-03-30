@@ -191,69 +191,55 @@ write_phy_mem(int paddr, uint32_t v)
 static bool restored = false;
 
 int
-restore_state(void)
+restore_state(char *fn)
 {
 	int fd;
-	ssize_t ret;
-	unsigned char version[2];
 
 	if (restored == true)
 		return 0;
 	restored = true;
 
-	fd = open("usim.state", O_RDONLY);
+	fd = open(fn, O_RDONLY);
 	if (fd < 0)
 		return -1;
 
-	ret = read(fd, version, 2);
-	if (ret < 0 || version[0] != 0 || version[1] != 1) {
-		close(fd);
-		return -1;
-	}
-
 	for (int i = 0; i < PAGES_TO_SAVE; i++) {
+		ssize_t ret;
+
 		add_new_page_no(i);
+
 		ret = read(fd, (char *) phy_pages[i], sizeof(struct page_s));
 		if (ret < 0) {
 			close(fd);
 			return -1;
 		}
 	}
+
 	close(fd);
-	printf("memory state restored\n");
 
 	return 0;
 }
 
 int
-save_state(void)
+save_state(char *fn)
 {
 	int fd;
-	ssize_t ret;
-	unsigned char version[2];
 
-	fd = open("usim.state", O_RDWR | O_CREAT, 0666);
+	fd = open(fn, O_RDWR | O_CREAT, 0666);
 	if (fd < 0)
 		return -1;
 
-	version[0] = 0;
-	version[1] = 1;
-
-	ret = write(fd, version, 2);
-	if (ret < 0) {
-		close(fd);
-		return -1;
-	}
-
 	for (int i = 0; i < PAGES_TO_SAVE; i++) {
+		ssize_t ret;
+
 		ret = write(fd, (char *) phy_pages[i], sizeof(struct page_s));
 		if (ret < 0) {
 			close(fd);
 			return -1;
 		}
 	}
+
 	close(fd);
-	printf("memory state saved\n");
 
 	return 0;
 }

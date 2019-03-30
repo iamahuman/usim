@@ -11,6 +11,7 @@
 #include <X11/keysym.h>
 
 #include "usim.h"
+#include "ucode.h"
 #include "tv.h"
 #include "kbd.h"
 #include "mouse.h"

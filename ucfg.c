@@ -12,16 +12,13 @@
 
 #include "misc.h"
 
-bool save_state_flag = false;
-bool warm_boot_flag = false;
-
 ucfg_t ucfg = {
 #define X(s, n, default) default,
 #include "ucfg.defs"
 #undef X
 };
 
-#define INIHEQ(s, n) (streq(s, section) && streq(n, name)) 
+#define INIHEQ(s, n) (streq(s, section) && streq(n, name))
 
 int
 ucfg_handler(void *user, const char *section, const char *name, const char *value)
@@ -29,7 +26,7 @@ ucfg_handler(void *user, const char *section, const char *name, const char *valu
 	ucfg_t *cfg = (ucfg_t *) user;
 
 	if (0) ;
-#define X(s, n, default)						\
+#define X(s, n, default)					\
 	else if (INIHEQ(#s, #n)) cfg->s##_##n = strdup(value);
 #include "ucfg.defs"
 #undef X
@@ -45,6 +42,6 @@ ucfg_handler(void *user, const char *section, const char *name, const char *valu
 		}
 		chaos_set_addr(addr);
 	}
-	
+
 	return 1;
 }

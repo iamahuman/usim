@@ -15,10 +15,6 @@
 extern symtab_t sym_mcr;
 extern symtab_t sym_prom;
 
-extern char *mcrsym_filename;
-
-extern bool save_state_flag;
 extern bool warm_boot_flag;
-extern bool run_ucode_flag;
 
 #endif

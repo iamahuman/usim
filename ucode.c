@@ -15,6 +15,7 @@
 #include <fcntl.h>
 
 #include "usim.h"
+#include "ucfg.h"
 #include "ucode.h"
 #include "mem.h"
 #include "iob.h"
@@ -270,7 +271,7 @@ unibus_write(int offset, uint32_t v)
 			prom_enabled_flag = 0;
 
 			if (warm_boot_flag) {
-				restore_state();
+				restore_state(ucfg.usim_state_filename);
 			}
 		}
 
@@ -721,7 +722,7 @@ rotate_left(uint32_t value, int bitstorotate)
 	return (value << bitstorotate) | tmp;
 }
 
-int
+void
 run(void)
 {
 	ucw_t p1;
@@ -1442,10 +1443,4 @@ run(void)
 			u_pc &= 037777;
 		}
 	}
-
-	if (save_state_flag) {
-		save_state();
-	}
-
-	return 0;
 }
