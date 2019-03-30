@@ -20,11 +20,11 @@ diskmaker: diskmaker.o misc.o
 lmfs: lmfs.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-lod: lod.o disass.o misc.o
+lod: lod.o disass.o misc.o syms.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 cc: YFLAGS = -d
-cc: cc.o ccy.o ccl.o disass.o lcadrd.o misc.o
+cc: cc.o ccy.o ccl.o disass.o lcadrd.o misc.o syms.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:

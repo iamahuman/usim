@@ -28,6 +28,9 @@ char *promsym_filename = "../bands/promh.sym.9";
 
 bool save_state_flag = false;
 bool warm_boot_flag = false;
+
+symtab_t sym_mcr;
+symtab_t sym_prom;
 
 static void
 usage(void)
@@ -89,10 +92,12 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	read_prom(prommcr_filename, promsym_filename);
+	read_prom(prommcr_filename);
+	sym_read_file(&sym_prom, promsym_filename);
 
 	tv_init();
 	disk_init(disk_filename);
+	sym_read_file(&sym_mcr, mcrsym_filename);
 	iob_init();
 	chaos_init();
 

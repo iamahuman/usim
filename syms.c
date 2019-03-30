@@ -10,33 +10,19 @@
 #include <sys/queue.h>
 
 #include "usim.h"
-
-struct sym_s {
-	LIST_ENTRY(sym_s) next;
-	char *name;
-	uint32_t v;
-	int mtype;
-};
-
-struct symtab_s {
-	char *name;
-	int sym_count;
-	LIST_HEAD(syms, sym_s) syms;
-};
-
-static struct symtab_s sym_prom;
-static struct symtab_s sym_mcr;
+#include "syms.h"
 
 static void
-sym_add(struct symtab_s *tab, int memory, char *name, uint32_t v)
+sym_add(symtab_t *tab, int memory, char *name, uint32_t v)
 {
-	struct sym_s *s;
+	sym_t *s;
 
-	s = (struct sym_s *) malloc(sizeof(struct sym_s));
+	s = (sym_t *) malloc(sizeof(sym_t));
 	if (s == NULL) {
 		perror("malloc");
 		exit(1);
 	}
+
 	s->name = strdup(name);
 	s->v = v;
 	s->mtype = memory;
@@ -46,10 +32,10 @@ sym_add(struct symtab_s *tab, int memory, char *name, uint32_t v)
 	LIST_INSERT_HEAD(&tab->syms, s, next);
 }
 
-static char *
-_sym_find_by_val(struct symtab_s *tab, int memory, uint32_t v)
+char *
+sym_find_by_type_val(symtab_t *tab, symtype_t memory, uint32_t v)
 {
-	struct sym_s *s;
+	sym_t *s;
 
 	LIST_FOREACH(s, &tab->syms, next) {
 		if (s->v == v && s->mtype == memory)
@@ -59,10 +45,10 @@ _sym_find_by_val(struct symtab_s *tab, int memory, uint32_t v)
 	return 0;
 }
 
-static int
-_sym_find(struct symtab_s *tab, char *name, int *pval)
+int
+sym_find(symtab_t *tab, char *name, int *pval)
 {
-	struct sym_s *s;
+	sym_t *s;
 
 	LIST_FOREACH(s, &tab->syms, next) {
 		if (strcasecmp(name, s->name) == 0) {
@@ -75,8 +61,8 @@ _sym_find(struct symtab_s *tab, char *name, int *pval)
 }
 
 // Read a CADR MCR symbol file.
-static int
-_sym_read_file(struct symtab_s *tab, const char *filename)
+int
+sym_read_file(symtab_t *tab, char *filename)
 {
 	FILE *f;
 	char line[8 * 1024];
@@ -122,31 +108,5 @@ _sym_read_file(struct symtab_s *tab, const char *filename)
 
 	fclose(f);
 
-	printf("[%s] %d symbols\n", tab->name, tab->sym_count);
-
 	return 0;
-}
-
-int
-sym_read_file(int mcr, char *fn)
-{
-	if (mcr)
-		return _sym_read_file(&sym_mcr, fn);
-	return _sym_read_file(&sym_prom, fn);
-}
-
-int
-sym_find(int mcr, char *name, int *pval)
-{
-	if (mcr)
-		return _sym_find(&sym_mcr, name, pval);
-	return _sym_find(&sym_prom, name, pval);
-}
-
-char *
-sym_find_by_type_val(int mcr, int t, int v)
-{
-	if (mcr)
-		return _sym_find_by_val(&sym_mcr, t, v);
-	return _sym_find_by_val(&sym_prom, t, v);
 }

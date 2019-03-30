@@ -70,7 +70,7 @@ ucw_t prom_ucode[512];
 bool prom_enabled_flag = true;
 
 int
-read_prom(char *file, char *symfile)
+read_prom(char *file)
 {
 	int fd;
 	uint32_t code;
@@ -107,8 +107,6 @@ read_prom(char *file, char *symfile)
 
 		loc++;
 	}
-
-	sym_read_file(0, symfile);
 
 	return 0;
 }

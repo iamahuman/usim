@@ -57,12 +57,12 @@ mouse_init(void)
 	mouse_amem_x = 334;	// A-MOUSE-CURSOR-X
 	mouse_amem_y = 335;	// A-MOUSE-CURSOR-Y
 
-	if (sym_find(1, "A-MOUSE-CURSOR-X", &val)) {
+	if (sym_find(&sym_mcr, "A-MOUSE-CURSOR-X", &val)) {
 		printf("can't find A-MOUSE-CURSOR-X in microcode symbols\n");
 	} else
 		mouse_amem_x = val;
 
-	if (sym_find(1, "A-MOUSE-CURSOR-Y", &val)) {
+	if (sym_find(&sym_mcr, "A-MOUSE-CURSOR-Y", &val)) {
 		printf("can't find A-MOUSE-CURSOR-Y in microcode symbols\n");
 	} else
 		mouse_amem_y = val;

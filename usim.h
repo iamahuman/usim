@@ -3,12 +3,17 @@
 
 #include <stdbool.h>
 
+#include "syms.h"
+
 #define tracef(args...)
 #define tracevm(args...)
 #define traceint(args...)
 #define tracedio(args...)
 #define tracenet(args...)
 #define traceio(args...)
+
+extern symtab_t sym_mcr;
+extern symtab_t sym_prom;
 
 extern char *mcrsym_filename;
 

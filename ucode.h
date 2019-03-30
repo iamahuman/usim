@@ -8,7 +8,7 @@
 typedef uint64_t ucw_t;
 extern ucw_t prom_ucode[512];
 
-extern int read_prom(char *promfn, char *promsymfn);
+extern int read_prom(char *promfn);
 
 extern int run(void);
 
