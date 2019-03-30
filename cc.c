@@ -895,10 +895,3 @@ main(int argc, char **argv)
 
 	exit(0);
 }
-
-///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in CC.
-uint32_t
-read_virt(int a)
-{
-	return -1;
-}

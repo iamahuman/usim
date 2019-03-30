@@ -76,8 +76,6 @@ static struct {
 	{(char *) 0, 0, 0}
 };
 
-
-///---!!! For DISASSEMBLE_INSTRUCTION.
 uint32_t
 read_virt(int addr)
 {
@@ -129,6 +127,28 @@ showlabel(char *l, int a, int cr)
 	v = show(a, cr);
 
 	return v;
+}
+
+static void
+showstr(int a)
+{
+	int t;
+	int j;
+	char s[256];
+
+	t = read_virt(a) & 0xff;
+	j = 0;
+	for (int i = 0; i < t; i += 4) {
+		uint32_t n;
+
+		n = read_virt(a + 1 + (i / 4));
+		s[j++] = n >> 0;
+		s[j++] = n >> 8;
+		s[j++] = n >> 16;
+		s[j++] = n >> 24;
+	}
+	s[t] = 0;
+	printf("'%s' ", s);
 }
 
 static int

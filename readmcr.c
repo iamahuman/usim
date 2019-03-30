@@ -19,13 +19,6 @@ static bool showamem = false;
 static bool showdmem = false;
 static char *symfn = NULL;
 
-///---!!! For DISASSEMBLE_INSTRUCTION -- which is not used in readmcr.
-uint32_t
-read_virt(int a)
-{
-	return -1;
-}
-
 static char *
 getlbl(int type, int loc)
 {
