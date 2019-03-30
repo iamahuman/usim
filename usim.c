@@ -88,7 +88,7 @@ main(int argc, char *argv[])
 	sym_read_file(&sym_prom, ucfg.ucode_promsym_filename);
 
 	tv_init();
-	disk_init(ucfg.usim_disk_filename);
+	disk_init(0, ucfg.disk_disk0_filename);
 	sym_read_file(&sym_mcr, ucfg.ucode_mcrsym_filename);
 	iob_init();
 	chaos_init();

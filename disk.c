@@ -23,8 +23,16 @@
 #define LABEL_LABL 011420440514ULL
 #define LABEL_BLANK 020020020020ULL
 
-static int disk_fd;
-static uint8_t *disk_mm;
+#define DISKS_MAX 8
+
+struct {
+	int fd;
+	uint8_t *mm;
+
+	int cyls;
+	int heads;
+	int blocks_per_track;
+} disks[DISKS_MAX];
 
 static int disk_status = 1;
 static int disk_cmd;
@@ -33,9 +41,6 @@ static int disk_ma;
 static int disk_ecc;
 static int disk_da;
 
-static int cyls;
-static int heads;
-static int blocks_per_track;
 static int cur_unit;
 static int cur_cyl;
 static int cur_head;
@@ -44,68 +49,67 @@ static int cur_block;
 static int disk_interrupt_delay;
 
 static int
-disk_read(int block_no, uint32_t *buffer)
+disk_read(int unit, int block_no, uint32_t *buffer)
 {
 	off_t offset;
-	int size;
+
+	unit = 0;		///---!!!
 
 	offset = block_no * BLOCKSZ;
 
 	debug(TRACE_DISK, "disk: file image block %d(10), offset %ld(10)\n", block_no, (long) offset);
 
-	size = BLOCKSZ;
-	memcpy(buffer, disk_mm + offset, size);
+	memcpy(buffer, disks[unit].mm + offset, BLOCKSZ);
 
 	return 0;
 }
 
 static int
-disk_write(int block_no, uint32_t *buffer)
+disk_write(int unit, int block_no, uint32_t *buffer)
 {
 	off_t offset;
-	int size;
+
+	unit = 0;		///---!!!
 
 	offset = block_no * BLOCKSZ;
 
 	debug(TRACE_DISK, "disk: file image block %d, offset %ld\n", block_no, (long) offset);
 
-	size = BLOCKSZ;
-	memcpy(disk_mm + offset, buffer, size);
+	memcpy(disks[unit].mm + offset, buffer, BLOCKSZ);
 
 	return 0;
 }
 
-static int
+static void
 disk_read_block(uint32_t vma, int unit, int cyl, int head, int block)
 {
 	int block_no;
 	uint32_t buffer[256];
 
-	block_no = (cyl * blocks_per_track * heads) + (head * blocks_per_track) + block;
-	if (disk_read(block_no, buffer) < 0) {
+	block_no = (cyl * disks[unit].blocks_per_track * disks[unit].heads) + (head * disks[unit].blocks_per_track) + block;
+	if (disk_read(unit, block_no, buffer) < 0) {
 		printf("disk_read_block: error reading block_no %d\n", block_no);
-		return -1;
+		return;
 	}
+
 	for (int i = 0; i < 256; i++) {
 		write_phy_mem(vma + i, buffer[i]);
 	}
-	return 0;
 }
 
-static int
+static void
 disk_write_block(uint32_t vma, int unit, int cyl, int head, int block)
 {
 	int block_no;
 	uint32_t buffer[256];
 
-	block_no = (cyl * blocks_per_track * heads) + (head * blocks_per_track) + block;
+	block_no = (cyl * disks[unit].blocks_per_track * disks[unit].heads) + (head * disks[unit].blocks_per_track) + block;
 
 	for (int i = 0; i < 256; i++) {
 		read_phy_mem(vma + i, &buffer[i]);
 	}
-	disk_write(block_no, buffer);
 
-	return 0;
+	disk_write(unit, block_no, buffer);
 }
 
 static void
@@ -151,11 +155,15 @@ disk_undecode_addr(void)
 static void
 disk_incr_block(void)
 {
+	int unit;
+
+	unit = 0;		///---!!!
+
 	cur_block++;
-	if (cur_block >= blocks_per_track) {
+	if (cur_block >= disks[unit].blocks_per_track) {
 		cur_block = 0;
 		cur_head++;
-		if (cur_head >= heads) {
+		if (cur_head >= disks[unit].heads) {
 			cur_head = 0;
 			cur_cyl++;
 		}
@@ -163,7 +171,7 @@ disk_incr_block(void)
 }
 
 static void
-disk_start_read(void)
+disk_ccw(void (*disk_fn)(uint32_t vma, int unit, int cyl, int head, int block))
 {
 	uint32_t ccw;
 	uint32_t vma;
@@ -188,7 +196,7 @@ disk_start_read(void)
 
 		disk_show_cur_addr();
 
-		disk_read_block(vma, cur_unit, cur_cyl, cur_head, cur_block);
+		(*disk_fn)(vma, cur_unit, cur_cyl, cur_head, cur_block);
 
 		if ((ccw & 1) == 0) {
 			debug(TRACE_DISK, "disk: last ccw\n");
@@ -205,6 +213,12 @@ disk_start_read(void)
 	if (disk_cmd & 04000) {
 		disk_future_interrupt();
 	}
+}
+
+static void
+disk_start_read(void)
+{
+	disk_ccw(&disk_read_block);
 }
 
 static void
@@ -218,45 +232,7 @@ disk_start_read_compare(void)
 static void
 disk_start_write(void)
 {
-	uint32_t ccw;
-	uint32_t vma;
-
-	disk_decode_addr();
-
-	// Process CCW's.
-	for (int i = 0; i < 65535; i++) {
-		int f;
-
-		f = read_phy_mem(disk_clp, &ccw);
-		if (f) {
-			// Huh. what to do now?
-			printf("disk: mem[clp=%o] yielded fault (no page)\n", disk_clp);
-			return;
-		}
-
-		debug(TRACE_DISK, "disk: mem[clp=%o] -> ccw %08o\n", disk_clp, ccw);
-
-		vma = ccw & ~0377;
-		disk_ma = vma;
-
-		disk_show_cur_addr();
-
-		disk_write_block(vma, cur_unit, cur_cyl, cur_head, cur_block);
-
-		if ((ccw & 1) == 0) {
-			debug(TRACE_DISK, "disk: last ccw\n");
-			break;
-		}
-		disk_incr_block();
-
-		disk_clp++;
-	}
-
-	disk_undecode_addr();
-
-	if (disk_cmd & 04000) {
-		disk_future_interrupt();
-	}
+	disk_ccw(&disk_write_block);
 }
 
 static int
@@ -375,44 +351,49 @@ disk_poll(void)
 }
 
 int
-disk_init(char *filename)
+disk_init(int unit, char *filename)
 {
 	uint32_t label[256];
 	int ret;
 
 	label[0] = 0;
 
+	if (unit >= DISKS_MAX) {
+		fprintf(stderr, "disk: only 8 disk devices are supported\n");
+		exit(1);
+	}
+
 	printf("disk: opening %s\n", filename);
 
-	disk_fd = open(filename, O_RDWR | O_BINARY);
-	if (disk_fd < 0) {
-		disk_fd = 0;
+	disks[unit].fd = open(filename, O_RDWR | O_BINARY);
+	if (disks[unit].fd < 0) {
+		disks[unit].fd = 0;
 		perror(filename);
 		exit(1);
 	}
 
 	struct stat st;
-	fstat(disk_fd, &st);
+	fstat(disks[unit].fd, &st);
 	printf("disk: size: %zd bytes\n", st.st_size);
-	disk_mm = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, disk_fd, 0);
+	disks[unit].mm = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, disks[unit].fd, 0);
 
-	ret = disk_read(0, label);
+	ret = disk_read(unit, 0, label);
 	if (ret < 0 || label[0] != LABEL_LABL) {
 		printf("disk: invalid pack label - disk image ignored\n");
 		printf("label %o\n", label[0]);
-		close(disk_fd);
-		disk_fd = 0;
+		close(disks[unit].fd);
+		disks[unit].fd = 0;
 		return -1;
 	}
 
-	cyls = label[2];
-	heads = label[3];
-	blocks_per_track = label[4];
+	disks[unit].cyls = label[2];
+	disks[unit].heads = label[3];
+	disks[unit].blocks_per_track = label[4];
 
-	printf("disk: image CHB %o/%o/%o\n", cyls, heads, blocks_per_track);
+	printf("disk: image CHB %o/%o/%o\n", disks[unit].cyls, disks[unit].heads, disks[unit].blocks_per_track);
 
 	// Hack to find MCR symbol file via disk pack label.
-	if (label[030] != 0 && label[030] != LABEL_BLANK) {
+	if (label[030] != 0 && label[030] != LABEL_BLANK && unit == 0) {
 		char fn[1024];
 		char *s;
 
