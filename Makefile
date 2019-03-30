@@ -8,7 +8,7 @@ CFLAGS = -g3 -O3
 all: TAGS usim readmcr diskmaker lod lmfs cc
 
 usim.o: CFLAGS += -DVERSION=\"$(VERSION)\"
-usim: usim.o ucode.o mem.o iob.o mouse.o kbd.o tv.o x11.o chaos.o disk.o ini.o ucfg.o syms.o misc.o
+usim: usim.o ucode.o mem.o iob.o mouse.o kbd.o tv.o x11.o chaos.o disk.o ini.o ucfg.o trace.o syms.o misc.o
 	$(CC) $(CFLAGS) -o $@ $^ -lpthread -lX11
 
 readmcr: readmcr.o disass.o misc.o syms.o

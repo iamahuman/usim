@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 
 #include "usim.h"
+#include "utrace.h"
 #include "ucode.h"
 #include "mem.h"
 
@@ -43,7 +44,7 @@ map_vtop(uint32_t virt, int *pl1_map, int *poffset)
 	// Frame buffer.
 	if ((virt & 077700000) == 077000000) {
 		if (virt >= 077051757 && virt <= 077051763) {
-			traceio("disk run light\n");
+			debug(TRACE_IOB, "disk run light\n");
 		}
 		if (poffset)
 			*poffset = virt & 0377;
@@ -143,7 +144,7 @@ read_phy_mem(int paddr, uint32_t *pv)
 	if (page == 0) {
 		// Page does not exist.
 		if (pn < phys_ram_pages) {
-			tracef("[read_phy_mem] adding phy ram page %o (address %o)\n", pn, paddr);
+			debug(TRACE_MISC, "[read_phy_mem] adding phy ram page %o (address %o)\n", pn, paddr);
 			add_new_page_no(pn);
 			page = phy_pages[pn];
 		} else {
@@ -172,7 +173,7 @@ write_phy_mem(int paddr, uint32_t v)
 		// Page does not exist - add it (probably result of
 		// disk write).
 		if (pn < phys_ram_pages) {
-			tracef("[write_phy_mem] adding phy ram page %o (address %o)\n", pn, paddr);
+			debug(TRACE_MISC, "[write_phy_mem] adding phy ram page %o (address %o)\n", pn, paddr);
 			add_new_page_no(pn);
 			page = phy_pages[pn];
 		} else {

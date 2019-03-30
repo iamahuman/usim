@@ -13,6 +13,7 @@
 
 #include "usim.h"
 #include "ucfg.h"
+#include "utrace.h"
 #include "ucode.h"
 #include "mem.h"
 #include "misc.h"
@@ -50,7 +51,7 @@ disk_read(int block_no, uint32_t *buffer)
 
 	offset = block_no * BLOCKSZ;
 
-	tracedio("disk: file image block %d(10), offset %ld(10)\n", block_no, (long) offset);
+	debug(TRACE_DISK, "disk: file image block %d(10), offset %ld(10)\n", block_no, (long) offset);
 
 	size = BLOCKSZ;
 	memcpy(buffer, disk_mm + offset, size);
@@ -66,7 +67,7 @@ disk_write(int block_no, uint32_t *buffer)
 
 	offset = block_no * BLOCKSZ;
 
-	tracedio("disk: file image block %d, offset %ld\n", block_no, (long) offset);
+	debug(TRACE_DISK, "disk: file image block %d, offset %ld\n", block_no, (long) offset);
 
 	size = BLOCKSZ;
 	memcpy(disk_mm + offset, buffer, size);
@@ -110,7 +111,7 @@ disk_write_block(uint32_t vma, int unit, int cyl, int head, int block)
 static void
 disk_throw_interrupt(void)
 {
-	tracedio("disk: throw interrupt\n");
+	debug(TRACE_DISK, "disk: throw interrupt\n");
 	disk_status |= 1 << 3;
 	assert_xbus_interrupt();
 }
@@ -125,7 +126,7 @@ disk_future_interrupt(void)
 static void
 disk_show_cur_addr(void)
 {
-	tracedio("disk: unit %d, CHB %o/%o/%o\n", cur_unit, cur_cyl, cur_head, cur_block);
+	debug(TRACE_DISK, "disk: unit %d, CHB %o/%o/%o\n", cur_unit, cur_cyl, cur_head, cur_block);
 }
 
 static void
@@ -180,7 +181,7 @@ disk_start_read(void)
 			return;
 		}
 
-		tracedio("disk: mem[clp=%o] -> ccw %08o\n", disk_clp, ccw);
+		debug(TRACE_DISK, "disk: mem[clp=%o] -> ccw %08o\n", disk_clp, ccw);
 
 		vma = ccw & ~0377;
 		disk_ma = vma;
@@ -190,7 +191,7 @@ disk_start_read(void)
 		disk_read_block(vma, cur_unit, cur_cyl, cur_head, cur_block);
 
 		if ((ccw & 1) == 0) {
-			tracedio("disk: last ccw\n");
+			debug(TRACE_DISK, "disk: last ccw\n");
 			break;
 		}
 
@@ -233,7 +234,7 @@ disk_start_write(void)
 			return;
 		}
 
-		tracedio("disk: mem[clp=%o] -> ccw %08o\n", disk_clp, ccw);
+		debug(TRACE_DISK, "disk: mem[clp=%o] -> ccw %08o\n", disk_clp, ccw);
 
 		vma = ccw & ~0377;
 		disk_ma = vma;
@@ -243,7 +244,7 @@ disk_start_write(void)
 		disk_write_block(vma, cur_unit, cur_cyl, cur_head, cur_block);
 
 		if ((ccw & 1) == 0) {
-			tracedio("disk: last ccw\n");
+			debug(TRACE_DISK, "disk: last ccw\n");
 			break;
 		}
 		disk_incr_block();
@@ -261,29 +262,29 @@ disk_start_write(void)
 static int
 disk_start(void)
 {
-	tracedio("disk: start, cmd (%o) ", disk_cmd);
+	debug(TRACE_DISK, "disk: start, cmd (%o) ", disk_cmd);
 
 	switch (disk_cmd & 01777) {
 	case 0:
-		tracedio("read\n");
+		debug(TRACE_DISK, "read\n");
 		disk_start_read();
 		break;
 	case 010:
-		tracedio("read compare\n");
+		debug(TRACE_DISK, "read compare\n");
 		disk_start_read_compare();
 		break;
 	case 011:
-		tracedio("write\n");
+		debug(TRACE_DISK, "write\n");
 		disk_start_write();
 		break;
 	case 01005:
-		tracedio("recalibrate\n");
+		debug(TRACE_DISK, "recalibrate\n");
 		break;
 	case 0405:
-		tracedio("fault clear\n");
+		debug(TRACE_DISK, "fault clear\n");
 		break;
 	default:
-		tracedio("unknown\n");
+		debug(TRACE_DISK, "unknown\n");
 		return -1;
 	}
 
@@ -293,27 +294,27 @@ disk_start(void)
 void
 disk_xbus_read(int offset, uint32_t *pv)
 {
-	tracef("disk register read, offset %o\n", offset);
+	debug(TRACE_MISC, "disk register read, offset %o\n", offset);
 
 	switch (offset) {
 	case 0370:
-		tracef("disk: read status\n");
+		debug(TRACE_MISC, "disk: read status\n");
 		*pv = disk_status;
 		break;
 	case 0371:
-		tracef("disk: read ma\n");
+		debug(TRACE_MISC, "disk: read ma\n");
 		*pv = disk_ma;
 		break;
 	case 0372:
-		tracef("disk: read da\n");
+		debug(TRACE_MISC, "disk: read da\n");
 		*pv = disk_da;
 		break;
 	case 0373:
-		tracef("disk: read ecc\n");
+		debug(TRACE_MISC, "disk: read ecc\n");
 		*pv = disk_ecc;
 		break;
 	case 0374:
-		tracef("disk: status read\n");
+		debug(TRACE_MISC, "disk: status read\n");
 		*pv = disk_status;
 		break;
 	case 0375:
@@ -326,7 +327,7 @@ disk_xbus_read(int offset, uint32_t *pv)
 		*pv = 0;
 		break;
 	default:
-		tracedio("disk: unknown reg read %o\n", offset);
+		debug(TRACE_DISK, "disk: unknown reg read %o\n", offset);
 		break;
 	}
 }
@@ -334,31 +335,31 @@ disk_xbus_read(int offset, uint32_t *pv)
 void
 disk_xbus_write(int offset, uint32_t v)
 {
-	tracef("disk register write, offset %o <- %o\n", offset, v);
+	debug(TRACE_MISC, "disk register write, offset %o <- %o\n", offset, v);
 
 	switch (offset) {
 	case 0370:
-		tracedio("disk: load status %o\n", v);
+		debug(TRACE_DISK, "disk: load status %o\n", v);
 		break;
 	case 0374:
 		disk_cmd = v;
 		if ((disk_cmd & 06000) == 0)
 			deassert_xbus_interrupt();
-		tracedio("disk: load cmd %o\n", v);
+		debug(TRACE_DISK, "disk: load cmd %o\n", v);
 		break;
 	case 0375:
-		tracedio("disk: load clp %o (phys page %o)\n", v, v << 8);
+		debug(TRACE_DISK, "disk: load clp %o (phys page %o)\n", v, v << 8);
 		disk_clp = v;
 		break;
 	case 0376:
 		disk_da = v;
-		tracef("disk: load da %o\n", v);
+		debug(TRACE_MISC, "disk: load da %o\n", v);
 		break;
 	case 0377:
 		disk_start();
 		break;
 	default:
-		tracedio("disk: unknown reg write %o\n", offset);
+		debug(TRACE_DISK, "disk: unknown reg write %o\n", offset);
 		break;
 	}
 }

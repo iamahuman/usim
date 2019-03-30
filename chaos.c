@@ -17,6 +17,7 @@
 #include <sys/uio.h>
 
 #include "usim.h"
+#include "utrace.h"
 #include "ucode.h"
 #include "chaos.h"
 
@@ -90,12 +91,12 @@ chaos_rx_pkt(void)
 	chaos_rcv_buffer_ptr = 0;
 	chaos_bit_count = (chaos_rcv_buffer_size * 2 * 8) - 1;
 	if (chaos_rcv_buffer_size > 0) {
-		tracenet("chaos: set RDN, generate interrupt\n");
+		debug(TRACE_CHAOS, "chaos: set RDN, generate interrupt\n");
 		chaos_csr |= CHAOS_CSR_RECEIVE_DONE;
 		if (chaos_csr & CHAOS_CSR_RECEIVE_ENABLE)
 			assert_unibus_interrupt(0270);
 	} else {
-		tracenet("chaos_rx_pkt: called, but no data in buffer\n");
+		debug(TRACE_CHAOS, "chaos_rx_pkt: called, but no data in buffer\n");
 	}
 }
 
@@ -110,7 +111,7 @@ char_xmit_done_intr(void)
 void
 chaos_xmit_pkt(void)
 {
-	tracenet("chaos_xmit_pkt() %d bytes, data len %d\n", chaos_xmit_buffer_ptr * 2, (chaos_xmit_buffer_ptr > 0 ? chaos_xmit_buffer[1] & 0x3f : -1));
+	debug(TRACE_CHAOS, "chaos_xmit_pkt() %d bytes, data len %d\n", chaos_xmit_buffer_ptr * 2, (chaos_xmit_buffer_ptr > 0 ? chaos_xmit_buffer[1] & 0x3f : -1));
 
 	chaos_xmit_buffer_size = chaos_xmit_buffer_ptr;
 
@@ -131,7 +132,7 @@ chaos_get_bit_count(void)
 {
 	if (chaos_rcv_buffer_size > 0)
 		return chaos_bit_count;
-	tracenet("chaos_get_bit_count: returned empty count\n");
+	debug(TRACE_CHAOS, "chaos_get_bit_count: returned empty count\n");
 	return 07777;
 }
 
@@ -144,13 +145,13 @@ chaos_get_rcv_buffer(void)
 		v = chaos_rcv_buffer[chaos_rcv_buffer_ptr++];
 		if (chaos_rcv_buffer_ptr == chaos_rcv_buffer_size) {
 			chaos_rcv_buffer_empty = 1;
-			tracenet("chaos_get_rcv_buffer: marked buffer as empty\n");
+			debug(TRACE_CHAOS, "chaos_get_rcv_buffer: marked buffer as empty\n");
 		}
 	} else {
 		// Read last word, clear receive done.
 		chaos_csr &= ~CHAOS_CSR_RECEIVE_DONE;
 		chaos_rcv_buffer_size = 0;
-		tracenet("chaos_get_rcv_buffer: cleared CHAOS_CSR_RECEIVE_DONE\n");
+		debug(TRACE_CHAOS, "chaos_get_rcv_buffer: cleared CHAOS_CSR_RECEIVE_DONE\n");
 	}
 
 	return v;
@@ -183,7 +184,7 @@ chaos_get_csr(void)
 
 	if (chaos_csr != old_chaos_csr) {
 		old_chaos_csr = chaos_csr;
-		tracenet("unibus: chaos read csr %o\n", chaos_csr);
+		debug(TRACE_CHAOS, "unibus: chaos read csr %o\n", chaos_csr);
 	}
 
 	return chaos_csr | ((chaos_lost_count << 9) & 017);
@@ -195,7 +196,7 @@ chaos_set_csr(int v)
 	int mask;
 
 	v &= 0xffff;
-	tracenet("chaos: set csr bits 0%o, old 0%o\n", v, chaos_csr);
+	debug(TRACE_CHAOS, "chaos: set csr bits 0%o, old 0%o\n", v, chaos_csr);
 
 	// Writing these don't stick.
 	mask =
@@ -207,7 +208,7 @@ chaos_set_csr(int v)
 	chaos_csr = (chaos_csr & mask) | (v & ~mask);
 
 	if (chaos_csr & CHAOS_CSR_RESET) {
-		tracenet("reset ");
+		debug(TRACE_CHAOS, "reset ");
 		chaos_rcv_buffer_size = 0;
 		chaos_xmit_buffer_ptr = 0;
 		chaos_lost_count = 0;
@@ -234,24 +235,24 @@ chaos_set_csr(int v)
 	}
 
 	if (chaos_csr & CHAOS_CSR_RECEIVE_ENABLE) {
-		tracenet("rx-enable ");
+		debug(TRACE_CHAOS, "rx-enable ");
 		if (chaos_rcv_buffer_empty) {
 			chaos_rcv_buffer_ptr = 0;
 			chaos_rcv_buffer_size = 0;
 		}
 		// If buffer is full, generate status and interrupt again.
 		if (chaos_rcv_buffer_size > 0) {
-			tracenet("\n rx-enabled and buffer is full\n");
+			debug(TRACE_CHAOS, "\n rx-enabled and buffer is full\n");
 			chaos_rx_pkt();
 		}
 	}
 
 	if (chaos_csr & CHAOS_CSR_TRANSMIT_ENABLE) {
-		tracenet("tx-enable ");
+		debug(TRACE_CHAOS, "tx-enable ");
 		chaos_csr |= CHAOS_CSR_TRANSMIT_DONE;
 	}
 
-	tracenet(" New csr 0%o\n", chaos_csr);
+	debug(TRACE_CHAOS, " New csr 0%o\n", chaos_csr);
 }
 
 #define UNIX_SOCKET_PATH	"/var/tmp/"
@@ -264,7 +265,7 @@ static struct sockaddr_un unix_addr;
 static void
 chaos_force_reconect(void)
 {
-	tracenet("chaos: forcing reconnect to chaosd\n");
+	debug(TRACE_CHAOS, "chaos: forcing reconnect to chaosd\n");
 
 	close(chaos_fd);
 	chaos_fd = 0;
@@ -292,7 +293,7 @@ chaos_send_to_chaosd(char *buffer, int size)
 	wcount = (size + 1) / 2;
 	dest_addr = ((u_short *) buffer)[wcount - 3];
 
-	tracenet("chaos tx: dest_addr = %o, chaos_addr=%o, size %d, wcount %d\n", dest_addr, chaos_addr, size, wcount);
+	debug(TRACE_CHAOS, "chaos tx: dest_addr = %o, chaos_addr=%o, size %d, wcount %d\n", dest_addr, chaos_addr, size, wcount);
 
 	// Recieve packets addressed to us.
 	if (dest_addr == chaos_addr) {
@@ -412,11 +413,11 @@ chaos_poll(void)
 
 	ret = poll(pfd, nfds, timeout);
 	if (ret == -1) {
-		tracenet("chaos: Polling, nothing there (RDN=%o)\n", chaos_csr & CHAOS_CSR_RECEIVE_DONE);
+		debug(TRACE_CHAOS, "chaos: Polling, nothing there (RDN=%o)\n", chaos_csr & CHAOS_CSR_RECEIVE_DONE);
 		chaos_need_reconnect = true;
 		return -1;
 	} else if (ret == 0) {
-		tracenet("chaos: timeout\n");
+		debug(TRACE_CHAOS, "chaos: timeout\n");
 		return -1;
 	}
 
@@ -427,13 +428,13 @@ chaos_poll(void)
 	if (!chaos_rcv_buffer_empty && (chaos_csr & CHAOS_CSR_RECEIVE_DONE)) {
 		// Toss packets arriving when buffer is already in
 		// use, they will be resent.
-		tracenet("chaos: polling, unread data, drop " "(RDN=%o, lost %d)\n", chaos_csr & CHAOS_CSR_RECEIVE_DONE, chaos_lost_count);
+		debug(TRACE_CHAOS, "chaos: polling, unread data, drop " "(RDN=%o, lost %d)\n", chaos_csr & CHAOS_CSR_RECEIVE_DONE, chaos_lost_count);
 		chaos_lost_count++;
 		ret = read(chaos_fd, lenbytes, 4);
 		if (ret != 4)
 			perror("read");
 		len = (lenbytes[0] << 8) | lenbytes[1];
-		tracenet("chaos: tossing packet of %d bytes\n", len);
+		debug(TRACE_CHAOS, "chaos: tossing packet of %d bytes\n", len);
 		if (len > sizeof(chaos_rcv_buffer_toss)) {
 			printf("chaos packet won't fit");
 			chaos_force_reconect();
@@ -471,11 +472,11 @@ chaos_poll(void)
 		chaos_force_reconect();
 		return -1;
 	} else if (ret == 0) {
-		tracenet("chaos: read zero bytes\n");
+		debug(TRACE_CHAOS, "chaos: read zero bytes\n");
 		return -1;
 	}
 
-	tracenet("chaos: polling; got chaosd packet %d\n", ret);
+	debug(TRACE_CHAOS, "chaos: polling; got chaosd packet %d\n", ret);
 
 	int dest_addr;
 
@@ -490,7 +491,7 @@ chaos_poll(void)
 		return 0;
 	}
 
-	tracenet("chaos rx: to %o, my %o\n", dest_addr, chaos_addr);
+	debug(TRACE_CHAOS, "chaos rx: to %o, my %o\n", dest_addr, chaos_addr);
 
 	chaos_rx_pkt();
 
@@ -511,7 +512,7 @@ chaos_reconnect(void)
 		return;
 	reconnect_time = time(NULL);
 
-	tracenet("chaos: reconnecting to chaosd\n");
+	debug(TRACE_CHAOS, "chaos: reconnecting to chaosd\n");
 	if (chaos_init() == 0) {
 		printf("chaos: reconnected\n");
 		chaos_need_reconnect = false;

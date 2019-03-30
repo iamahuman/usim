@@ -11,6 +11,8 @@
 #include <sys/time.h>
 
 #include "usim.h"
+#include "ucfg.h"
+#include "utrace.h"
 #include "ucode.h"
 #include "mem.h"
 #include "iob.h"
@@ -19,7 +21,6 @@
 #include "chaos.h"
 #include "disk.h"
 
-#include "ucfg.h"
 #include "syms.h"
 #include "disass.h"
 
@@ -75,6 +76,8 @@ main(int argc, char *argv[])
 		usage();
 		exit(1);
 	}
+
+	trace_stream = stderr;
 
 	if (ini_parse(config_filename, ucfg_handler, &ucfg) < 0)
 		fprintf(stderr, "Can't load '%s', using defaults\n", config_filename);

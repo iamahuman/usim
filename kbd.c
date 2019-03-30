@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "usim.h"
+#include "utrace.h"
 #include "ucode.h"
 #include "iob.h"
 #include "kbd.h"
@@ -113,7 +114,7 @@ queue_key_event(int ev)
 	v = (1 << 16) | ev;
 
 	if (key_queue_free > 0) {
-		traceio("queue_key_event() - queuing 0%o, q len before %d\n", v, KEY_QUEUE_LEN - key_queue_free);
+		debug(TRACE_IOB, "queue_key_event() - queuing 0%o, q len before %d\n", v, KEY_QUEUE_LEN - key_queue_free);
 		key_queue_free--;
 		key_queue[key_queue_optr] = v;
 		key_queue_optr = (key_queue_optr + 1) % KEY_QUEUE_LEN;
@@ -135,7 +136,7 @@ kbd_dequeue_key_event(void)
 
 	if (key_queue_free < KEY_QUEUE_LEN) {
 		int v = key_queue[key_queue_iptr];
-		traceio("dequeue_key_event() - dequeuing 0%o, q len before %d\n", v, KEY_QUEUE_LEN - key_queue_free);
+		debug(TRACE_IOB, "dequeue_key_event() - dequeuing 0%o, q len before %d\n", v, KEY_QUEUE_LEN - key_queue_free);
 		key_queue_iptr = (key_queue_iptr + 1) % KEY_QUEUE_LEN;
 		key_queue_free++;
 		kbd_key_scan = (1 << 16) | v;
@@ -152,7 +153,7 @@ kbd_key_event(int code, int keydown)
 {
 	int v;
 
-	traceio("key_event(code=%x, keydown=%x)\n", code, keydown);
+	debug(TRACE_IOB, "key_event(code=%x, keydown=%x)\n", code, keydown);
 
 	v = ((!keydown) << 8) | code;
 
@@ -160,7 +161,7 @@ kbd_key_event(int code, int keydown)
 		queue_key_event(v); // Already something there, queue this.
 	else {
 		kbd_key_scan = (1 << 16) | v;
-		traceio("key_event() - 0%o\n", kbd_key_scan);
+		debug(TRACE_IOB, "key_event() - 0%o\n", kbd_key_scan);
 		if (iob_csr & (1 << 2)) {
 			iob_csr |= 1 << 5;
 			assert_unibus_interrupt(0260);

@@ -8,6 +8,7 @@
 #include "ini.h"
 
 #include "ucfg.h"
+#include "utrace.h"
 #include "chaos.h"
 
 #include "misc.h"
@@ -41,6 +42,41 @@ ucfg_handler(void *user, const char *section, const char *name, const char *valu
 			exit(1);
 		}
 		chaos_set_addr(addr);
+	}
+
+	if (INIHEQ("trace", "level")) {
+		     if (streq(cfg->trace_level, "alert"))   trace_level = LOG_ALERT;
+		else if (streq(cfg->trace_level, "crit"))    trace_level = LOG_CRIT;
+		else if (streq(cfg->trace_level, "debug"))   trace_level = LOG_DEBUG;
+		else if (streq(cfg->trace_level, "emerg"))   trace_level = LOG_EMERG;
+		else if (streq(cfg->trace_level, "err"))     trace_level = LOG_ERR;
+		else if (streq(cfg->trace_level, "info"))    trace_level = LOG_INFO;
+		else if (streq(cfg->trace_level, "notice"))  trace_level = LOG_NOTICE;
+		else if (streq(cfg->trace_level, "warning")) trace_level = LOG_WARNING;
+		else fprintf(stderr, "unknown trace level: %s\n", cfg->trace_level);
+	}
+
+	if (INIHEQ("trace", "facilities")) {
+		char *s;
+		char *sp;
+
+		s = strdup(cfg->trace_facilities);
+		sp = strtok(s, " ");
+		while (sp != NULL) {
+			     if (streq(sp, "all"))   trace_facilities = TRACE_ALL;
+			else if (streq(sp, "none"))  trace_facilities = TRACE_NONE;
+			else if (streq(sp, "misc"))  trace_facilities |= TRACE_MISC;
+			else if (streq(sp, "vm"))    trace_facilities |= TRACE_VM;
+			else if (streq(sp, "int"))   trace_facilities |= TRACE_INT;
+			else if (streq(sp, "disk"))  trace_facilities |= TRACE_DISK;
+			else if (streq(sp, "chaos")) trace_facilities |= TRACE_CHAOS;
+			else if (streq(sp, "iob"))   trace_facilities |= TRACE_IOB;
+			else fprintf(stderr, "unknown trace facility: %s\n", sp);
+
+			sp = strtok(NULL, " ");
+		}
+
+		free(s);
 	}
 
 	return 1;

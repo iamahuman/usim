@@ -8,3 +8,6 @@ X(ucode, prommcr_filename, "promh.mcr.9")
 X(ucode, mcrsym_filename, "ucadr.sym.841")
 
 X(chaos, myaddr, "0404")
+
+X(trace, level, "notice")
+X(trace, facilities, "none")
