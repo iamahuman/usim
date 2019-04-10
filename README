@@ -89,7 +89,7 @@ your local password):
   (login 'USER 'server)
 
 Now you can read/write files from the host system, the format for Unix
-pathnames is HOST:/DIRECTORY/FILE.EXTENTION.  N.B. Slashes in a string
+pathnames is HOST:/DIRECTORY/FILE.EXTENSION.  N.B. Slashes in a string
 in Lisp have to be escaped!
 
 To edit the file /tmp/foo.lisp on the host SERVER, we can type the
