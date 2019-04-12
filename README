@@ -169,21 +169,21 @@ for the reader, you need to do the following steps:
 * Keyboard bindings
 
 Keys are mapped in the following manner by default:
-|-----------+------------------------|
-| Keyboard  | Emulator               |
-|-----------+------------------------|
-| Esc       | Terminal               |
-| F2        | System                 |
-| F3        | Network                |
-| F4        | Abort                  |
-| F5        | Clear Input            |
-| F6        | Help                   |
-| PgUp      | Break                  |
-| PgDn      | (Appears to crash usim |
-| Home      | Call                   |
-| End       | End                    |
-| Backspace | Rub Out                |
-|-----------+------------------------|
+|-----------+-------------------------|
+| Keyboard  | Emulator                |
+|-----------+-------------------------|
+| Esc       | Terminal                |
+| F2        | System                  |
+| F3        | Network                 |
+| F4        | Abort                   |
+| F5        | Clear Input             |
+| F6        | Help                    |
+| PgUp      | Break                   |
+| PgDn      | (Appears to crash usim) |
+| Home      | Call                    |
+| End       | End                     |
+| Backspace | Rub Out                 |
+|-----------+-------------------------|
  
 
 * The diskmaker Utility
