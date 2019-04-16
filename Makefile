@@ -3,13 +3,13 @@ VERSION = 0.9-ams
 CC = gcc -std=gnu99
 CC += -Wall -Wextra
 
-CFLAGS = -g3 -O3
+CFLAGS = -g3 -O3 -I/usr/X11R6/include
 
 all: TAGS usim readmcr diskmaker lod lmfs cc
 
 usim.o: CFLAGS += -DVERSION=\"$(VERSION)\"
 usim: usim.o ucode.o mem.o iob.o mouse.o kbd.o tv.o x11.o chaos.o disk.o ini.o ucfg.o trace.o syms.o misc.o
-	$(CC) $(CFLAGS) -o $@ $^ -lpthread -lX11
+	$(CC) $(CFLAGS) -o $@ $^ -lpthread -lX11 -L/usr/X11R6/lib
 
 readmcr: readmcr.o disass.o misc.o syms.o
 	$(CC) $(CFLAGS) -o $@ $^
