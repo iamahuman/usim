@@ -390,19 +390,5 @@ disk_init(int unit, char *filename)
 
 	INFO(TRACE_DISK, "disk: image CHB %o/%o/%o\n", disks[unit].cyls, disks[unit].heads, disks[unit].blocks_per_track);
 
-	// Hack to find MCR symbol file via disk pack label.
-	if (label[030] != 0 && label[030] != LABEL_BLANK && unit == 0) {
-		char fn[1024];
-		char *s;
-
-		memset(fn, 0, sizeof(fn));
-		strcpy(fn, (char *) &label[030]);
-		INFO(TRACE_DISK, "disk: pack label comment '%s'\n", fn);
-		s = strstr(fn, ".mcr.");
-		if (s)
-			memcpy(s, ".sym.", 5);
-		ucfg.ucode_mcrsym_filename = strdup(fn);
-	}
-
 	return 0;
 }
