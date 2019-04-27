@@ -269,7 +269,7 @@ unibus_write(int offset, uint32_t v)
 		debug(TRACE_IOB, "unibus: write mode register %o\n", v);
 		if ((v & 044) == 044) {
 			debug(TRACE_IOB, "unibus: disabling prom enable flag\n");
-			prom_enabled_flag = 0;
+			prom_enabled_flag = false;
 
 			if (warm_boot_flag) {
 				restore_state(ucfg.usim_state_filename);
