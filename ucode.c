@@ -861,6 +861,7 @@ run(void)
 			uint32_t l1_data;
 
 			l1_data = 0;
+			l2_data = 0;
 
 			switch (m_src & 037) {
 			case 0:
