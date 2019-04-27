@@ -796,6 +796,12 @@ run(void)
 			chaos_poll();
 		}
 
+		// Enforce max. cycles.
+		cycles++;
+		if (cycles == 0)
+			// Handle overflow.
+			cycles = 1;
+
 		// Fetch next instruction from PROM or RAM.
 #define FETCH() (prom_enabled_flag ? prom_ucode[u_pc] : ucode[u_pc])
 
@@ -838,11 +844,10 @@ run(void)
 			u |= (ucw_t) oa_reg_hi << 26;
 		}
 
-		// Enforce max. cycles.
-		cycles++;
-		if (cycles == 0)
-			// Handle overflow.
-			cycles = 1;
+		// NOP short cut.
+		if ((u & NOP_MASK) == 0) {
+			goto next;
+		}
 
 		popj = (u >> 42) & 1;
 		a_src = (u >> 32) & 01777;
@@ -913,11 +918,6 @@ run(void)
 			}
 		} else {
 			m_src_value = read_m_mem(m_src);
-		}
-
-		// NOP short cut.
-		if ((u & NOP_MASK) == 0) {
-			goto next;
 		}
 
 		// Decode isntruction.
