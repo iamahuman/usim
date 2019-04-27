@@ -104,8 +104,10 @@ sym_read_file(symtab_t *tab, char *filename)
 	char line[8 * 1024];
 
 	f = fopen(filename, "r");
-	if (f == NULL)
+	if (f == NULL) {
+		warn("failed to open: %s", filename);
 		return -1;
+	}
 
 	LIST_INIT(&tab->symbols);
 
