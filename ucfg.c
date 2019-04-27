@@ -71,6 +71,7 @@ ucfg_handler(void *user, const char *section, const char *name, const char *valu
 			else if (streq(sp, "disk"))  trace_facilities |= TRACE_DISK;
 			else if (streq(sp, "chaos")) trace_facilities |= TRACE_CHAOS;
 			else if (streq(sp, "iob"))   trace_facilities |= TRACE_IOB;
+			else if (streq(sp, "microcode")) trace_facilities |= TRACE_MICROCODE;
 			else fprintf(stderr, "unknown trace facility: %s\n", sp);
 
 			sp = strtok(NULL, " ");
