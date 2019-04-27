@@ -82,17 +82,17 @@ iob_unibus_read(int offset, int *pv)
 	switch (offset) {
 	case 0100:
 		*pv = kbd_key_scan & 0177777;
-		debug(TRACE_IOB, "unibus: kbd low %011o\n", *pv);
+		DEBUG(TRACE_IOB, "unibus: kbd low %011o\n", *pv);
 		iob_csr &= ~(1 << 5);	// Clear CSR<5>.
 		break;
 	case 0102:
 		*pv = (kbd_key_scan >> 16) & 0177777;
-		debug(TRACE_IOB, "unibus: kbd high %011o\n", *pv);
+		DEBUG(TRACE_IOB, "unibus: kbd high %011o\n", *pv);
 		iob_csr &= ~(1 << 5);	// Clear CSR<5>.
 		break;
 	case 0104:
 		*pv = (mouse_tail << 12) | (mouse_middle << 13) | (mouse_head << 14) | (mouse_y & 07777);
-		debug(TRACE_IOB, "unibus: mouse y %011o\n", *pv);
+		DEBUG(TRACE_IOB, "unibus: mouse y %011o\n", *pv);
 
 		mouse_tail = 0;
 		mouse_middle = 0;
@@ -102,57 +102,57 @@ iob_unibus_read(int offset, int *pv)
 		break;
 	case 0106:
 		*pv = (mouse_rawx << 12) | (mouse_rawy << 14) | (mouse_x & 07777);
-		debug(TRACE_IOB, "unibus: mouse x %011o\n", *pv);
+		DEBUG(TRACE_IOB, "unibus: mouse x %011o\n", *pv);
 		break;
 	case 0110:
-		debug(TRACE_IOB, "unibus: beep\n");
+		DEBUG(TRACE_IOB, "unibus: beep\n");
 		fprintf(stderr, "\a");	// Beep!
 		break;
 	case 0112:
 		*pv = iob_csr;
-		debug(TRACE_IOB, "unibus: kbd csr %011o\n", *pv);
+		DEBUG(TRACE_IOB, "unibus: kbd csr %011o\n", *pv);
 		break;
 	case 0120:
 		*pv = get_us_clock_low();
-		debug(TRACE_IOB, "unibus: usec clock low\n");
+		DEBUG(TRACE_IOB, "unibus: usec clock low\n");
 		break;
 	case 0122:
 		*pv = get_us_clock_high();
-		debug(TRACE_IOB, "unibus: usec clock high\n");
+		DEBUG(TRACE_IOB, "unibus: usec clock high\n");
 		break;
 	case 0124:
 		*pv = get_60hz_clock();
-		debug(TRACE_IOB, "unibus: 60hz clock\n");
+		DEBUG(TRACE_IOB, "unibus: 60hz clock\n");
 		break;
 	case 0140:
 		*pv = chaos_get_csr();
 		break;
 	case 0142:
 		*pv = chaos_get_addr();
-		debug(TRACE_CHAOS, "unibus: chaos read my-number\n");
+		DEBUG(TRACE_IOB, "unibus: chaos read my-number\n");
 		break;
 	case 0144:
 		*pv = chaos_get_rcv_buffer();
-		debug(TRACE_CHAOS, "unibus: chaos read rcv buffer %06o\n", *pv);
+		DEBUG(TRACE_IOB, "unibus: chaos read rcv buffer %06o\n", *pv);
 		break;
 	case 0146:
 		*pv = chaos_get_bit_count();
-		debug(TRACE_CHAOS, "unibus: chaos read bit-count 0%o\n", *pv);
+		DEBUG(TRACE_IOB, "unibus: chaos read bit-count 0%o\n", *pv);
 		break;
 	case 0152:
 		*pv = chaos_get_addr();
-		debug(TRACE_CHAOS, "unibus: chaos read xmt => %o\n", *pv);
+		DEBUG(TRACE_IOB, "unibus: chaos read xmt => %o\n", *pv);
 		chaos_xmit_pkt();
 		break;
 	case 160:
 	case 162:
 	case 164:
 	case 166:
-		debug(TRACE_IOB, "unibus: uart read ---!!! %o\n", *pv);
+		DEBUG(TRACE_IOB, "unibus: uart read ---!!! %o\n", *pv);
 		break;
 	default:
 		if (offset > 0140 && offset <= 0153)
-			printf("unibus: chaos read other %o\n", offset);
+			DEBUG(TRACE_IOB, "unibus: chaos read other %o\n", offset);
 		chaos_xmit_pkt();
 		break;
 	}
@@ -163,50 +163,50 @@ iob_unibus_write(int offset, int v)
 {
 	switch (offset) {
 	case 0100:
-		debug(TRACE_IOB, "unibus: kbd low\n");
+		DEBUG(TRACE_IOB, "unibus: kbd low\n");
 		break;
 	case 0102:
-		debug(TRACE_IOB, "unibus: kbd high\n");
+		DEBUG(TRACE_IOB, "unibus: kbd high\n");
 		break;
 	case 0104:
-		debug(TRACE_IOB, "unibus: mouse y\n");
+		DEBUG(TRACE_IOB, "unibus: mouse y\n");
 		break;
 	case 0106:
-		debug(TRACE_IOB, "unibus: mouse x\n");
+		DEBUG(TRACE_IOB, "unibus: mouse x\n");
 		break;
 	case 0110:
-		debug(TRACE_IOB, "unibus: beep\n");
+		DEBUG(TRACE_IOB, "unibus: beep\n");
 		break;
 	case 0112:
-		debug(TRACE_IOB, "unibus: kbd csr\n");
+		DEBUG(TRACE_IOB, "unibus: kbd csr\n");
 		iob_csr = (iob_csr & ~017) | (v & 017);
 		break;
 	case 0120:
-		debug(TRACE_IOB, "unibus: usec clock\n");
+		DEBUG(TRACE_IOB, "unibus: usec clock\n");
 		break;
 	case 0122:
-		debug(TRACE_IOB, "unibus: usec clock\n");
+		DEBUG(TRACE_IOB, "unibus: usec clock\n");
 		break;
 	case 0124:
-		printf("unibus: START 60hz clock\n");
+		DEBUG(TRACE_IOB, "unibus: start 60hz clock\n");
 		break;
 	case 0140:
-		debug(TRACE_IOB, "unibus: chaos write %011o\n", v);
+		DEBUG(TRACE_IOB, "unibus: chaos write %011o\n", v);
 		chaos_set_csr(v);
 		break;
 	case 0142:
-		debug(TRACE_IOB, "unibus: chaos write-buffer write %011o\n", v);
+		DEBUG(TRACE_IOB, "unibus: chaos write-buffer write %011o\n", v);
 		chaos_put_xmit_buffer(v);
 		break;
 	case 160:
 	case 162:
 	case 164:
 	case 166:
-		debug(TRACE_IOB, "unibus: uart write ---!!! %o\n", v);
+		DEBUG(TRACE_IOB, "unibus: uart write ---!!! %o\n", v);
 		break;
 	default:
 		if (offset > 0140 && offset <= 0152)
-			printf("unibus: chaos write other\n");
+			DEBUG(TRACE_IOB, "unibus: chaos write other\n");
 		break;
 	}
 }

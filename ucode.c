@@ -88,7 +88,7 @@ read_prom(char *file)
 	code = read32(fd);
 	start = read32(fd);
 	size = read32(fd);
-	printf("prom (%s): code: %d, start: %d, size: %d\n", file, code, start, size);
+	INFO(TRACE_MISC, "prom (%s): code: %d, start: %d, size: %d\n", file, code, start, size);
 
 	int loc = start;
 	for (uint32_t i = 0; i < size; i++) {
@@ -125,10 +125,10 @@ assert_unibus_interrupt(int vector)
 {
 	// Unibus interrupts enabled?
 	if (interrupt_status_reg & 02000) {
-		debug(TRACE_INT, "assert: unibus interrupt (enabled)\n");
+		DEBUG(TRACE_INT, "assert: unibus interrupt (enabled)\n");
 		set_interrupt_status_reg((interrupt_status_reg & ~01774) | 0100000 | (vector & 01774));
 	} else {
-		debug(TRACE_INT, "assert: unibus interrupt (disabled)\n");
+		DEBUG(TRACE_INT, "assert: unibus interrupt (disabled)\n");
 	}
 }
 
@@ -136,7 +136,7 @@ void
 deassert_unibus_interrupt(void)
 {
 	if (interrupt_status_reg & 0100000) {
-		debug(TRACE_INT, "deassert: unibus interrupt\n");
+		DEBUG(TRACE_INT, "deassert: unibus interrupt\n");
 		set_interrupt_status_reg(interrupt_status_reg & ~(01774 | 0100000));
 	}
 }
@@ -144,7 +144,7 @@ deassert_unibus_interrupt(void)
 void
 assert_xbus_interrupt(void)
 {
-	debug(TRACE_INT, "assert: xbus interrupt (%o)\n", interrupt_status_reg);
+	DEBUG(TRACE_INT, "assert: xbus interrupt (%o)\n", interrupt_status_reg);
 	set_interrupt_status_reg(interrupt_status_reg | 040000);
 }
 
@@ -152,7 +152,7 @@ void
 deassert_xbus_interrupt(void)
 {
 	if (interrupt_status_reg & 040000) {
-		debug(TRACE_INT, "deassert: xbus interrupt\n");
+		DEBUG(TRACE_INT, "deassert: xbus interrupt\n");
 		set_interrupt_status_reg(interrupt_status_reg & ~040000);
 	}
 }
@@ -164,11 +164,11 @@ unibus_read(int offset, uint32_t *pv)
 {
 	switch (offset) {
 	case 040:
-		debug(TRACE_IOB, "unibus: read interrupt status\n");
+		DEBUG(TRACE_IOB, "unibus: read interrupt status\n");
 		*pv = 0;
 		break;
 	case 044:
-		debug(TRACE_IOB, "unibus: read error status\n");
+		DEBUG(TRACE_IOB, "unibus: read error status\n");
 		*pv = 0;
 		break;
 	default:
@@ -200,7 +200,7 @@ read_mem(int vaddr, uint32_t *pv)
 		page_fault_flag = 1;
 		opc = pn;
 		*pv = 0;
-		debug(TRACE_MISC, "read_mem(vaddr=%o) access fault\n", vaddr);
+		DEBUG(TRACE_MISC, "read_mem(vaddr=%o) access fault\n", vaddr);
 		return -1;
 	}
 
@@ -242,7 +242,7 @@ read_mem(int vaddr, uint32_t *pv)
 			tv_xbus_read(offset, pv);
 			return 0;
 		}
-		printf("xbus read %o %o\n", offset, vaddr);
+		DEBUG(TRACE_MISC, "xbus read %o %o\n", offset, vaddr);
 		*pv = 0;
 		return 0;
 	}
@@ -252,7 +252,7 @@ read_mem(int vaddr, uint32_t *pv)
 	if (page == 0) {
 		page_fault_flag = 1;
 		opc = pn;
-		debug(TRACE_MISC, "read_mem(vaddr=%o) page fault\n", vaddr);
+		DEBUG(TRACE_MISC, "read_mem(vaddr=%o) page fault\n", vaddr);
 		*pv = 0;
 		return -1;
 	}
@@ -266,9 +266,9 @@ unibus_write(int offset, uint32_t v)
 {
 	switch (offset) {
 	case 012:
-		debug(TRACE_IOB, "unibus: write mode register %o\n", v);
+		DEBUG(TRACE_IOB, "unibus: write mode register %o\n", v);
 		if ((v & 044) == 044) {
-			debug(TRACE_IOB, "unibus: disabling prom enable flag\n");
+			DEBUG(TRACE_IOB, "unibus: disabling prom enable flag\n");
 			prom_enabled_flag = false;
 
 			if (warm_boot_flag) {
@@ -277,26 +277,26 @@ unibus_write(int offset, uint32_t v)
 		}
 
 		if (v & 2) {
-			debug(TRACE_IOB, "unibus: normal speed\n");
+			DEBUG(TRACE_IOB, "unibus: normal speed\n");
 		}
 		break;
 	case 040:
-		debug(TRACE_IOB, "unibus: write interrupt status %o\n", v);
+		DEBUG(TRACE_IOB, "unibus: write interrupt status %o\n", v);
 		set_interrupt_status_reg((interrupt_status_reg & ~0036001) | (v & 0036001));
 		break;
 	case 042:
-		debug(TRACE_IOB, "unibus: write interrupt stim %o\n", v);
+		DEBUG(TRACE_IOB, "unibus: write interrupt stim %o\n", v);
 		set_interrupt_status_reg((interrupt_status_reg & ~0101774) | (v & 0101774));
 		break;
 	case 044:
-		debug(TRACE_IOB, "unibus: clear bus error %o\n", v);
+		DEBUG(TRACE_IOB, "unibus: clear bus error %o\n", v);
 		break;
 	default:
 		if (offset >= 0140 && offset <= 0176) {
-			debug(TRACE_IOB, "unibus: mapping reg %o\n", offset);
+			DEBUG(TRACE_IOB, "unibus: mapping reg %o\n", offset);
 			break;
 		}
-		debug(TRACE_IOB, "unibus: write? v %o, offset %o\n", v, offset);
+		DEBUG(TRACE_IOB, "unibus: write? v %o, offset %o\n", v, offset);
 		break;
 	}
 }
@@ -323,7 +323,7 @@ write_mem(int vaddr, uint32_t v)
 		access_fault_bit = 1;
 		page_fault_flag = 1;
 		opc = pn;
-		debug(TRACE_MISC, "write_mem(vaddr=%o) access fault\n", vaddr);
+		DEBUG(TRACE_MISC, "write_mem(vaddr=%o) access fault\n", vaddr);
 		return -1;
 	}
 
@@ -332,7 +332,7 @@ write_mem(int vaddr, uint32_t v)
 		write_fault_bit = 1;
 		page_fault_flag = 1;
 		opc = pn;
-		debug(TRACE_MISC, "write_mem(vaddr=%o) write fault\n", vaddr);
+		DEBUG(TRACE_MISC, "write_mem(vaddr=%o) write fault\n", vaddr);
 		return -1;
 	}
 
@@ -352,11 +352,11 @@ write_mem(int vaddr, uint32_t v)
 		tv_write(offset, v);
 		return 0;
 	case 037760:
-		printf("tv: reg write %o, offset %o, v %o\n", vaddr, offset, v);
+		DEBUG(TRACE_MISC, "tv: reg write %o, offset %o, v %o\n", vaddr, offset, v);
 		return 0;
 	case 037764:		// Extra xbus devices.
 		offset <<= 1;
-		debug(TRACE_IOB, "unibus: iob v %o, offset %o\n", vaddr, offset);
+		DEBUG(TRACE_IOB, "unibus: iob v %o, offset %o\n", vaddr, offset);
 		iob_unibus_write(offset, v);
 		return 0;
 	case 037766:		// Unibus.
@@ -377,7 +377,7 @@ write_mem(int vaddr, uint32_t v)
 
 	// Catch questionable accesses.
 	if (pn >= 036000) {
-		printf("??: reg write vaddr %o, pn %o, offset %o, v %o; u_pc %o\n", vaddr, pn, offset, v, u_pc);
+		DEBUG(TRACE_MISC, "??: reg write vaddr %o, pn %o, offset %o, v %o; u_pc %o\n", vaddr, pn, offset, v, u_pc);
 	}
 
 	page = phy_pages[pn];
@@ -410,9 +410,8 @@ read_a_mem(int loc)
 static uint32_t
 read_m_mem(int loc)
 {
-	if (loc > 32) {
-		printf("read m-memory address > 32! (%o)\n", loc);
-	}
+	if (loc > 32)
+		WARNING(TRACE_MISC, "read m-memory address > 32! (%o)\n", loc);
 
 	return m_memory[loc];
 }
@@ -436,14 +435,12 @@ read_pdl_mem(int which)
 {
 	switch (which) {
 	case USE_PDL_PTR:
-		if (pdl_ptr > 1024) {
-			printf("pdl ptr %o!\n", pdl_ptr);
-		}
+		if (pdl_ptr > 1024)
+			WARNING(TRACE_MISC, "pdl ptr %o!\n", pdl_ptr);
 		return pdl_memory[pdl_ptr];
 	case USE_PDL_INDEX:
-		if (pdl_index > 1024) {
-			printf("pdl ptr %o!\n", pdl_index);
-		}
+		if (pdl_index > 1024)
+			WARNING(TRACE_MISC, "pdl ptr %o!\n", pdl_index);
 		return pdl_memory[pdl_index];
 	}
 	return -1;		///---!! Not reachable.
@@ -453,7 +450,7 @@ static void
 write_pdl_mem(int which, uint32_t v)
 {
 	if (pdl_index >= 1024) {
-		printf("pdl ptr %o!\n", pdl_index);
+		WARNING(TRACE_MISC, "pdl ptr %o!\n", pdl_index);
 		return;
 	}
 
@@ -511,12 +508,12 @@ advance_lc(int *ppc)
 		vma = old_lc >> 2;
 		read_mem(old_lc >> 2, &new_md);
 		new_md_delay = 2;
-		debug(TRACE_MISC, "advance_lc() read vma %011o -> %011o\n", old_lc >> 2, new_md);
+		DEBUG(TRACE_MISC, "advance_lc() read vma %011o -> %011o\n", old_lc >> 2, new_md);
 	} else {
 		// Force skipping 2 instruction (PF + SET-MD).
 		if (ppc)
 			*ppc |= 2;
-		debug(TRACE_MISC, "advance_lc() no read; md = %011o\n", md);
+		DEBUG(TRACE_MISC, "advance_lc() no read; md = %011o\n", md);
 	}
 
 	{
@@ -530,7 +527,7 @@ advance_lc(int *ppc)
 			((lc & 1) ? 1 : 0);	     // LC0.
 		lc1 = (lc & 2) ? 1 : 0;
 		last_byte_in_word = (~lc0b & ~lc1) & 1;
-		debug(TRACE_MISC, "lc0b %d, lc1 %d, last_byte_in_word %d\n", lc0b, lc1, last_byte_in_word);
+		DEBUG(TRACE_MISC, "lc0b %d, lc1 %d, last_byte_in_word %d\n", lc0b, lc1, last_byte_in_word);
 		if (last_byte_in_word)
 			// Set NEED-FETCH.
 			lc |= (1UL << 31UL);
@@ -548,7 +545,7 @@ write_dest(int dest, uint32_t out_bus)
 
 	switch (dest >> 5) {
 	case 1:			// LC (location counter) 26 bits.
-		debug(TRACE_MISC, "writing LC <- %o\n", out_bus);
+		DEBUG(TRACE_MISC, "writing LC <- %o\n", out_bus);
 		lc = (lc & ~0377777777) | (out_bus & 0377777777);
 
 		if (lc_byte_mode_flag) {
@@ -563,7 +560,7 @@ write_dest(int dest, uint32_t out_bus)
 		lc |= (1UL << 31UL);
 		break;
 	case 2:			// Interrrupt Control <29-26>.
-		debug(TRACE_MISC, "writing IC <- %o\n", out_bus);
+		DEBUG(TRACE_MISC, "writing IC <- %o\n", out_bus);
 		interrupt_control = out_bus;
 
 		lc_byte_mode_flag = interrupt_control & (1 << 29);
@@ -572,43 +569,43 @@ write_dest(int dest, uint32_t out_bus)
 		sequence_break_flag = interrupt_control & (1 << 26);
 
 		if (sequence_break_flag) {
-			debug(TRACE_INT, "ic: sequence break request\n");
+			DEBUG(TRACE_INT, "ic: sequence break request\n");
 		}
 
 		if (interrupt_enable_flag) {
-			debug(TRACE_INT, "ic: interrupt enable\n");
+			DEBUG(TRACE_INT, "ic: interrupt enable\n");
 		}
 
 		if (bus_reset_flag) {
-			debug(TRACE_INT, "ic: bus reset\n");
+			DEBUG(TRACE_INT, "ic: bus reset\n");
 		}
 
 		if (lc_byte_mode_flag) {
-			debug(TRACE_INT, "ic: lc byte mode\n");
+			DEBUG(TRACE_INT, "ic: lc byte mode\n");
 		}
 
 		lc = (lc & ~(017 << 26)) | // Preserve flags.
 			(interrupt_control & (017 << 26));
 		break;
 	case 010:		// PDL (addressed by pointer)
-		debug(TRACE_MISC, "writing pdl[%o] <- %o\n", pdl_ptr, out_bus);
+		DEBUG(TRACE_MISC, "writing pdl[%o] <- %o\n", pdl_ptr, out_bus);
 		write_pdl_mem(USE_PDL_PTR, out_bus);
 		break;
 	case 011:		// PDL (addressed by pointer, push)
 		pdl_ptr = (pdl_ptr + 1) & 01777;
-		debug(TRACE_MISC, "writing pdl[%o] <- %o, push\n", pdl_ptr, out_bus);
+		DEBUG(TRACE_MISC, "writing pdl[%o] <- %o, push\n", pdl_ptr, out_bus);
 		write_pdl_mem(USE_PDL_PTR, out_bus);
 		break;
 	case 012:		// PDL (address by index).
-		debug(TRACE_MISC, "writing pdl[%o] <- %o\n", pdl_index, out_bus);
+		DEBUG(TRACE_MISC, "writing pdl[%o] <- %o\n", pdl_index, out_bus);
 		write_pdl_mem(USE_PDL_INDEX, out_bus);
 		break;
 	case 013:		// PDL index.
-		debug(TRACE_MISC, "pdl-index <- %o\n", out_bus);
+		DEBUG(TRACE_MISC, "pdl-index <- %o\n", out_bus);
 		pdl_index = out_bus & 01777;
 		break;
 	case 014:		// PDL pointer.
-		debug(TRACE_MISC, "pdl-ptr <- %o\n", out_bus);
+		DEBUG(TRACE_MISC, "pdl-ptr <- %o\n", out_bus);
 		pdl_ptr = out_bus & 01777;
 		break;
 	case 015:		// SPC data, push.
@@ -617,12 +614,12 @@ write_dest(int dest, uint32_t out_bus)
 	case 016:		// Next instruction modifier (lo).
 		oa_reg_lo = out_bus & 0377777777;
 		oa_reg_lo_set = 1;
-		debug(TRACE_MISC, "setting oa_reg lo %o\n", oa_reg_lo);
+		DEBUG(TRACE_MISC, "setting oa_reg lo %o\n", oa_reg_lo);
 		break;
 	case 017:		// Next instruction modifier (hi).
 		oa_reg_hi = out_bus;
 		oa_reg_hi_set = 1;
-		debug(TRACE_MISC, "setting oa_reg hi %o\n", oa_reg_hi);
+		DEBUG(TRACE_MISC, "setting oa_reg hi %o\n", oa_reg_hi);
 		break;
 	case 020:		// VMA register (memory address).
 		vma = out_bus;
@@ -638,7 +635,7 @@ write_dest(int dest, uint32_t out_bus)
 		break;
 	case 023:		// VMA register, write map.
 		vma = out_bus;
-		debug(TRACE_VM, "vma-write-map md=%o, vma=%o (addr %o)\n", md, vma, md >> 13);
+		DEBUG(TRACE_VM, "vma-write-map md=%o, vma=%o (addr %o)\n", md, vma, md >> 13);
 	write_map:
 		if ((vma >> 26) & 1) {
 			int l1_index;
@@ -649,7 +646,7 @@ write_dest(int dest, uint32_t out_bus)
 
 			l1_map[l1_index] = l1_data;
 			invalidate_vtop_cache();
-			debug(TRACE_VM, "l1_map[%o] <- %o\n", l1_index, l1_data);
+			DEBUG(TRACE_VM, "l1_map[%o] <- %o\n", l1_index, l1_data);
 		}
 
 		if ((vma >> 25) & 1) {
@@ -666,13 +663,13 @@ write_dest(int dest, uint32_t out_bus)
 
 			l2_map[l2_index] = l2_data;
 			invalidate_vtop_cache();
-			debug(TRACE_VM, "l2_map[%o] <- %o\n", l2_index, l2_data);
+			DEBUG(TRACE_VM, "l2_map[%o] <- %o\n", l2_index, l2_data);
 			add_new_page_no(l2_data & 037777);
 		}
 		break;
 	case 030:		// MD register (memory data).
 		md = out_bus;
-		debug(TRACE_MISC, "md<-%o\n", md);
+		DEBUG(TRACE_MISC, "md<-%o\n", md);
 		break;
 	case 031:
 		md = out_bus;
@@ -685,7 +682,7 @@ write_dest(int dest, uint32_t out_bus)
 		break;
 	case 033:		// MD register, write map (like 23).
 		md = out_bus;
-		debug(TRACE_MISC, "memory-data-write-map md=%o, vma=%o (addr %o)\n", md, vma, md >> 13);
+		DEBUG(TRACE_MISC, "memory-data-write-map md=%o, vma=%o (addr %o)\n", md, vma, md >> 13);
 		goto write_map;
 		break;
 	}
@@ -820,7 +817,7 @@ run(void)
 
 		// Stall pipe for one cycle.
 		if (no_exec_next) {
-			debug(TRACE_MISC, "no_exec_next; u_pc %o\n", u_pc);
+			DEBUG(TRACE_MISC, "no_exec_next; u_pc %o\n", u_pc);
 			no_exec_next = 0;
 
 			p0 = p1;
@@ -833,13 +830,13 @@ run(void)
 
 		// Next instruction modify.
 		if (oa_reg_lo_set) {
-			debug(TRACE_MISC, "merging oa lo %o\n", oa_reg_lo);
+			DEBUG(TRACE_MISC, "merging oa lo %o\n", oa_reg_lo);
 			oa_reg_lo_set = 0;
 			u |= oa_reg_lo;
 		}
 
 		if (oa_reg_hi_set) {
-			debug(TRACE_MISC, "merging oa hi %o\n", oa_reg_hi);
+			DEBUG(TRACE_MISC, "merging oa hi %o\n", oa_reg_hi);
 			oa_reg_hi_set = 0;
 			u |= (ucw_t) oa_reg_hi << 26;
 		}
@@ -877,7 +874,7 @@ run(void)
 				m_src_value = pdl_index & 01777;
 				break;
 			case 5:
-				debug(TRACE_MISC, "reading pdl[%o] -> %o\n", pdl_index, read_pdl_mem(USE_PDL_INDEX));
+				DEBUG(TRACE_MISC, "reading pdl[%o] -> %o\n", pdl_index, read_pdl_mem(USE_PDL_INDEX));
 				m_src_value = read_pdl_mem(USE_PDL_INDEX);
 				break;
 			case 6:
@@ -904,16 +901,16 @@ run(void)
 				break;
 			case 014:
 				m_src_value = (spc_stack_ptr << 24) | (spc_stack[spc_stack_ptr] & 01777777);
-				debug(TRACE_MISC, "reading spc[%o] + ptr -> %o\n", spc_stack_ptr, m_src_value);
+				DEBUG(TRACE_MISC, "reading spc[%o] + ptr -> %o\n", spc_stack_ptr, m_src_value);
 				spc_stack_ptr = (spc_stack_ptr - 1) & 037;
 				break;
 			case 024:
-				debug(TRACE_MISC, "reading pdl[%o] -> %o, pop\n", pdl_ptr, read_pdl_mem(USE_PDL_PTR));
+				DEBUG(TRACE_MISC, "reading pdl[%o] -> %o, pop\n", pdl_ptr, read_pdl_mem(USE_PDL_PTR));
 				m_src_value = read_pdl_mem(USE_PDL_PTR);
 				pdl_ptr = (pdl_ptr - 1) & 01777;
 				break;
 			case 025:
-				debug(TRACE_MISC, "reading pdl[%o] -> %o\n", pdl_ptr, read_pdl_mem(USE_PDL_PTR));
+				DEBUG(TRACE_MISC, "reading pdl[%o] -> %o\n", pdl_ptr, read_pdl_mem(USE_PDL_PTR));
 				m_src_value = read_pdl_mem(USE_PDL_PTR);
 				break;
 			}
@@ -1071,7 +1068,7 @@ run(void)
 				break;
 			case 041: // Divide step
 				do_sub = q & 1;
-				debug(TRACE_MISC, "do_sub %d\n", do_sub);
+				DEBUG(TRACE_MISC, "do_sub %d\n", do_sub);
 				if (do_sub) {
 					sub32(m_src_value, a_src_value, !carry_in, alu_out, alu_carry);
 				} else {
@@ -1080,7 +1077,7 @@ run(void)
 				break;
 			case 045: // Remainder correction
 				do_sub = q & 1;
-				debug(TRACE_MISC, "do_sub %d\n", do_sub);
+				DEBUG(TRACE_MISC, "do_sub %d\n", do_sub);
 				if (do_sub) {
 					alu_carry = 0;
 				} else {
@@ -1088,10 +1085,10 @@ run(void)
 				}
 				break;
 			case 051: // Initial divide step
-				debug(TRACE_MISC, "divide-first-step\n");
-				debug(TRACE_MISC, "divide: %o / %o \n", q, a_src_value);
+				DEBUG(TRACE_MISC, "divide-first-step\n");
+				DEBUG(TRACE_MISC, "divide: %o / %o \n", q, a_src_value);
 				sub32(m_src_value, a_src_value, !carry_in, alu_out, alu_carry);
-				debug(TRACE_MISC, "alu_out %08x %o %d\n", alu_out, alu_out, alu_out);
+				DEBUG(TRACE_MISC, "alu_out %08x %o %d\n", alu_out, alu_out, alu_out);
 				break;
 			}
 
@@ -1099,20 +1096,20 @@ run(void)
 			old_q = q;
 			switch (u & 3) {
 			case 1:
-				debug(TRACE_MISC, "q<<\n");
+				DEBUG(TRACE_MISC, "q<<\n");
 				q <<= 1;
 				// Inverse of ALU sign.
 				if ((alu_out & 0x80000000) == 0)
 					q |= 1;
 				break;
 			case 2:
-				debug(TRACE_MISC, "q>>\n");
+				DEBUG(TRACE_MISC, "q>>\n");
 				q >>= 1;
 				if (alu_out & 1)
 					q |= 0x80000000;
 				break;
 			case 3:
-				debug(TRACE_MISC, "q<-alu\n");
+				DEBUG(TRACE_MISC, "q<-alu\n");
 				q = alu_out;
 				break;
 			}
@@ -1120,7 +1117,7 @@ run(void)
 			// Output bus control.
 			switch (out_bus) {
 			case 0:
-				printf("out_bus == 0!\n");
+				WARNING(TRACE_MISC, "out_bus == 0!\n");
 				out_bus = rotate_left(m_src_value, u & 037);
 				break;
 			case 1:
@@ -1138,11 +1135,11 @@ run(void)
 			}
 
 			write_dest(dest, out_bus);
-			debug(TRACE_MISC, "alu_out 0x%08x, alu_carry %d, q 0x%08x\n", alu_out, alu_carry, q);
+			DEBUG(TRACE_MISC, "alu_out 0x%08x, alu_carry %d, q 0x%08x\n", alu_out, alu_carry, q);
 			break;
 		case 1:		// JUMP
 			new_pc = (u >> 12) & 037777;
-			debug(TRACE_MISC, "a=%o (%o), m=%o (%o)\n", a_src, a_src_value, m_src, m_src_value);
+			DEBUG(TRACE_MISC, "a=%o (%o), m=%o (%o)\n", a_src, a_src_value, m_src, m_src_value);
 			r_bit = (u >> 9) & 1;
 			p_bit = (u >> 8) & 1;
 			n_bit = (u >> 7) & 1;
@@ -1150,7 +1147,7 @@ run(void)
 			take_jump = 0;
 
 			if (((u >> 10) & 3) == 1) {
-				printf("halted\n");
+				DEBUG(TRACE_MISC, "halted\n");
 				run_ucode_flag = 0;
 				break;
 			}
@@ -1161,7 +1158,7 @@ run(void)
 				switch (u & 017) {
 				case 0:
 					if (op_code != 2)
-						printf("jump-condition == 0! u_pc=%o\n", p0_pc);
+						WARNING(TRACE_MISC, "jump-condition == 0! u_pc=%o\n", p0_pc);
 					break;
 				case 1:
 					take_jump = m_src_value < a_src_value;
@@ -1176,11 +1173,11 @@ run(void)
 					take_jump = page_fault_flag;
 					break;
 				case 5:
-					debug(TRACE_MISC, "jump i|pf\n");
+					DEBUG(TRACE_MISC, "jump i|pf\n");
 					take_jump = page_fault_flag | (interrupt_enable_flag ? interrupt_pending_flag : 0);
 					break;
 				case 6:
-					debug(TRACE_MISC, "jump i|pf|sb\n");
+					DEBUG(TRACE_MISC, "jump i|pf|sb\n");
 					take_jump = page_fault_flag | (interrupt_enable_flag ? interrupt_pending_flag : 0) | sequence_break_flag;
 					break;
 				case 7:
@@ -1189,14 +1186,14 @@ run(void)
 				}
 			} else {
 				rot = u & 037;
-				debug(TRACE_MISC, "jump-if-bit; rot %o, before %o ", rot, m_src_value);
+				DEBUG(TRACE_MISC, "jump-if-bit; rot %o, before %o ", rot, m_src_value);
 				m_src_value = rotate_left(m_src_value, rot);
-				debug(TRACE_MISC, "after %o\n", m_src_value);
+				DEBUG(TRACE_MISC, "after %o\n", m_src_value);
 				take_jump = m_src_value & 1;
 			}
 
 			if (((u >> 10) & 3) == 3) {
-				printf("jump w/misc-3!\n");
+				WARNING(TRACE_MISC, "jump w/misc-3!\n");
 			}
 
 			if (invert_sense)
@@ -1211,7 +1208,7 @@ run(void)
 			// P & R & jump-inst -> write ucode.
 			if (p_bit && r_bit && op_code == 1) {
 				w = ((ucw_t) (a_src_value & 0177777) << 32) | (uint32_t) m_src_value;
-				debug(TRACE_MISC, "u-code write; %Lo @ %o\n", w, new_pc);
+				DEBUG(TRACE_MISC, "u-code write; %Lo @ %o\n", w, new_pc);
 				ucode[new_pc] = w;
 			}
 			if (r_bit && take_jump) {
@@ -1253,7 +1250,7 @@ run(void)
 					lc0 = (lc >> 0) & 1;
 					pos = u & 007;
 					pos |= ((ir4 ^ (lc1 ^ lc0)) << 4) | ((ir3 ^ lc0) << 3);
-					debug(TRACE_MISC, "byte-mode, pos %o\n", pos);
+					DEBUG(TRACE_MISC, "byte-mode, pos %o\n", pos);
 				} else {
 					// 16 bit mode.
 					char ir4;
@@ -1265,17 +1262,17 @@ run(void)
 					pos = u & 017;
 
 					pos |= ((ir4 ^ lc1) ? 0 : 1) << 4;
-					debug(TRACE_MISC, "16b-mode, pos %o\n", pos);
+					DEBUG(TRACE_MISC, "16b-mode, pos %o\n", pos);
 				}
 			}
 			// Misc. function 2.
 			if (((u >> 10) & 3) == 2) {
-				debug(TRACE_MISC, "dispatch_memory[%o] <- %o\n", disp_addr, a_src_value);
+				DEBUG(TRACE_MISC, "dispatch_memory[%o] <- %o\n", disp_addr, a_src_value);
 				dispatch_memory[disp_addr] = a_src_value;
 				goto dispatch_done;
 			}
 
-			debug(TRACE_MISC, "m-src %o, ", m_src_value);
+			DEBUG(TRACE_MISC, "m-src %o, ", m_src_value);
 			// Rotate M-SOURCE.
 			m_src_value = rotate_left(m_src_value, pos);
 			// Generate mask.
@@ -1290,7 +1287,7 @@ run(void)
 			// Put LDB into DISPATCH-ADDR.
 			disp_addr |= m_src_value & mask;
 
-			debug(TRACE_MISC, "rotated %o, mask %o, result %o\n", m_src_value, mask, m_src_value & mask);
+			DEBUG(TRACE_MISC, "rotated %o, mask %o, result %o\n", m_src_value, mask, m_src_value & mask);
 
 			// Tweak DISPATCH-ADDR with L2 map bits.
 			if (map) {
@@ -1301,7 +1298,7 @@ run(void)
 				l2_map_bits = map_vtop(md, (int *) 0, (int *) 0);
 				bit19 = ((l2_map_bits >> 19) & 1) ? 1 : 0;
 				bit18 = ((l2_map_bits >> 18) & 1) ? 1 : 0;
-				debug(TRACE_MISC, "md %o, l2_map_bits %o, b19 %o, b18 %o\n", md, l2_map_bits, bit19, bit18);
+				DEBUG(TRACE_MISC, "md %o, l2_map_bits %o, b19 %o, b18 %o\n", md, l2_map_bits, bit19, bit18);
 				switch (map) {
 				case 1:
 					disp_addr |= bit18;
@@ -1316,7 +1313,7 @@ run(void)
 			}
 			disp_addr &= 03777;
 
-			debug(TRACE_MISC, "dispatch[%o] -> %o ", disp_addr, dispatch_memory[disp_addr]);
+			DEBUG(TRACE_MISC, "dispatch[%o] -> %o ", disp_addr, dispatch_memory[disp_addr]);
 
 			disp_addr = dispatch_memory[disp_addr];
 			dispatch_constant = disp_const;
@@ -1327,7 +1324,7 @@ run(void)
 			p_bit = (disp_addr >> 15) & 1;
 			r_bit = (disp_addr >> 16) & 1;
 
-			debug(TRACE_MISC, "%s%s%s\n", n_bit ? "N " : "", p_bit ? "P " : "", r_bit ? "R " : "");
+			DEBUG(TRACE_MISC, "%s%s%s\n", n_bit ? "N " : "", p_bit ? "P " : "", r_bit ? "R " : "");
 
 			if (n_plus1 && n_bit) {
 				u_pc--;
@@ -1353,7 +1350,7 @@ run(void)
 		case 3:		// BYTE.
 			dest = (u >> 14) & 07777;
 			mr_sr_bits = (u >> 12) & 3;
-			debug(TRACE_MISC, "a=%o (%o), m=%o (%o), dest=%o\n", a_src, a_src_value, m_src, m_src_value, dest);
+			DEBUG(TRACE_MISC, "a=%o (%o), m=%o (%o), dest=%o\n", a_src, a_src_value, m_src, m_src_value, dest);
 			widthm1 = (u >> 5) & 037;
 			pos = u & 037;
 
@@ -1373,7 +1370,7 @@ run(void)
 
 					pos = u & 007;
 					pos |= ((ir4 ^ (lc1 ^ lc0)) << 4) | ((ir3 ^ lc0) << 3);
-					debug(TRACE_MISC, "byte-mode, pos %o\n", pos);
+					DEBUG(TRACE_MISC, "byte-mode, pos %o\n", pos);
 				} else {
 					// 16-bit mode.
 					char ir4;
@@ -1384,7 +1381,7 @@ run(void)
 
 					pos = u & 017;
 					pos |= ((ir4 ^ lc1) ? 0 : 1) << 4;
-					debug(TRACE_MISC, "16b-mode, pos %o\n", pos);
+					DEBUG(TRACE_MISC, "16b-mode, pos %o\n", pos);
 				}
 			}
 
@@ -1403,32 +1400,32 @@ run(void)
 
 			mask = left_mask & right_mask;
 
-			debug(TRACE_MISC, "widthm1 %o, pos %o, mr_sr_bits %o\n", widthm1, pos, mr_sr_bits);
-			debug(TRACE_MISC, "left_mask_index %o, right_mask_index %o\n", left_mask_index, right_mask_index);
-			debug(TRACE_MISC, "left_mask %o, right_mask %o, mask %o\n", left_mask, right_mask, mask);
+			DEBUG(TRACE_MISC, "widthm1 %o, pos %o, mr_sr_bits %o\n", widthm1, pos, mr_sr_bits);
+			DEBUG(TRACE_MISC, "left_mask_index %o, right_mask_index %o\n", left_mask_index, right_mask_index);
+			DEBUG(TRACE_MISC, "left_mask %o, right_mask %o, mask %o\n", left_mask, right_mask, mask);
 
 			out_bus = 0;
 
 			switch (mr_sr_bits) {
 			case 0:
-				printf("mr_sr_bits == 0!\n");
+				WARNING(TRACE_MISC, "mr_sr_bits == 0!\n");
 				break;
 			case 1:	// LDB.
-				debug(TRACE_MISC, "ldb; m %o\n", m_src_value);
+				DEBUG(TRACE_MISC, "ldb; m %o\n", m_src_value);
 				m_src_value = rotate_left(m_src_value, pos);
 				out_bus = (m_src_value & mask) | (a_src_value & ~mask);
-				debug(TRACE_MISC, "ldb; m-rot %o, mask %o, result %o\n", m_src_value, mask, out_bus);
+				DEBUG(TRACE_MISC, "ldb; m-rot %o, mask %o, result %o\n", m_src_value, mask, out_bus);
 				break;
 			case 2:	// Selective deposit.
 				out_bus = (m_src_value & mask) | (a_src_value & ~mask);
-				debug(TRACE_MISC, "sel-dep; a %o, m %o, mask %o -> %o\n", a_src_value, m_src_value, mask, out_bus);
+				DEBUG(TRACE_MISC, "sel-dep; a %o, m %o, mask %o -> %o\n", a_src_value, m_src_value, mask, out_bus);
 				break;
 			case 3:	// DPB.
-				debug(TRACE_MISC, "dpb; m %o, pos %o\n", m_src_value, pos);
+				DEBUG(TRACE_MISC, "dpb; m %o, pos %o\n", m_src_value, pos);
 				// Mask is already rotated.
 				m_src_value = rotate_left(m_src_value, pos);
 				out_bus = (m_src_value & mask) | (a_src_value & ~mask);
-				debug(TRACE_MISC, "dpb; mask %o, result %o\n", mask, out_bus);
+				DEBUG(TRACE_MISC, "dpb; mask %o, result %o\n", mask, out_bus);
 				break;
 			}
 
@@ -1437,7 +1434,7 @@ run(void)
 		}
 
 		if (popj) {
-			debug(TRACE_MISC, "popj; ");
+			DEBUG(TRACE_MISC, "popj; ");
 			u_pc = pop_spc();
 			if ((u_pc >> 14) & 1) {
 				advance_lc(&u_pc);

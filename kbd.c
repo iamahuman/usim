@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <err.h>
 
 #include "usim.h"
 #include "utrace.h"
@@ -114,15 +115,15 @@ queue_key_event(int ev)
 	v = (1 << 16) | ev;
 
 	if (key_queue_free > 0) {
-		debug(TRACE_IOB, "queue_key_event() - queuing 0%o, q len before %d\n", v, KEY_QUEUE_LEN - key_queue_free);
+		DEBUG(TRACE_IOB, "queue_key_event() - queuing 0%o, q len before %d\n", v, KEY_QUEUE_LEN - key_queue_free);
 		key_queue_free--;
 		key_queue[key_queue_optr] = v;
 		key_queue_optr = (key_queue_optr + 1) % KEY_QUEUE_LEN;
 	} else {
-		fprintf(stderr, "IOB key queue full!\n");
+		WARNING(TRACE_IOB, "IOB key queue full!");
 		if (!(iob_csr & (1 << 5)) && (iob_csr & (1 << 2))) {
 			iob_csr |= 1 << 5;
-			fprintf(stderr, "queue_key_event generating interrupt\n");
+			WARNING(TRACE_IOB, "queue_key_event generating interrupt");
 			assert_unibus_interrupt(0260);
 		}
 	}
@@ -136,13 +137,13 @@ kbd_dequeue_key_event(void)
 
 	if (key_queue_free < KEY_QUEUE_LEN) {
 		int v = key_queue[key_queue_iptr];
-		debug(TRACE_IOB, "dequeue_key_event() - dequeuing 0%o, q len before %d\n", v, KEY_QUEUE_LEN - key_queue_free);
+		DEBUG(TRACE_IOB, "dequeue_key_event() - dequeuing 0%o, q len before %d\n", v, KEY_QUEUE_LEN - key_queue_free);
 		key_queue_iptr = (key_queue_iptr + 1) % KEY_QUEUE_LEN;
 		key_queue_free++;
 		kbd_key_scan = (1 << 16) | v;
 		if (iob_csr & (1 << 2)) { // Keyboard interrupt enabled?
 			iob_csr |= 1 << 5;
-			fprintf(stderr, "dequeue_key_event generating interrupt (q len after %d)\n", KEY_QUEUE_LEN - key_queue_free);
+			WARNING(TRACE_IOB, "dequeue_key_event generating interrupt (q len after %d)", KEY_QUEUE_LEN - key_queue_free);
 			assert_unibus_interrupt(0260);
 		}
 	}
@@ -153,7 +154,7 @@ kbd_key_event(int code, int keydown)
 {
 	int v;
 
-	debug(TRACE_IOB, "key_event(code=%x, keydown=%x)\n", code, keydown);
+	DEBUG(TRACE_IOB, "key_event(code=%x, keydown=%x)\n", code, keydown);
 
 	v = ((!keydown) << 8) | code;
 
@@ -161,7 +162,7 @@ kbd_key_event(int code, int keydown)
 		queue_key_event(v); // Already something there, queue this.
 	else {
 		kbd_key_scan = (1 << 16) | v;
-		debug(TRACE_IOB, "key_event() - 0%o\n", kbd_key_scan);
+		DEBUG(TRACE_IOB, "key_event() - 0%o\n", kbd_key_scan);
 		if (iob_csr & (1 << 2)) {
 			iob_csr |= 1 << 5;
 			assert_unibus_interrupt(0260);

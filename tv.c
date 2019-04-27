@@ -5,6 +5,7 @@
 #include <sys/time.h>
 
 #include "usim.h"
+#include "utrace.h"
 #include "ucode.h"
 
 #include "x11.h"
@@ -40,7 +41,7 @@ tv_read(uint32_t offset, uint32_t *pv)
 	offset *= 32;
 
 	if (offset > tv_width * tv_height) {
-		printf("tv: tv_read past end; " "offset %o\n", offset);
+		WARNING(TRACE_MISC, "tv: tv_read past end; offset %o\n", offset);
 		*pv = 0;
 		return;
 	}

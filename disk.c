@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <err.h>
 
 #include "usim.h"
 #include "ucfg.h"
@@ -57,7 +58,7 @@ disk_read(int unit, int block_no, uint32_t *buffer)
 
 	offset = block_no * BLOCKSZ;
 
-	debug(TRACE_DISK, "disk: file image block %d(10), offset %ld(10)\n", block_no, (long) offset);
+	DEBUG(TRACE_DISK, "disk: file image block %d(10), offset %ld(10)\n", block_no, (long) offset);
 
 	memcpy(buffer, disks[unit].mm + offset, BLOCKSZ);
 
@@ -73,7 +74,7 @@ disk_write(int unit, int block_no, uint32_t *buffer)
 
 	offset = block_no * BLOCKSZ;
 
-	debug(TRACE_DISK, "disk: file image block %d, offset %ld\n", block_no, (long) offset);
+	DEBUG(TRACE_DISK, "disk: file image block %d, offset %ld\n", block_no, (long) offset);
 
 	memcpy(disks[unit].mm + offset, buffer, BLOCKSZ);
 
@@ -88,7 +89,7 @@ disk_read_block(uint32_t vma, int unit, int cyl, int head, int block)
 
 	block_no = (cyl * disks[unit].blocks_per_track * disks[unit].heads) + (head * disks[unit].blocks_per_track) + block;
 	if (disk_read(unit, block_no, buffer) < 0) {
-		printf("disk_read_block: error reading block_no %d\n", block_no);
+		ERR(TRACE_DISK, "disk_read_block: error reading block_no %d\n", block_no);
 		return;
 	}
 
@@ -115,7 +116,7 @@ disk_write_block(uint32_t vma, int unit, int cyl, int head, int block)
 static void
 disk_throw_interrupt(void)
 {
-	debug(TRACE_DISK, "disk: throw interrupt\n");
+	DEBUG(TRACE_DISK, "disk: throw interrupt\n");
 	disk_status |= 1 << 3;
 	assert_xbus_interrupt();
 }
@@ -130,7 +131,7 @@ disk_future_interrupt(void)
 static void
 disk_show_cur_addr(void)
 {
-	debug(TRACE_DISK, "disk: unit %d, CHB %o/%o/%o\n", cur_unit, cur_cyl, cur_head, cur_block);
+	DEBUG(TRACE_DISK, "disk: unit %d, CHB %o/%o/%o\n", cur_unit, cur_cyl, cur_head, cur_block);
 }
 
 static void
@@ -185,11 +186,11 @@ disk_ccw(void (*disk_fn)(uint32_t vma, int unit, int cyl, int head, int block))
 		f = read_phy_mem(disk_clp, &ccw);
 		if (f) {
 			// Huh. what to do now?
-			printf("disk: mem[clp=%o] yielded fault (no page)\n", disk_clp);
+			ERR(TRACE_DISK, "disk: mem[clp=%o] yielded fault (no page)\n", disk_clp);
 			return;
 		}
 
-		debug(TRACE_DISK, "disk: mem[clp=%o] -> ccw %08o\n", disk_clp, ccw);
+		DEBUG(TRACE_DISK, "disk: mem[clp=%o] -> ccw %08o\n", disk_clp, ccw);
 
 		vma = ccw & ~0377;
 		disk_ma = vma;
@@ -199,7 +200,7 @@ disk_ccw(void (*disk_fn)(uint32_t vma, int unit, int cyl, int head, int block))
 		(*disk_fn)(vma, cur_unit, cur_cyl, cur_head, cur_block);
 
 		if ((ccw & 1) == 0) {
-			debug(TRACE_DISK, "disk: last ccw\n");
+			DEBUG(TRACE_DISK, "disk: last ccw\n");
 			break;
 		}
 
@@ -224,7 +225,7 @@ disk_start_read(void)
 static void
 disk_start_read_compare(void)
 {
-	printf("disk_start_read_compare!\n");
+	DEBUG(TRACE_DISK, "disk_start_read_compare!\n");
 	disk_decode_addr();
 	disk_show_cur_addr();
 }
@@ -238,29 +239,29 @@ disk_start_write(void)
 static int
 disk_start(void)
 {
-	debug(TRACE_DISK, "disk: start, cmd (%o) ", disk_cmd);
+	DEBUG(TRACE_DISK, "disk: start, cmd (%o) ", disk_cmd);
 
 	switch (disk_cmd & 01777) {
 	case 0:
-		debug(TRACE_DISK, "read\n");
+		DEBUG(TRACE_DISK, "read\n");
 		disk_start_read();
 		break;
 	case 010:
-		debug(TRACE_DISK, "read compare\n");
+		DEBUG(TRACE_DISK, "read compare\n");
 		disk_start_read_compare();
 		break;
 	case 011:
-		debug(TRACE_DISK, "write\n");
+		DEBUG(TRACE_DISK, "write\n");
 		disk_start_write();
 		break;
 	case 01005:
-		debug(TRACE_DISK, "recalibrate\n");
+		DEBUG(TRACE_DISK, "recalibrate\n");
 		break;
 	case 0405:
-		debug(TRACE_DISK, "fault clear\n");
+		DEBUG(TRACE_DISK, "fault clear\n");
 		break;
 	default:
-		debug(TRACE_DISK, "unknown\n");
+		DEBUG(TRACE_DISK, "unknown\n");
 		return -1;
 	}
 
@@ -270,27 +271,27 @@ disk_start(void)
 void
 disk_xbus_read(int offset, uint32_t *pv)
 {
-	debug(TRACE_MISC, "disk register read, offset %o\n", offset);
+	DEBUG(TRACE_MISC, "disk register read, offset %o\n", offset);
 
 	switch (offset) {
 	case 0370:
-		debug(TRACE_MISC, "disk: read status\n");
+		DEBUG(TRACE_MISC, "disk: read status\n");
 		*pv = disk_status;
 		break;
 	case 0371:
-		debug(TRACE_MISC, "disk: read ma\n");
+		DEBUG(TRACE_MISC, "disk: read ma\n");
 		*pv = disk_ma;
 		break;
 	case 0372:
-		debug(TRACE_MISC, "disk: read da\n");
+		DEBUG(TRACE_MISC, "disk: read da\n");
 		*pv = disk_da;
 		break;
 	case 0373:
-		debug(TRACE_MISC, "disk: read ecc\n");
+		DEBUG(TRACE_MISC, "disk: read ecc\n");
 		*pv = disk_ecc;
 		break;
 	case 0374:
-		debug(TRACE_MISC, "disk: status read\n");
+		DEBUG(TRACE_MISC, "disk: status read\n");
 		*pv = disk_status;
 		break;
 	case 0375:
@@ -303,7 +304,7 @@ disk_xbus_read(int offset, uint32_t *pv)
 		*pv = 0;
 		break;
 	default:
-		debug(TRACE_DISK, "disk: unknown reg read %o\n", offset);
+		DEBUG(TRACE_DISK, "disk: unknown reg read %o\n", offset);
 		break;
 	}
 }
@@ -311,31 +312,31 @@ disk_xbus_read(int offset, uint32_t *pv)
 void
 disk_xbus_write(int offset, uint32_t v)
 {
-	debug(TRACE_MISC, "disk register write, offset %o <- %o\n", offset, v);
+	DEBUG(TRACE_MISC, "disk register write, offset %o <- %o\n", offset, v);
 
 	switch (offset) {
 	case 0370:
-		debug(TRACE_DISK, "disk: load status %o\n", v);
+		DEBUG(TRACE_DISK, "disk: load status %o\n", v);
 		break;
 	case 0374:
 		disk_cmd = v;
 		if ((disk_cmd & 06000) == 0)
 			deassert_xbus_interrupt();
-		debug(TRACE_DISK, "disk: load cmd %o\n", v);
+		DEBUG(TRACE_DISK, "disk: load cmd %o\n", v);
 		break;
 	case 0375:
-		debug(TRACE_DISK, "disk: load clp %o (phys page %o)\n", v, v << 8);
+		DEBUG(TRACE_DISK, "disk: load clp %o (phys page %o)\n", v, v << 8);
 		disk_clp = v;
 		break;
 	case 0376:
 		disk_da = v;
-		debug(TRACE_MISC, "disk: load da %o\n", v);
+		DEBUG(TRACE_MISC, "disk: load da %o\n", v);
 		break;
 	case 0377:
 		disk_start();
 		break;
 	default:
-		debug(TRACE_DISK, "disk: unknown reg write %o\n", offset);
+		DEBUG(TRACE_DISK, "disk: unknown reg write %o\n", offset);
 		break;
 	}
 }
@@ -358,12 +359,10 @@ disk_init(int unit, char *filename)
 
 	label[0] = 0;
 
-	if (unit >= DISKS_MAX) {
-		fprintf(stderr, "disk: only 8 disk devices are supported\n");
-		exit(1);
-	}
+	if (unit >= DISKS_MAX)
+		errx(1, "disk: only 8 disk devices are supported");
 
-	printf("disk: opening %s\n", filename);
+	INFO(TRACE_DISK, "disk: opening %s\n", filename);
 
 	disks[unit].fd = open(filename, O_RDWR | O_BINARY);
 	if (disks[unit].fd < 0) {
@@ -374,13 +373,12 @@ disk_init(int unit, char *filename)
 
 	struct stat st;
 	fstat(disks[unit].fd, &st);
-	printf("disk: size: %zd bytes\n", st.st_size);
+	INFO(TRACE_DISK, "disk: size: %zd bytes\n", st.st_size);
 	disks[unit].mm = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, disks[unit].fd, 0);
 
 	ret = disk_read(unit, 0, label);
 	if (ret < 0 || label[0] != LABEL_LABL) {
-		printf("disk: invalid pack label - disk image ignored\n");
-		printf("label %o\n", label[0]);
+		WARNING(TRACE_DISK, "disk: invalid pack label (%o) - disk image ignored\n", label[0]);
 		close(disks[unit].fd);
 		disks[unit].fd = 0;
 		return -1;
@@ -390,7 +388,7 @@ disk_init(int unit, char *filename)
 	disks[unit].heads = label[3];
 	disks[unit].blocks_per_track = label[4];
 
-	printf("disk: image CHB %o/%o/%o\n", disks[unit].cyls, disks[unit].heads, disks[unit].blocks_per_track);
+	INFO(TRACE_DISK, "disk: image CHB %o/%o/%o\n", disks[unit].cyls, disks[unit].heads, disks[unit].blocks_per_track);
 
 	// Hack to find MCR symbol file via disk pack label.
 	if (label[030] != 0 && label[030] != LABEL_BLANK && unit == 0) {
@@ -399,7 +397,7 @@ disk_init(int unit, char *filename)
 
 		memset(fn, 0, sizeof(fn));
 		strcpy(fn, (char *) &label[030]);
-		printf("disk: pack label comment '%s'\n", fn);
+		INFO(TRACE_DISK, "disk: pack label comment '%s'\n", fn);
 		s = strstr(fn, ".mcr.");
 		if (s)
 			memcpy(s, ".sym.", 5);
