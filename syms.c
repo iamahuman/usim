@@ -73,8 +73,8 @@ sym_find_by_type_val(symtab_t *tab, symtype_t memory, uint32_t v, int *offset)
 
 	}
 
-	if (closest) {
-		if (offset) *offset = v - closest->v;
+	if (closest && offset) {
+		*offset = v - closest->v;
 		return closest->name;
 	}
 
