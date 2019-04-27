@@ -233,7 +233,7 @@ find_and_dump_fef(uint32_t pc, int width)
 		uint32_t loc;
 
 		loc = addr + i / 2;
-		disassemble_instruction(addr, loc, (i % 2) ? 0 : 1, ib[i], width);
+		disassemble_instruction(addr, loc, (i % 2) ? 0 : 1, ib[i]);
 	}
 
 	return 0;
