@@ -18,9 +18,9 @@ char *op_names[16] = {
 	"ND3",
 	"BRANCH",
 	"MISC",
-	"ND4 ",
-	"17 UNUSED"
-	"AREFI",
+	"ND4",
+	"17 UNUSED",
+	"AREFI"
 };
 
 char *reg_names[] = {
