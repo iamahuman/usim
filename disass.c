@@ -598,7 +598,7 @@ static int misc_inst_size = sizeof misc_inst / sizeof misc_inst[0];
 static bool misc_inst_vector_setup = false;
 
 void
-disassemble_instruction(uint32_t fefptr, uint32_t loc, int even, uint32_t inst, uint32_t width)
+disassemble_instruction(uint32_t fefptr, uint32_t loc, int even, uint32_t inst)
 {
 	int op;
 	int subop;
