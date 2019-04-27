@@ -80,8 +80,8 @@ dump_d_mem(int fd, int start, int size)
 {
 	printf("d-memory; start %o, size %o\n", start, size);
 
-	if (size < 04000)
-		fprintf(stderr, "WARNING: D-MEM is less than 04000 words\n");
+	if (size != 04000)
+		errx(1, "d-mem is not exactly 4000 words: %o", size);
 
 	for (int i = 0; i < size; i++) {
 		unsigned int v;
