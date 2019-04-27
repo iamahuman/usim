@@ -22,14 +22,14 @@ static char *symfn = NULL;
 static symtab_t symmcr;
 
 static char *
-getlbl(int type, int loc)
+getlbl(symtype_t type, int loc, int *offset)
 {
 	char *lbl;
 
 	if (symfn == NULL)
 		return "";
 
-	lbl = sym_find_by_type_val(&symmcr, type, loc);
+	lbl = sym_find_by_type_val(&symmcr, type, loc, offset);
 	if (lbl == NULL)
 		return "";
 
@@ -61,10 +61,12 @@ dump_i_mem(int fd, int start, int size)
 			((ucw_t) w4 << 0);
 
 		if (showimem) {
-			char *l = getlbl(1, loc);
-			if (strcmp(l, "") != 0)
-				printf("%s:\n", l);
+			char *l;
+			int offset;
 
+			l = getlbl(IMEM, loc, &offset);
+			if (offset == 0)
+				printf("%s:\n", l);
 			printf("%03o %016" PRIo64 ":\t %s\n", loc, ll, uinst_desc(ll, &symmcr));
 		}
 
@@ -86,7 +88,7 @@ dump_d_mem(int fd, int start, int size)
 		v = read32(fd);
 
 		if (showdmem == true)
-			printf("%o <- %o\t%s\n", i, v, getlbl(2, i));
+			printf("%o <- %o\t%s\n", i, v, getlbl(DMEM, i, NULL));
 	}
 }
 
@@ -108,7 +110,7 @@ dump_a_mem(int fd, int start, int size)
 		v = read32(fd);
 
 		if (showamem == true)
-			printf("%o <- %o\t%s %s\n", i, v, getlbl(4, i), getlbl(5, i));
+			printf("%o <- %o\t%s %s\n", i, v, getlbl(AMEM, i, NULL), getlbl(MMEM, i, NULL));
 	}
 }
 

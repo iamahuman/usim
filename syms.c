@@ -27,22 +27,57 @@ sym_add(symtab_t *tab, int memory, char *name, uint32_t v)
 	s->v = v;
 	s->mtype = memory;
 
-	tab->sym_count++;
+	if (LIST_EMPTY(&tab->symbols))
+		LIST_INSERT_HEAD(&tab->symbols, s, next);
+	else {
+		sym_t *ss;
+		sym_t *p;
 
-	LIST_INSERT_HEAD(&tab->syms, s, next);
+		p = LIST_FIRST(&tab->symbols);
+		if (p->v >= v) {
+			LIST_INSERT_HEAD(&tab->symbols, s, next);
+		} else {
+			LIST_FOREACH(ss, &tab->symbols, next) {
+				if (ss->v < v)
+					p = ss;
+			}
+			LIST_INSERT_AFTER(p, s, next);
+		}
+	}
+
+	tab->sym_count++;
 }
 
 char *
-sym_find_by_type_val(symtab_t *tab, symtype_t memory, uint32_t v)
+sym_find_by_type_val(symtab_t *tab, symtype_t memory, uint32_t v, int *offset)
 {
 	sym_t *s;
+	sym_t *closest;
 
-	LIST_FOREACH(s, &tab->syms, next) {
-		if (s->v == v && s->mtype == memory)
+	closest = NULL;
+	LIST_FOREACH(s, &tab->symbols, next) {
+		if (s->mtype != memory)
+			continue;
+
+		/* Found exact match? */
+		if (s->v == v) {
+			if (offset)
+				*offset = 0;
 			return s->name;
+		} else if (s->v < v) {
+			closest = s;
+		} else if (s->v > v) {
+			break;
+		}
+
 	}
 
-	return 0;
+	if (closest) {
+		if (offset) *offset = v - closest->v;
+		return closest->name;
+	}
+
+	return NULL;
 }
 
 int
@@ -50,7 +85,7 @@ sym_find(symtab_t *tab, char *name, int *pval)
 {
 	sym_t *s;
 
-	LIST_FOREACH(s, &tab->syms, next) {
+	LIST_FOREACH(s, &tab->symbols, next) {
 		if (strcasecmp(name, s->name) == 0) {
 			*pval = s->v;
 			return 0;
@@ -71,7 +106,7 @@ sym_read_file(symtab_t *tab, char *filename)
 	if (f == NULL)
 		return -1;
 
-	LIST_INIT(&tab->syms);
+	LIST_INIT(&tab->symbols);
 
 	tab->name = strdup(filename);
 

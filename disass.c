@@ -59,7 +59,7 @@ c_or_d_adr_out(symtype_t type, int val)
 {
 	char *lbl;
 
-	lbl = sym_find_by_type_val(&uinstsymtab, type, val);
+	lbl = sym_find_by_type_val(&uinstsymtab, type, val, NULL);
 	if (lbl)
 		PRIN1SP("%s", lbl);
 	else
@@ -74,7 +74,7 @@ a_or_m_adr_out(symtype_t type, int val)
 	if (val == 0)
 		return;
 
-	lbl = sym_find_by_type_val(&uinstsymtab, type, val);
+	lbl = sym_find_by_type_val(&uinstsymtab, type, val, NULL);
 	if (lbl)
 		PRIN1("%s", lbl);
 	else
