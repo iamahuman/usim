@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <err.h>
 
 #include "usim.h"
 #include "ucode.h"
@@ -202,6 +203,9 @@ main(int argc, char *argv[])
 		case 4:
 			dump_a_mem(fd, start, size);
 			done = true;
+			break;
+		default:
+			errx(1, "unknown section code: %o", code);
 			break;
 		}
 	}
