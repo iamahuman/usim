@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <signal.h>
+#include <err.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -11,6 +12,7 @@
 #include <X11/keysym.h>
 
 #include "usim.h"
+#include "utrace.h"
 #include "ucode.h"
 #include "tv.h"
 #include "kbd.h"
@@ -148,7 +150,7 @@ process_key(XEvent *e, int keydown)
 			break;
 		default:
 			if (keysym > 255) {
-				fprintf(stderr, "unknown keycode: %lu\n", keysym);
+				WARNING(TRACE_MISC, "unknown keycode: %lu", keysym);
 				return;
 			}
 			lmcode = okb_to_scancode[keysym][(extra & (3 << 6)) ? 1 : 0];
@@ -236,9 +238,9 @@ x11_event(void)
 			break;
 		}
 	}
-	if (old_run_state != run_ucode_flag) {
+
+	if (old_run_state != run_ucode_flag)
 		old_run_state = run_ucode_flag;
-	}
 }
 
 void
@@ -262,10 +264,8 @@ x11_init(void)
 
 	displayname = getenv("DISPLAY");
 	display = XOpenDisplay(displayname);
-	if (display == NULL) {
-		fprintf(stderr, "usim: failed to open display.\n");
-		exit(-1);
-	}
+	if (display == NULL)
+		errx(1, "failed to open display");
 
 	bitmap_order = BitmapBitOrder(display);
 	xscreen = DefaultScreen(display);
@@ -277,18 +277,14 @@ x11_init(void)
 	root = RootWindow(display, xscreen);
 	attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
 	window = XCreateWindow(display, root, 0, 0, tv_width, tv_height, 0, color_depth, InputOutput, visual, CWBorderPixel | CWEventMask, &attr);
-	if (window == None) {
-		fprintf(stderr, "usim: failed to open window.\n");
-		exit(-1);
-	}
+	if (window == None)
+		errx(1, "failed to open window");
 
-	if (!XStringListToTextProperty(&window_name, 1, pWindowName)) {
+	if (!XStringListToTextProperty(&window_name, 1, pWindowName))
 		pWindowName = NULL;
-	}
 
-	if (!XStringListToTextProperty(&icon_name, 1, pIconName)) {
+	if (!XStringListToTextProperty(&icon_name, 1, pIconName))
 		pIconName = NULL;
-	}
 
 	size_hints = XAllocSizeHints();
 	if (size_hints != NULL) {
@@ -316,9 +312,8 @@ x11_init(void)
 	XFillRectangle(display, window, gc, 0, 0, tv_width, tv_height);
 
 	// Wait for first Expose event to do any drawing, then flush.
-	do {
+	do
 		XNextEvent(display, &e);
-	}
 	while (e.type != Expose || e.xexpose.count);
 
 	XFlush(display);

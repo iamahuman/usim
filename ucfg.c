@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <err.h>
 
 #include "ini.h"
 
@@ -37,10 +38,8 @@ ucfg_handler(void *user, const char *section, const char *name, const char *valu
 		char *end;
 
 		addr = strtoul(value, &end, 8);
-		if (*end != 0 || addr > 0177777) {
-			fprintf(stderr, "Chaosnet address must be a 16-bit octal number\n");
-			exit(1);
-		}
+		if (*end != 0 || addr > 0177777)
+			errx(1, "chaosnet address must be a 16-bit octal number");
 		chaos_set_addr(addr);
 	}
 
@@ -53,7 +52,7 @@ ucfg_handler(void *user, const char *section, const char *name, const char *valu
 		else if (streq(cfg->trace_level, "info"))    trace_level = LOG_INFO;
 		else if (streq(cfg->trace_level, "notice"))  trace_level = LOG_NOTICE;
 		else if (streq(cfg->trace_level, "warning")) trace_level = LOG_WARNING;
-		else fprintf(stderr, "unknown trace level: %s\n", cfg->trace_level);
+		else warnx("unknown trace level: %s", cfg->trace_level);
 	}
 
 	if (INIHEQ("trace", "facilities")) {
@@ -73,7 +72,7 @@ ucfg_handler(void *user, const char *section, const char *name, const char *valu
 			else if (streq(sp, "iob"))   trace_facilities |= TRACE_IOB;
 			else if (streq(sp, "microcode")) trace_facilities |= TRACE_MICROCODE;
 			else if (streq(sp, "macrocode")) trace_facilities |= TRACE_MACROCODE;
-			else fprintf(stderr, "unknown trace facility: %s\n", sp);
+			else warnx("unknown trace facility: %s", sp);
 
 			sp = strtok(NULL, " ");
 		}

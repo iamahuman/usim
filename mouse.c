@@ -1,6 +1,7 @@
 // mouse.c --- mouse interface
 
 #include <stdio.h>
+#include <err.h>
 
 #include "usim.h"
 #include "ucode.h"
@@ -57,13 +58,13 @@ mouse_init(void)
 	mouse_amem_x = 334;	// A-MOUSE-CURSOR-X
 	mouse_amem_y = 335;	// A-MOUSE-CURSOR-Y
 
-	if (sym_find(&sym_mcr, "A-MOUSE-CURSOR-X", &val)) {
-		printf("can't find A-MOUSE-CURSOR-X in microcode symbols\n");
-	} else
+	if (sym_find(&sym_mcr, "A-MOUSE-CURSOR-X", &val))
+		warnx("can't find A-MOUSE-CURSOR-X in microcode symbols");
+	 else
 		mouse_amem_x = val;
 
-	if (sym_find(&sym_mcr, "A-MOUSE-CURSOR-Y", &val)) {
-		printf("can't find A-MOUSE-CURSOR-Y in microcode symbols\n");
-	} else
+	if (sym_find(&sym_mcr, "A-MOUSE-CURSOR-Y", &val))
+		warnx("can't find A-MOUSE-CURSOR-Y in microcode symbols");
+	 else
 		mouse_amem_y = val;
 }

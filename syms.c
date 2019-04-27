@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <strings.h>
+#include <err.h>
 
 #include <sys/queue.h>
 
@@ -135,7 +136,7 @@ sym_read_file(symtab_t *tab, char *filename)
 			else if (strcmp(symtype, "NUMBER") == 0)
 				type = 6;
 			else
-				printf("? %s", symtype);
+				warnx("unknown section type in symbol table: %s", symtype);
 
 			sym_add(tab, type, sym, loc);
 		}

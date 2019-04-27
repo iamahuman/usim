@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <err.h>
 
 #include "misc.h"
 
@@ -70,10 +71,9 @@ read16(int fd)
 	int ret;
 
 	ret = read(fd, b, 2);
-	if (ret != 2) {
-		fprintf(stderr, "read error; ret %d, size %d\n", ret, 2);
-		exit(1);
-	}
+	if (ret != 2)
+		errx(1, "read error; ret %d, size %d", ret, 2);
+
 	return (b[1] << 8) | b[0];
 }
 
@@ -84,10 +84,9 @@ read32(int fd)
 	int ret;
 
 	ret = read(fd, b, 4);
-	if (ret != 4) {
-		fprintf(stderr, "read error; ret %d, size %d\n", ret, 4);
-		exit(1);
-	}
+	if (ret != 4)
+		errx(1, "read error; ret %d, size %d", ret, 4);
+
 	return ((uint32_t) b[1] << 24 |
 		(uint32_t) b[0] << 16 |
 		(uint32_t) b[3] << 8  |
@@ -130,7 +129,7 @@ read_block(int fd, int block_no, unsigned char *buf)
 	size = BLOCKSZ;
 	ret = read(fd, buf, size);
 	if (ret != size) {
-		fprintf(stderr, "disk read error; ret %d, size %d\n", (int) ret, size);
+		warnx("disk read error; ret %d, size %d", (int) ret, size);
 		perror("read");
 		return -1;
 	}
@@ -155,7 +154,7 @@ write_block(int fd, int block_no, unsigned char *buf)
 	size = BLOCKSZ;
 	ret = write(fd, buf, size);
 	if (ret != size) {
-		fprintf(stderr, "disk write error; ret %d, size %d\n", (int) ret, size);
+		warnx("disk write error; ret %d, size %d", (int) ret, size);
 		perror("write");
 		return -1;
 	}
