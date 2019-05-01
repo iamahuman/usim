@@ -56,8 +56,8 @@ static XComposeStatus status;
 static unsigned x_alt;
 static unsigned x_meta;
 
-// Takes E, converts it into a LM keycode and sends it to the
-// IOB KBD.
+// Takes E, converts it into a LM (hardware) keycode and sends it to
+// the IOB KBD.
 static void
 process_key(XEvent *e, int keydown)
 {
@@ -65,7 +65,6 @@ process_key(XEvent *e, int keydown)
 	unsigned char buffer[5];
 	int extra;
 	int lmcode;
-	int newkbd = 0;
 
 	extra = 0;
 	if (e->xkey.state & x_meta)
@@ -95,68 +94,26 @@ process_key(XEvent *e, int keydown)
 			return;
 
 		switch (keysym) {
-		case XK_F1:	// Terminal.
-			lmcode = 1;
-			break;
-		case XK_F2:	// System.
-			lmcode = 1 | (3 << 8);
-			break;
-		case XK_F3:	// Network.
-			lmcode = 0 | (3 << 8);
-			break;
-		case XK_F4:	// Abort.
-			lmcode = 16 | (3 << 8);
-			break;
-		case XK_F5:	// Clear.
-			lmcode = 17;
-			break;
-		case XK_F6:	// Help.
-			lmcode = 44 | (3 << 8);
-			break;
-		case XK_F11:	// End.
-			lmcode = 50 | (3 << 8);
-			break;
-		case XK_F7:	// Call.
-			lmcode = 16;
-			break;
-		case XK_F12:	// Break.
-		case XK_Break:
-			lmcode = 0;
-			break;
-		case XK_BackSpace:	// Rubout.
-			lmcode = 046;
-			break;
-		case XK_Return:	// Return.
-			lmcode = 50;
-			break;
-		case XK_Tab:
-			lmcode = 18;
-			break;
-		case XK_Escape:
-			lmcode = 1;
-			break;
-		case XK_Left:
-			newkbd = 1;
-			lmcode = 0117;
-			break;
-		case XK_Right:
-			newkbd = 1;
-			lmcode = 017;
-			break;
-		case XK_Up:
-			newkbd = 1;
-			lmcode = 0106;
-			break;
-		case XK_Down:
-			newkbd = 1;
-			lmcode = 0176;
-			break;
+		case XK_F1:        lmcode = 1;             break; // Terminal.
+		case XK_F2:        lmcode = 1 | (3 << 8);  break; // System.
+		case XK_F3:        lmcode = 0 | (3 << 8);  break; // Network.
+		case XK_F4:        lmcode = 16 | (3 << 8); break; // Abort.
+		case XK_F5:        lmcode = 17; 	   break; // Clear.
+		case XK_F6:        lmcode = 44 | (3 << 8); break; // Help.
+		case XK_F11:       lmcode = 50 | (3 << 8); break; // End.
+		case XK_F7:        lmcode = 16; 	   break; // Call.
+		case XK_F12:       lmcode = 0;             break; // Break.
+		case XK_Break:     lmcode = 0;             break; // Break.
+		case XK_BackSpace: lmcode = 046;           break; // Rubout.
+		case XK_Return:    lmcode = 50;            break; // Return.
+		case XK_Tab:       lmcode = 18;            break; // Tab
+		case XK_Escape:    lmcode = 1;             break; // Escape
 		default:
 			if (keysym > 255) {
 				WARNING(TRACE_MISC, "unknown keycode: %lu", keysym);
 				return;
 			}
-			lmcode = okb_to_scancode[keysym][(extra & (3 << 6)) ? 1 : 0];
+			lmcode = kbd_translate_table[(extra & (3 << 6)) ? 1 : 0][keysym];
 			break;
 		}
 
@@ -166,10 +123,7 @@ process_key(XEvent *e, int keydown)
 		if (extra & (17 << 10))
 			lmcode |= extra;
 
-		if (newkbd)
-			lmcode |= 1 << 16;
-		else
-			lmcode |= 0xffff0000;
+		lmcode |= 0xffff0000;
 
 		kbd_key_event(lmcode, keydown);
 	}

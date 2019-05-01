@@ -10,6 +10,7 @@
 
 #include "ucfg.h"
 #include "utrace.h"
+#include "kbd.h"
 #include "chaos.h"
 
 #include "misc.h"
