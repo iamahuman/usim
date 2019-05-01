@@ -43,6 +43,8 @@ static XImage *ximage;
 #define X_SHIFT 1
 #define X_CAPS 2
 #define X_CTRL 4
+#define X_ALT 8
+#define X_META 16
 
 static unsigned long Black;
 static unsigned long White;
@@ -51,10 +53,10 @@ static int old_run_state;
 
 static XComposeStatus status;
 
-// Store modifier bitmasks for alt and meta: shift, lock, control are all
-// constant, so they don't need to be stored
-static unsigned x_alt;
-static unsigned x_meta;
+// Store modifier bitmasks for Alt and Meta: Shift, Caps Lock, and
+// Control are all constant, so they don't need to be stored.
+static unsigned int x_alt = X_ALT;
+static unsigned int x_meta = X_META;
 
 // Takes E, converts it into a LM (hardware) keycode and sends it to
 // the IOB KBD.
@@ -98,10 +100,10 @@ process_key(XEvent *e, int keydown)
 		case XK_F2:        lmcode = 1 | (3 << 8);  break; // System.
 		case XK_F3:        lmcode = 0 | (3 << 8);  break; // Network.
 		case XK_F4:        lmcode = 16 | (3 << 8); break; // Abort.
-		case XK_F5:        lmcode = 17; 	   break; // Clear.
+		case XK_F5:        lmcode = 17;		   break; // Clear.
 		case XK_F6:        lmcode = 44 | (3 << 8); break; // Help.
 		case XK_F11:       lmcode = 50 | (3 << 8); break; // End.
-		case XK_F7:        lmcode = 16; 	   break; // Call.
+		case XK_F7:        lmcode = 16;		   break; // Call.
 		case XK_F12:       lmcode = 0;             break; // Break.
 		case XK_Break:     lmcode = 0;             break; // Break.
 		case XK_BackSpace: lmcode = 046;           break; // Rubout.
@@ -203,74 +205,73 @@ x11_event(void)
 static void
 init_mod_map(void)
 {
-	XModifierKeymap *map = XGetModifierMapping(display);
-	int max_mod = map->max_keypermod;
+	XModifierKeymap *map;
+	int max_mod;
+
+	map = XGetModifierMapping(display);
+	max_mod = map->max_keypermod;
+
 	NOTICE(TRACE_MISC, "Looking up X11 Modifier mappings...\n");
-	// The modifiers at indices 0-2 have predefined meanings, but those at
-	// indices 3-7 (Mod1 through Mod5) have their meaning defined by the
-	// keys assigned to them, so loop through to find alt and meta
+
+	// The modifiers at indices 0-2 have predefined meanings, but
+	// those at indices 3-7 (Mod1 through Mod5) have their meaning
+	// defined by the keys assigned to them, so loop through to
+	// find Alt and Meta.
 	for (int mod = 3; mod < 8; mod++) {
-		int is_alt = false;
-		int is_meta = false;
-		// get the keysyms matching this modifier
-		for (int idx = 0; idx < max_mod; idx++) {
-			int keysyms_per_code = 0;
-			KeyCode code = map->modifiermap[mod*max_mod + idx];
-			// Don't try to look up mappings for NoSymbol
-			if (code == NoSymbol) {
+		bool is_alt;
+		bool is_meta;
+
+		is_alt = false;
+		is_meta = false;
+
+		// Get the keysyms matching this modifier.
+		for (int i = 0; i < max_mod; i++) {
+			int keysyms_per_code;
+			KeyCode code;
+			KeySym *syms;
+
+			keysyms_per_code = 0;
+			code = map->modifiermap[mod * max_mod + i];
+
+			// Don't try to look up mappings for NoSymbol.
+			if (code == NoSymbol)
 				continue;
-			}
-			KeySym *syms = XGetKeyboardMapping(display, code, max_mod,
-							   &keysyms_per_code);
-			if (keysyms_per_code == 0) {
-				WARNING(TRACE_MISC, "No keysyms for code %xu\n", code); 
-			}
-			for (int jdx = 0; jdx < keysyms_per_code; jdx++){
-				switch(syms[jdx]){
-					
-				// check for Meta keys
-				case XK_Meta_L:
-				case XK_Meta_R:
+
+			syms = XGetKeyboardMapping(display, code, max_mod, &keysyms_per_code);
+			if (keysyms_per_code == 0)
+				WARNING(TRACE_MISC, "No keysyms for code %xu\n", code);
+
+			for (int j = 0; j < keysyms_per_code; j++){
+				switch(syms[j]){
+				case XK_Meta_L: case XK_Meta_R:
 					is_meta = true;
 					break;
-					
-				// check for Alt keys
-				case XK_Alt_L:
-				case XK_Alt_R:
+				case XK_Alt_L: case XK_Alt_R:
 					is_alt = true;
 					break;
-
 				case NoSymbol:
 					break;
-                                // do nothing by default
 				default:
-					DEBUG(TRACE_MISC, "Sym %lx\n", syms[jdx]);
+					DEBUG(TRACE_MISC, "Sym %lx\n", syms[j]);
 					break;
 				}
 			}
-	 	}
-	 	// assign the modifer masks corresponding to this modifier
-		if (is_alt) {
+		}
+
+		// Assign the modifer masks corresponding to this
+		// modifier.
+		if (is_alt)
 			x_alt = 1 << mod;
-		}
-		if (is_meta) {
-	  		x_meta = 1 << mod;
-		}
-		// if both modifiers have already been found, then we're done.
+		if (is_meta)
+			x_meta = 1 << mod;
+
+		// If both modifiers have already been found, then
+		// we're done.
 		if (x_alt && x_meta) {
 			NOTICE(TRACE_MISC, "Found x_alt = %d, x_meta = %d\n", x_alt, x_meta);
 			return;
 		}
 	}
-	// We only need one of Alt and Meta since they serve the same purpose.
-	if (x_alt || x_meta) {
-		NOTICE(TRACE_MISC, "Found one of x_alt = %d x_meta = %d\n", x_alt, x_meta);
-		return;
-	}
-	// Assign default values
-	x_alt  = 8;
-	x_meta = 16;
-	WARNING(TRACE_MISC, "Defaulting to x_alt = %d x_meta = %d\n", x_alt, x_meta);
 }
 
 void
@@ -349,5 +350,6 @@ x11_init(void)
 	XFlush(display);
 	ximage = XCreateImage(display, visual, (unsigned) color_depth, ZPixmap, 0, (char *) tv_bitmap, tv_width, tv_height, 32, 0);
 	ximage->byte_order = LSBFirst;
+
 	init_mod_map();
 }
