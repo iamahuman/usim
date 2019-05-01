@@ -174,7 +174,7 @@ void
 kbd_warm_boot_key(void)
 {
 	// Send a Return to get the machine booted.
-	kbd_key_event(50, 0);
+	kbd_key_event(062, 0);
 }
 
 void
