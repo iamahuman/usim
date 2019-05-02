@@ -14,7 +14,6 @@
 #include "ucfg.h"
 #include "utrace.h"
 #include "ucode.h"
-#include "mem.h"
 #include "iob.h"
 #include "tv.h"
 #include "kbd.h"
@@ -25,6 +24,7 @@
 #include "disass.h"
 
 static char *config_filename;
+bool dump_state_flag = false;
 bool warm_boot_flag = false;
 
 symtab_t sym_mcr;
@@ -33,7 +33,7 @@ symtab_t sym_prom;
 static void
 sigusr1_handler(int arg)
 {
-	save_state(ucfg.usim_state_filename);
+	dump_state();
 }
 
 static void
@@ -43,6 +43,7 @@ usage(void)
 	fprintf(stderr, "CADR simulator\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -c FILE        configuration file (default: %s)\n", config_filename);
+	fprintf(stderr, "  -d             dump state on halt (default state file: %s)\n", ucfg.usim_state_filename);
 	fprintf(stderr, "  -w             warm boot\n");
 	fprintf(stderr, "  -h             help message\n");
 }
@@ -57,9 +58,10 @@ main(int argc, char *argv[])
 	config_filename = "usim.ini";
 	warm_boot_flag = false;
 
-	while ((c = getopt(argc, argv, "c:wh")) != -1) {
+	while ((c = getopt(argc, argv, "c:dwh")) != -1) {
 		switch (c) {
 		case 'c': config_filename = strdup(optarg); break;
+		case 'd': dump_state_flag = true; break;
 		case 'w': warm_boot_flag = true; break;
 		case 'h':
 			usage();
@@ -98,6 +100,9 @@ main(int argc, char *argv[])
 	}
 
 	run();
+
+	if (dump_state_flag)
+		dump_state();
 
 	exit(0);
 }

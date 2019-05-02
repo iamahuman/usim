@@ -14,6 +14,7 @@ extern bool run_ucode_flag;
 extern int read_prom(char *promfn);
 
 extern void run(void);
+extern void dump_state(void);
 
 extern void write_a_mem(int loc, uint32_t v);
 extern uint32_t read_a_mem(int loc);

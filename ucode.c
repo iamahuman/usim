@@ -24,8 +24,9 @@
 #include "chaos.h"
 #include "disk.h"
 
-#include "misc.h"
+#include "disass.h"
 #include "syms.h"
+#include "misc.h"
 
 bool run_ucode_flag = true;
 
@@ -70,6 +71,8 @@ static uint32_t dispatch_constant;
 
 ucw_t prom_ucode[512];
 bool prom_enabled_flag = true;
+
+static void record_lc_history(void);
 
 int
 read_prom(char *file)
@@ -532,6 +535,8 @@ advance_lc(int *ppc)
 			// Set NEED-FETCH.
 			lc |= (1UL << 31UL);
 	}
+
+	record_lc_history();
 }
 
 // Write value to decoded destination.
@@ -558,6 +563,8 @@ write_dest(int dest, uint32_t out_bus)
 
 		// Set NEED-FETCH.
 		lc |= (1UL << 31UL);
+
+		record_lc_history();
 		break;
 	case 2:			// Interrrupt Control <29-26>.
 		DEBUG(TRACE_MISC, "writing IC <- %o\n", out_bus);
@@ -720,6 +727,333 @@ rotate_left(uint32_t value, int bitstorotate)
 	return (value << bitstorotate) | tmp;
 }
 
+#define MAX_PC_HISTORY 64
+
+static struct {
+	unsigned int pc;
+} pc_history[MAX_PC_HISTORY];
+
+static int pc_history_head = 0;
+static int pc_history_tail= 0;
+
+static void
+record_pc_history(int pc)
+{
+	pc_history[pc_history_head].pc = pc;
+
+	pc_history_head = (pc_history_head + 1) % MAX_PC_HISTORY;
+}
+
+#define MAX_LC_HISTORY 200
+
+struct {
+	unsigned short instr;
+	unsigned int lc;
+} lc_history[MAX_LC_HISTORY];
+
+int lc_history_head = 0;
+int lc_history_tail = 0;
+
+static void
+record_lc_history(void)
+{
+	unsigned int instr;
+
+	{
+		int oafb;
+		int owfb;
+		int opff;
+
+		oafb = access_fault_bit;
+		owfb = write_fault_bit;
+		opff = page_fault_flag;
+
+		read_mem(lc >> 2, &instr);
+
+		access_fault_bit = oafb;
+		write_fault_bit = owfb;
+		page_fault_flag = opff;
+	}
+
+	lc_history[lc_history_head].instr = (lc & 2) ? (instr >> 16) & 0xffff : (instr & 0xffff);
+	lc_history[lc_history_head].lc = lc;
+
+	if (0) {
+		unsigned short instr;
+		int loc;
+
+		instr = lc_history[lc_history_head].instr;
+		loc = lc_history[lc_history_head].lc & 0377777777;
+		printf("\t%s\n", disassemble_instruction(0, loc, instr, instr));
+	}
+
+	lc_history_head = (lc_history_head + 1) % MAX_LC_HISTORY;
+}
+
+static void
+printlbl(symtype_t type, int loc)
+{
+	char *l;
+	int offset;
+
+	l = sym_find_by_type_val(prom_enabled_flag ? &sym_prom : &sym_mcr, type, loc, &offset);
+	if (l == NULL) {
+		printf("%03o", loc);
+	} else {
+		if (offset == 0)
+			printf("(%s)", l);
+		else
+			printf("(%s %o)", l, offset);
+	}
+}
+
+static void
+show_pc_history(void)
+{
+	int head;
+
+	printf("Micro PC History (OPC's), oldest first:	\n");
+	head = pc_history_head;
+	for (int i = 0; i < MAX_PC_HISTORY; i++) {
+		unsigned int pc;
+
+		pc = pc_history[head].pc;
+		head = (head + 1) % MAX_PC_HISTORY;
+
+		if (pc == 0)
+			break;
+
+		printf("  %05o\t", pc);
+		printlbl(IMEM, pc);
+		if (prom_enabled_flag)
+			printf("\t...in the PROM.");
+		printf("\n");
+	}
+}
+
+static void
+show_spc_stack(void)
+{
+	if (spc_stack_ptr == 0)
+		return;
+
+	printf("Backtrace of microcode subroutine stack:\n");
+	for (int i = spc_stack_ptr; i >= 0; i--) {
+		int pc;
+
+		pc = spc_stack[i] & 037777;
+
+		printf("%2o %011o ", i, spc_stack[i]);
+		printlbl(IMEM, pc);
+		printf("\n");
+	}
+}
+
+static void
+show_lc_history(void)
+{
+	int head;
+
+	printf("Complete backtrace follows:\n");
+	head = lc_history_head;
+	for (int i = 0; i < MAX_LC_HISTORY; i++) {
+		unsigned short instr;
+		int loc;
+
+		instr = lc_history[head].instr;
+		loc = lc_history[head].lc & 0377777777;
+		head = (head + 1) % MAX_LC_HISTORY;
+
+		// Skip printing out obviously empty entries.
+		if (loc == 0 && instr == 0)
+			continue;
+
+		printf("\t%s\n", disassemble_instruction(0, loc, instr, instr));
+	}
+
+	printf("\n");
+}
+
+static void
+show_mmem(void)
+{
+	printf("M-MEM:\n");
+	for (int i = 0; i < 32; i += 4) {
+		printf("\tM[%02o] %011o %011o %011o %011o\n",
+		       i, m_memory[i + 0], m_memory[i + 1], m_memory[i + 2], m_memory[i + 3]);
+	}
+	printf("\n");
+}
+
+
+static void
+show_amem(void)
+{
+	printf("A-MEM:\n");
+	for (int i = 0; i < 1024; i += 4) {
+		int skipped;
+
+		printf("\tA[%04o] %011o %011o %011o %011o\n",
+		       i, a_memory[i + 0], a_memory[i + 1], a_memory[i + 2], a_memory[i + 3]);
+
+		skipped = 0;
+		while (a_memory[i + 0] == a_memory[i + 0 + 4] &&
+		       a_memory[i + 1] == a_memory[i + 1 + 4] &&
+		       a_memory[i + 2] == a_memory[i + 2 + 4] &&
+		       a_memory[i + 3] == a_memory[i + 3 + 4] &&
+		       i < 1024) {
+			if (skipped == 0)
+				printf("\t...\n");
+			skipped++;
+			i += 4;
+		}
+
+	}
+	printf("\n");
+}
+
+static void
+show_ammem_sym(void)
+{
+	printf("A/M-MEMORY BY SYMBOL:\n");
+	for (int i = 0; i < 1024; i++) {
+		char *l;
+
+		l = sym_find_by_type_val(prom_enabled_flag ? &sym_prom : &sym_mcr, AMEM, i, NULL);
+		if (l != NULL) {
+			printf("\t%04o %-40s %011o", i, l, a_memory[i]);
+			if (i < 32) {
+				l = sym_find_by_type_val(prom_enabled_flag ? &sym_prom : &sym_mcr, MMEM, i, NULL);
+				if (l != NULL) {
+					printf("  %-40s %011o", l, m_memory[i]);
+				}
+			}
+			printf("\n");
+		}
+
+	}
+	printf("\n");
+}
+
+static void
+show_spc(void)
+{
+	printf("SPC STACK:\n");
+	printf("\tSPC POINTER: %o\n", spc_stack_ptr);
+	for (int i = 0; i < 32; i += 4) {
+		printf("\tSPC[%02o] %011o %011o %011o %011o\n",
+		       i,
+		       spc_stack[i + 0], spc_stack[i + 1], spc_stack[i + 2], spc_stack[i + 3]);
+	}
+	printf("\n");
+}
+
+static void
+show_pdl(void)
+{
+	printf("PDL MEMORY:\n");
+	printf("\tPDL POINTER: %o, PDL INDEX: %o\n", pdl_ptr, pdl_index);
+	for (int i = 0; i < 1024; i += 4) {
+		int skipped;
+
+		printf("\tPDL[%04o] %011o %011o %011o %011o\n",
+		       i, pdl_memory[i + 0], pdl_memory[i + 1], pdl_memory[i + 2], pdl_memory[i + 3]);
+
+		skipped = 0;
+		while (pdl_memory[i + 0] == pdl_memory[i + 0 + 4] &&
+		       pdl_memory[i + 1] == pdl_memory[i + 1 + 4] &&
+		       pdl_memory[i + 2] == pdl_memory[i + 2 + 4] &&
+		       pdl_memory[i + 3] == pdl_memory[i + 3 + 4] &&
+		       i < 1024) {
+			if (skipped == 0)
+				printf("\t...\n");
+			skipped++;
+			i += 4;
+		}
+	}
+	printf("\n");
+}
+
+static void
+show_l1_map(void)
+{
+	printf("L1 MAP:\n");
+	for (int i = 0; i < 2048; i += 4) {
+		int skipped;
+
+		printf("\tL1[%04o] %011o %011o %011o %011o\n",
+		       i, l1_map[i + 0], l1_map[i + 1], l1_map[i + 2], l1_map[i + 3]);
+
+		skipped = 0;
+		while (l1_map[i + 0] == l1_map[i + 0 + 4] &&
+		       l1_map[i + 1] == l1_map[i + 1 + 4] &&
+		       l1_map[i + 2] == l1_map[i + 2 + 4] &&
+		       l1_map[i + 3] == l1_map[i + 3 + 4] &&
+		       i < 2048) {
+			if (skipped == 0)
+				printf("\t...\n");
+			skipped++;
+			i += 4;
+		}
+	}
+	printf("\n");
+}
+
+static void
+show_l2_map(void)
+{
+	printf("L2 MAP:\n");
+	for (int i = 0; i < 1024; i += 4) {
+		int skipped;
+
+		printf("\tL2[%04o] %011o %011o %011o %011o\n",
+		       i, l2_map[i + 0], l2_map[i + 1], l2_map[i + 2], l2_map[i + 3]);
+
+		skipped = 0;
+		while (l2_map[i + 0] == l2_map[i + 0 + 4] &&
+		       l2_map[i + 1] == l2_map[i + 1 + 4] &&
+		       l2_map[i + 2] == l2_map[i + 2 + 4] &&
+		       l2_map[i + 3] == l2_map[i + 3 + 4] &&
+		       i < 1024) {
+			if (skipped == 0)
+				printf("\t...\n");
+			skipped++;
+			i += 4;
+		}
+	}
+	printf("\n");
+}
+
+void
+dump_state(void)
+{
+	unsigned int pc;
+
+	pc = pc_history[pc_history_tail].pc;
+
+	printf("***********************************************\n");
+	printf("PC=%05o\t", pc);
+	printlbl(IMEM, pc);
+	printf("\n");
+	printf("IR=%s\n", uinst_desc(ucode[pc], prom_enabled_flag ? &sym_prom : &sym_mcr));
+	show_pc_history();
+	show_spc_stack();
+	show_lc_history();
+
+	show_mmem();
+	show_amem();
+	show_ammem_sym();
+
+	show_spc();
+
+	show_pdl();
+
+	show_l1_map();
+	show_l2_map();
+
+	save_state(ucfg.usim_state_filename);
+}
+
 void
 run(void)
 {
@@ -840,6 +1174,17 @@ run(void)
 			oa_reg_hi_set = 0;
 			u |= (ucw_t) oa_reg_hi << 26;
 		}
+
+		if (0) {
+			char *uinst;
+
+			uinst = uinst_desc(u, prom_enabled_flag ? &sym_prom : &sym_mcr);
+			printf("%s", uinst);
+			printlbl(IMEM, p0_pc);
+			printf("\n");
+		}
+
+		record_pc_history(p0_pc);
 
 		// NOP short cut.
 		if ((u & NOP_MASK) == 0) {
