@@ -18,153 +18,176 @@ provide a reasonably functional Lisp Machine experience.
 
 * Building
 
-UNIX-like systems:
-
-  Just run "make".
-
-Everything else:
-
-  Unsupported.
+Just run =make=, if it doesn't work then it probobly isn't supported.
 
 * Quick-start
 
-Build usim and all related code as described above.  Then download the
-PROM, microcode and load bands from https://github.com/LM-3/bands.git,
-by default diskmaker assumes that the bands/ directory is located
-directly below the usim source code directory (usim/../bands).  You
-can also use a configuration file and customize the disk image, see
-the bands/disk.cfg fuke for an example.
+Build =usim= and all related code as described above.  Then download
+the PROM, microcode and load bands from
+https://github.com/LM-3/bands.git, by default =diskmaker= assumes that
+the =bands/= directory is located directly below the =usim= source
+code directory (=usim/../bands=).  You can also use a configuration
+file and customize the disk image, see the =bands/disk.cfg= file for
+an example.  To create a disk image run:
 
-  ./diskmaker -c
+#+BEGIN_SRC
+./diskmaker -c
+#+END_SRC
 
-When you have created a disk image you can run usim, and it will boot
-up to a time/date prompt.  The format of the date and time is quite
-flexible (see SYS: IO1; TIMPAR LISP), one possible format is:
+When you have created a disk image you can run =usim=, and it will
+boot up to a time/date prompt.  The format of the date and time is
+quite flexible (see =SYS: IO1; TIMPAR LISP=), one possible format is:
 
-  Jan-3-1980 11:30
+#+BEGIN_SRC
+Jan-3-1980 11:30
+#+END_SRC
 
-Now you have a working CADR system, it will not have network setup, or
+Now you have a running CADR system, it will not have network setup, or
 a local file system, this will be described later in this section.
 
 Here are a simple few things to try (in the Listener you don't need to
-type Enter after closing a Lisp form):
+type =Enter= after closing a Lisp form):
 
-  (ed)		    ; Start Zmacs; it works just like any other Emacs.
-  (hacks:demo)	    ; A few Lisp Machine demo programs.
+#+BEGIN_SRC
+(ed)		    ; Start Zmacs; it works just like any other Emacs.
+(hacks:demo)	    ; A few Lisp Machine demo programs.
+#+END_SRC
 
 Here are some interesting keybindings to try in the Listener, see the
 "Keyboard bindings" section of this document:
 
-  System-L			; Switch to the Listener.
-  System-E			; Switch to Zmacs.
-  System-P			; Peek program, show internal system information.
-  System-?			; Show what System commands are available.
+#+BEGIN_SRC
+System-L			; Switch to the Listener.
+System-E			; Switch to Zmacs.
+System-P			; Peek program, show internal system information.
+System-?			; Show what System commands are available.
 
-  Terminal-M			; Toggle **MORE** processing.
-  Terminal-0-M			; Disable **MORE** processing.
+Terminal-M			; Toggle **MORE** processing.
+Terminal-0-M			; Disable **MORE** processing.
+#+END_SRC
 
 For more details see the Lisp Machine Manual
 (https://lm-3.github.io/chinual.html).
 
+To get =usim= talking to the host you need to build the Chaosnet
+daemon and related programs from http://github.com/lm-3/chaos.  Build
+it as per the instructions in the =README= file and then start the
+=chaosd= daemon (just run =./chaosd= where you build it) in another
+terminal window, you must start =chaosd= before starting =usim=.
 
-To get usim talking to the host you need to build the chaos daemon and
-related programs from http://github.com/lm-3/chaos.  Build it as per
-the instructions in the README file and then start the chaosd daemon
-(just run ./chaosd where you build it) in another terminal window, you
-must start chaosd before starting usim (this is a bug, see #---!!!).
+By default, your CADR has the host name "CADR" (Chaos address: 0401) ,
+and the host where =usim= is running is called "SERVER" (Chaos
+address: 0404).
 
-Your CADR has the host name "CADR" (Chaos address: 0401) , and the
-host where usim is running is called "SERVER" (Chaos address: 0404).
+Once your CADR is up and running running, in the Listener type:
 
-Once your CADR is up and running running, in the listener type:
+#+BEGIN_SRC
+(si:set-sys-host "server" ':unix 0404)
+#+END_SRC
 
-  (si:set-sys-host "server" ':unix 0404)
-
-Answer Yes when asked if this host is OK.  This is to set the SYS
+Answer Yes when asked if this host is OK.  This is to set the =SYS=
 host accordingly so that the system knows where it can look for files.
-You can now login as LISPM onto the host SERVER using, USER is your
-_local_ user name (and if you are asked for a password, it is also
-your local password):
+You can now login as =LISPM= onto the host =SERVER= using, =USER= is
+your _local_ user name (and if you are asked for a password, it is
+also your local password):
 
-  (login 'USER 'server)
+#+BEGIN_SRC
+(login 'USER 'server)
+#+END_SRC
 
 Now you can read/write files from the host system, the format for Unix
-pathnames is HOST:/DIRECTORY/FILE.EXTENSION.  N.B. Slashes in a string
-in Lisp have to be escaped!
+pathnames is =HOST:/DIRECTORY/FILE.EXTENSION=.  N.B. Slashes in a
+string in Lisp have to be escaped!
 
-To edit the file /tmp/foo.lisp on the host SERVER, we can type the
+To edit the file =/tmp/foo.lisp= on the host =SERVER=, we can type the
 following form:
 
-  (ed "server://tmp//foo.lisp")
+#+BEGIN_SRC
+(ed "server://tmp//foo.lisp")
+#+END_SRC
 
 Or if we are in Zmacs, we can enter (note the lack of escaped
 slashes):
 
-  C-x C-f server:/tmp/foo RET
+#+BEGIN_SRC
+C-x C-f server:/tmp/foo RET
+#+END_SRC
 
 This is a fully usable system, but it has no site associated with it
 yet.  A site defines where to find system source code, the timezone,
-and a bunch of other things (see SYS: SITE; SITE LISP or the Chinual
+and a bunch of other things (see =SYS: SITE; SITE LISP= or the Chinual
 for details).
 
 
 To finish of a complete, but basic setup we need load a site file and
 save our current setup (so we don't have to do everything again),
-first download the system source code from
-http://github.com/LM-3/sys.
+first download the system source code from http://github.com/LM-3/sys.
 
-By default, the system source code is assumed to be stored in /tree on
-the host, if you want to relocate this you will need to modify the
-lmsite/site.lisp file accordingly.
+By default, the system source code is assumed to be stored in =/tree=
+on the host, if you want to relocate this you will need to modify the
+=SYS: SITE; SITE LISP= file accordingly.
 
 The following two forms are only required if you didn't keep usim
 running from the previous setup:
 
-  (si:set-sys-host "server" ':unix 0404)
-  (login 'USER 'server)
+#+BEGIN_SRC
+(si:set-sys-host "server" ':unix 0404)
+(login 'USER 'server)
+#+END_SRC
 
-Load the site file and make the system aware of its new
-surroundings.  The system doesn't know how to translate logical
-pathnames yet, so we need to specify the actual location:
+Load the site file and make the system aware of its new surroundings.
+The system doesn't know how to translate logical pathnames yet, so we
+need to specify the actual location:
 
-  (load "server://tree//lmsite//site.lisp") ; Replace with actual location!
-  (fs:define-sys-logical-device)
+#+BEGIN_SRC
+(load "server://tree//lmsite//site.lisp") ; Replace with actual location!
+(fs:define-sys-logical-device)
+#+END_SRC
 
 Recompile a few required files, and update internal state (this only
 needs to be done once, or when you modify the site definition):
 
-  (qc-file "sys:site;site lisp >")
-  (qc-file "sys:site;hsttbl lisp >")
-  (qc-file "sys:site;lmlocs lisp >")
-  (si:update-site-configuration-info)
+#+BEGIN_SRC
+(qc-file "sys:site;site lisp >")
+(qc-file "sys:site;hsttbl lisp >")
+(qc-file "sys:site;lmlocs lisp >")
+(si:update-site-configuration-info)
+#+END_SRC
 
 Now you can save the current system, and make it current:
 
-  (si:disk-save 2)		; Answer yes to clobber.
-  (set-current-band 2)
+#+BEGIN_SRC
+(si:disk-save 2)		; Answer yes to clobber.
+(set-current-band 2)
+#+END_SRC
 
 Or if you just wish to try it out (you can make it current later):
 
-  (disk-restore 2)
+#+BEGIN_SRC
+(disk-restore 2)
+#+END_SRC
 
 Now all the fun can finally start since we can access the system
-source code, to see what the function SI:SET-SYST-HOST does we can
+source code, to see what the function =SI:SET-SYST-HOST= does we can
 issue the following in the Listener:
 
-  (ed 'hacks:demo)
+#+BEGIN_SRC
+(ed 'hacks:demo)
+#+END_SRC
 
 Or why not, open a file:
 
-  (ed "sys: sys; qmisc lisp")
+#+BEGIN_SRC
+(ed "sys: sys; qmisc lisp")
+#+END_SRC
 
+The final step is to update the system to the latest patch level .
+This is left as a small exercise for the reader, you need to do the
+following steps:
 
-The final step is to update the system to the latest patch level
-(---!!! see system-patch-dir file?).  This is left as a small exercise
-for the reader, you need to do the following steps:
-
- 1. Compile all the patch files in SYS: PATCH.
- 2. Run the LOAD-PATCH function.
- 3. Save and make current the world again (just like above).
+  1. Compile all the patch files in =SYS: PATCH=.
+  2. Run the =LOAD-PATCH= function.
+  3. Save and make current the world again (just like above).
 
 * Keyboard bindings
 
@@ -193,25 +216,17 @@ work.
 | F11          | End        |
 | F12          | Break      |
 | Break        | Break      |
-|-------------+------------ |
-
-* The diskmaker Utility
----------------------
-
-The program "diskmaker" will interpret a disk image partition table
-and make a new disk using a template file.  The template file
-basically feeds all the parameters to "diskmaker" to build a valid
-disk image and populate it with microcode and a load band.
+|-------------+-------------|
 
 * What programs are here?
 
-usim		- the CADR emulator
-diskmaker	- program to make Trident disk images for the CADR from
+  - usim	- the CADR emulator
+  - diskmaker	- program to make Trident disk images for the CADR from
 		  a microcode file, and a load band
-readmcr		- utility to read MCR file
-lod		- utiltity to pick apart load bands and show their insides
-lmfs		- raw hack to read files from (Symbolics) LMFS partitions
-cc		- crude CADR debugger program
+  - readmcr	- utility to read MCR file
+  - lod		- utiltity to pick apart load bands and show their insides
+  - lmfs	- raw hack to read files from (Symbolics) LMFS partitions
+  - cc		- crude CADR debugger program
 
 * Recent Changes
 
