@@ -13,6 +13,8 @@
 #include "iob.h"
 #include "kbd.h"
 
+int kbd_type = 0;
+
 uint32_t kbd_key_scan;
 
 #define KEY_QUEUE_LEN 10
@@ -91,110 +93,12 @@ kbd_warm_boot_key(void)
 	// Send a Return to get the machine booted.
 	kbd_key_event(062, 0);
 }
-
-#include "knight.h"
-
-// ASCII to Knight keyboard scancode translation table.
-unsigned short kbd_translate_table[3][256];
-
-static void
-kbd_old_init(void)
-{
-	memset((char *) kbd_translate_table, 0, sizeof(kbd_translate_table));
-
-	for (int i = 0; i < 64; i++) {
-		unsigned char k;
-		k = kbd_old_table[i][0];
-		kbd_translate_table[0][(int) k] = i;
-	}
-
-	for (int i = 0; i < 255; i++) {
-		kbd_translate_table[1][i] = kbd_translate_table[0][i] | (3 << 6);
-		kbd_translate_table[2][i] = kbd_translate_table[0][i] | (3 << 8);
-	}
-
-	// Modify mapping to match present-day US keyboard layout.
-	kbd_translate_table[0]['`'] = 015 | (3 << 6);
-	kbd_translate_table[1]['`'] = 016 | (3 << 6);
-
-	kbd_translate_table[0]['\''] = 010 | (3 << 6);
-	kbd_translate_table[1]['\''] = 3 | (3 << 6);
-	kbd_translate_table[0]['='] = 014 | (3 << 6);
-	kbd_translate_table[1]['2'] = 015;
-
-	kbd_translate_table[1]['6'] = 016;
-	kbd_translate_table[1]['7'] = 7 | (3 << 6);
-	kbd_translate_table[1]['8'] = 061 | (3 << 6);
-	kbd_translate_table[1]['9'] = 011 | (3 << 6);
-	kbd_translate_table[1]['0'] = 012 | (3 << 6);
-	kbd_translate_table[1]['-'] = 013 | (3 << 6);
-	kbd_translate_table[1]['='] = 060 | (3 << 6);
-
-	kbd_translate_table[1][';'] = 061;
-	kbd_translate_table[1][':'] = 061;
-	kbd_translate_table[1]['!'] = 2 | (3 << 6);
-	kbd_translate_table[1]['"'] = 3 | (3 << 6);
-	kbd_translate_table[1]['#'] = 4 | (3 << 6);
-	kbd_translate_table[1]['$'] = 5 | (3 << 6);
-	kbd_translate_table[1]['%'] = 6 | (3 << 6);
-	kbd_translate_table[1]['&'] = 7 | (3 << 6);
-	kbd_translate_table[1]['('] = 011 | (3 << 6);
-	kbd_translate_table[1][')'] = 012 | (3 << 6);
-	kbd_translate_table[1]['_'] = 013 | (3 << 6);
-	kbd_translate_table[1]['~'] = 016 | (3 << 6);
-	kbd_translate_table[1]['@'] = 13;
-	kbd_translate_table[1]['^'] = 14;
-
-	kbd_translate_table[1]['Q'] = 20 | (3 << 6);
-	kbd_translate_table[1]['W'] = 21 | (3 << 6);
-	kbd_translate_table[1]['E'] = 22 | (3 << 6);
-	kbd_translate_table[1]['R'] = 23 | (3 << 6);
-	kbd_translate_table[1]['T'] = 24 | (3 << 6);
-	kbd_translate_table[1]['Y'] = 25 | (3 << 6);
-	kbd_translate_table[1]['U'] = 26 | (3 << 6);
-	kbd_translate_table[1]['I'] = 27 | (3 << 6);
-	kbd_translate_table[1]['O'] = 28 | (3 << 6);
-	kbd_translate_table[1]['P'] = 29 | (3 << 6);
-	kbd_translate_table[1]['{'] = 30 | (3 << 6);
-	kbd_translate_table[1]['}'] = 31 | (3 << 6);
-	kbd_translate_table[1]['|'] = 32 | (3 << 6);
-
-	kbd_translate_table[1]['A'] = 39 | (3 << 6);
-	kbd_translate_table[1]['S'] = 40 | (3 << 6);
-	kbd_translate_table[1]['D'] = 41 | (3 << 6);
-	kbd_translate_table[1]['F'] = 42 | (3 << 6);
-	kbd_translate_table[1]['G'] = 43 | (3 << 6);
-	kbd_translate_table[1]['H'] = 44 | (3 << 6);
-	kbd_translate_table[1]['J'] = 45 | (3 << 6);
-	kbd_translate_table[1]['K'] = 46 | (3 << 6);
-	kbd_translate_table[1]['L'] = 47 | (3 << 6);
-	kbd_translate_table[1]['+'] = 48 | (3 << 6);
-	kbd_translate_table[1]['*'] = 061 | (3 << 6);
-
-	kbd_translate_table[1]['Z'] = 53 | (3 << 6);
-	kbd_translate_table[1]['X'] = 54 | (3 << 6);
-	kbd_translate_table[1]['C'] = 55 | (3 << 6);
-	kbd_translate_table[1]['V'] = 56 | (3 << 6);
-	kbd_translate_table[1]['B'] = 57 | (3 << 6);
-	kbd_translate_table[1]['N'] = 58 | (3 << 6);
-	kbd_translate_table[1]['M'] = 59 | (3 << 6);
-	kbd_translate_table[1]['<'] = 60 | (3 << 6);
-	kbd_translate_table[1]['>'] = 61 | (3 << 6);
-	kbd_translate_table[1]['?'] = 62 | (3 << 6);
-
-	// Map Delete to Rubout.
-	kbd_translate_table[0][0x7f] = 046;
-	kbd_translate_table[0][0x08] = 046;
-
-	// Map Tab to Tab.
-	kbd_translate_table[0][9] = 0211;
-
-	// Map Escape to Escape.
-	kbd_translate_table[0][0x1b] = 0204;
-}
 
 void
 kbd_init(void)
 {
-	kbd_old_init();
+	if (kbd_type == 0)
+		knight_init();
+	else
+		cadet_init();
 }

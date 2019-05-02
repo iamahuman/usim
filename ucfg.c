@@ -81,5 +81,11 @@ ucfg_handler(void *user, const char *section, const char *name, const char *valu
 		free(s);
 	}
 
+	if (INIHEQ("kbd", "type")) {
+		     if (streq("knight", cfg->kbd_type)) kbd_type = 0;
+		else if (streq("cadet", cfg->kbd_type))  kbd_type = 1;
+		else warnx(1, "unknown keyboard type: %s", cfg->kbd_type);
+	}
+
 	return 1;
 }

@@ -3,9 +3,12 @@
 
 #include <stdint.h>
 
-extern uint32_t kbd_key_scan;
+#include "knight.h"
+#include "cadet.h"
 
-extern unsigned short kbd_translate_table[3][256];
+extern int kbd_type;
+
+extern uint32_t kbd_key_scan;
 
 extern void kbd_init(void);
 extern void kbd_warm_boot_key(void);

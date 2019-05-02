@@ -1,90 +1,172 @@
 #ifndef USIM_KNIGHT_H
 #define USIM_KNIGHT_H
 
-#include "lmk.h"
+extern unsigned short knight_translate_table[3][256];
 
-// See SYS:LMWIN;COLD LISP for details.
-//
-// Keyboard translate table is a 3 X 64 array.
-// 3 entries for each of 100 keys.  First is vanilla, second shift, third top.
-unsigned char kbd_old_table[64][3] = {
-	{LMK_break, LMK_break, LMK_network},
-	{LMK_esc, LMK_esc, LMK_system},
-	{LMK_1, LMK_exclam, LMK_exclam},
-	{LMK_2, LMK_quotedbl, LMK_quotedbl},
-	{LMK_3, LMK_numbersign, LMK_numbersign},
-	{LMK_4, LMK_dollar, LMK_dollar},
-	{LMK_5, LMK_percent, LMK_percent},
-	{LMK_6, LMK_ampersand, LMK_ampersand},
-	{LMK_7, LMK_apostrophe, LMK_apostrophe},
-	{LMK_8, LMK_parenleft, LMK_parenleft},
-	{LMK_9, LMK_parenright, LMK_parenright},
-	{LMK_0, LMK_underscore, LMK_underscore},
-	{LMK_minus, LMK_equal, LMK_equal},
-	{LMK_at, LMK_grave, LMK_grave},
-	{LMK_asciicircum, LMK_asciitilde, LMK_asciitilde},
-	{LMK_bs, LMK_bs, LMK_bs},
-	{LMK_call, LMK_call, LMK_abort},
+extern void knight_init(void);
 
-	{LMK_clear, LMK_clear, LMK_clear},
-	{LMK_tab, LMK_tab, LMK_tab},
-	{LMK_altmode, LMK_altmode, LMK_altmode},
-	{LMK_q, LMK_Q, LMK_and_sign},
-	{LMK_w, LMK_W, LMK_or_sign},
-	{LMK_e, LMK_E, LMK_up_horseshoe},
-	{LMK_r, LMK_R, LMK_down_horseshoe},
-	{LMK_t, LMK_T, LMK_left_horseshoe},
-	{LMK_y, LMK_Y, LMK_right_horseshoe},
-	{LMK_u, LMK_U, LMK_not_sign},
-	{LMK_i, LMK_I, LMK_circle_x},
-	{LMK_o, LMK_O, LMK_down_arrow},
-	{LMK_p, LMK_P, LMK_up_arrow},
-	{LMK_bracketleft, LMK_braceleft, LMK_braceleft},
-	{LMK_bracketright, LMK_braceright, LMK_braceright},
-	{LMK_backslash, LMK_bar, LMK_bar},
-	{LMK_slash, LMK_infinity, LMK_infinity},
-	{LMK_plus_minus, LMK_delta, LMK_delta},
-	{LMK_circle_plus, LMK_circle_plus, LMK_circle_plus},
+#define KNIGHT_VANILLA		0	// VANILLA
+#define KNIGHT_SHIFT		0300	// SHIFT BITS
+#define KNIGHT_TOP		01400	// TOP BITS
+#define KNIGHT_CONTROL		06000	// CONTROL BITS
+#define KNIGHT_META		030000	// META BITS
+#define KNIGHT_SHIFT_LOCK	040000	// SHIFT LOCK
 
-	{LMK_form, LMK_form, LMK_form},
-	{LMK_vt, LMK_vt, LMK_vt},
-	{LMK_rubout, LMK_rubout, LMK_rubout},
-	{LMK_a, LMK_A, LMK_less_or_equal},
-	{LMK_s, LMK_S, LMK_greater_or_equal},
-	{LMK_d, LMK_D, LMK_equivalence},
-	{LMK_f, LMK_F, LMK_partial_delta},
-	{LMK_g, LMK_G, LMK_not_equal},
-	{LMK_h, LMK_H, LMK_help},
-	{LMK_j, LMK_J, LMK_left_arrow},
-	{LMK_k, LMK_K, LMK_right_arrow},
-	{LMK_l, LMK_L, LMK_double_arrow},
-	{LMK_semicolon, LMK_plus, LMK_plus},
-	{LMK_colon, LMK_asterisk, LMK_asterisk},
-	{LMK_cr, LMK_cr, LMK_end},
-	{LMK_line, LMK_line, LMK_line},
-	{LMK_back_next, LMK_back_next, LMK_back_next},
+#define KNIGHT_break		00
+#define KNIGHT_escape		01
+#define KNIGHT_1		02
+#define KNIGHT_2		03
+#define KNIGHT_3		04
+#define KNIGHT_4		05
+#define KNIGHT_5		06
+#define KNIGHT_6		07
+#define KNIGHT_7		010
+#define KNIGHT_8		011
+#define KNIGHT_9		012
+#define KNIGHT_0		013
+#define KNIGHT_minus		014
+#define KNIGHT_at		015
+#define KNIGHT_asciicircum	016
+#define KNIGHT_bs		017
+#define KNIGHT_call		020
 
-	// #\SHIFT-LOCK
-	// #\LEFT-TOP
-	// #\LEFT-SHIFT
-	{LMK_z, LMK_Z, LMK_alpha},
-	{LMK_x, LMK_X, LMK_beta},
-	{LMK_c, LMK_C, LMK_epsilon},
-	{LMK_v, LMK_V, LMK_lambda},
-	{LMK_b, LMK_B, LMK_pi},
-	{LMK_n, LMK_N, LMK_universal_quantifier},
-	{LMK_m, LMK_M, LMK_existential_quantifier},
-	{LMK_comma, LMK_less, LMK_less},
-	{LMK_period, LMK_greater, LMK_greater},
-	{LMK_slash, LMK_question, LMK_question},
-	// #\RIGHT-SHIFT
-	// #\RIGHT-TOP
+#define KNIGHT_clear		021
+#define KNIGHT_tab		022
+#define KNIGHT_altmode		023
+#define KNIGHT_q		024
+#define KNIGHT_w		025
+#define KNIGHT_e		026
+#define KNIGHT_r		027
+#define KNIGHT_t		030
+#define KNIGHT_y		031
+#define KNIGHT_u		032
+#define KNIGHT_i		033
+#define KNIGHT_o		034
+#define KNIGHT_p		035
+#define KNIGHT_bracketleft	036
+#define KNIGHT_bracketright	037
+#define KNIGHT_backslash	040
+#define KNIGHT_slash		041
+#define KNIGHT_plus_minus	042
+#define KNIGHT_circle_plus	043
 
-	// #\LEFT-META
-	// #\LEFT-CTRL
-	{LMK_sp, LMK_sp, LMK_sp},
-	// #\RIGHT-CTRL
-	// #\RIGHT-META
-};
+#define KNIGHT_form		044
+#define KNIGHT_vt		045
+#define KNIGHT_rubout		046
+#define KNIGHT_a		047
+#define KNIGHT_s		050
+#define KNIGHT_d		051
+#define KNIGHT_f		052
+#define KNIGHT_g		053
+#define KNIGHT_h		054
+#define KNIGHT_j		055
+#define KNIGHT_k		056
+#define KNIGHT_l		057
+#define KNIGHT_semicolon	060
+#define KNIGHT_colon		061
+#define KNIGHT_cr		062
+#define KNIGHT_line		063
+#define KNIGHT_back_next	064
+
+#define KNIGHT_z		065
+#define KNIGHT_x		066
+#define KNIGHT_c		067
+#define KNIGHT_v		070
+#define KNIGHT_b		071
+#define KNIGHT_n		072
+#define KNIGHT_m		073
+#define KNIGHT_comma		074
+#define KNIGHT_period		075
+#define KNIGHT_slash1		076
+
+#define KNIGHT_sp		077
+
+// Shift
+
+#define KNIGHT_exclam		(KNIGHT_1 | KNIGHT_SHIFT)
+#define KNIGHT_quotedbl		(KNIGHT_2 | KNIGHT_SHIFT)
+#define KNIGHT_numbersign	(KNIGHT_3 | KNIGHT_SHIFT)
+#define KNIGHT_dollar		(KNIGHT_4 | KNIGHT_SHIFT)
+#define KNIGHT_percent		(KNIGHT_5 | KNIGHT_SHIFT)
+#define KNIGHT_ampersand	(KNIGHT_6 | KNIGHT_SHIFT)
+#define KNIGHT_apostrophe	(KNIGHT_7 | KNIGHT_SHIFT)
+#define KNIGHT_parenleft	(KNIGHT_8 | KNIGHT_SHIFT)
+#define KNIGHT_parenright	(KNIGHT_9 | KNIGHT_SHIFT)
+#define KNIGHT_underscore	(KNIGHT_0 | KNIGHT_SHIFT)
+#define KNIGHT_equal		(KNIGHT_minus | KNIGHT_SHIFT)
+#define KNIGHT_grave		(KNIGHT_at | KNIGHT_SHIFT)
+#define KNIGHT_asciitilde	(KNIGHT_asciicircum | KNIGHT_SHIFT)
+
+#define KNIGHT_Q		(KNIGHT_q | KNIGHT_SHIFT)
+#define KNIGHT_W		(KNIGHT_w | KNIGHT_SHIFT)
+#define KNIGHT_E		(KNIGHT_e | KNIGHT_SHIFT)
+#define KNIGHT_R		(KNIGHT_r | KNIGHT_SHIFT)
+#define KNIGHT_T		(KNIGHT_t | KNIGHT_SHIFT)
+#define KNIGHT_Y		(KNIGHT_y | KNIGHT_SHIFT)
+#define KNIGHT_U		(KNIGHT_u | KNIGHT_SHIFT)
+#define KNIGHT_I		(KNIGHT_i | KNIGHT_SHIFT)
+#define KNIGHT_O		(KNIGHT_o | KNIGHT_SHIFT)
+#define KNIGHT_P		(KNIGHT_p | KNIGHT_SHIFT)
+#define KNIGHT_braceleft	(KNIGHT_bracketleft | KNIGHT_SHIFT)
+#define KNIGHT_braceright	(KNIGHT_bracketright | KNIGHT_SHIFT)
+#define KNIGHT_bar		(KNIGHT_backslash | KNIGHT_SHIFT)
+#define KNIGHT_infinity		(KNIGHT_slash | KNIGHT_SHIFT)
+#define KNIGHT_delta		(KNIGHT_plus_minus | KNIGHT_SHIFT)
+
+#define KNIGHT_A		(KNIGHT_a | KNIGHT_SHIFT)
+#define KNIGHT_S		(KNIGHT_s | KNIGHT_SHIFT)
+#define KNIGHT_D		(KNIGHT_d | KNIGHT_SHIFT)
+#define KNIGHT_F		(KNIGHT_f | KNIGHT_SHIFT)
+#define KNIGHT_G		(KNIGHT_g | KNIGHT_SHIFT)
+#define KNIGHT_H		(KNIGHT_h | KNIGHT_SHIFT)
+#define KNIGHT_J		(KNIGHT_j | KNIGHT_SHIFT)
+#define KNIGHT_K		(KNIGHT_k | KNIGHT_SHIFT)
+#define KNIGHT_L		(KNIGHT_l | KNIGHT_SHIFT)
+#define KNIGHT_plus		(KNIGHT_semicolon | KNIGHT_SHIFT)
+#define KNIGHT_asterisk		(KNIGHT_colon | KNIGHT_SHIFT)
+
+#define KNIGHT_Z		(KNIGHT_z | KNIGHT_SHIFT)
+#define KNIGHT_X		(KNIGHT_x | KNIGHT_SHIFT)
+#define KNIGHT_C		(KNIGHT_c | KNIGHT_SHIFT)
+#define KNIGHT_V		(KNIGHT_v | KNIGHT_SHIFT)
+#define KNIGHT_B		(KNIGHT_b | KNIGHT_SHIFT)
+#define KNIGHT_N		(KNIGHT_n | KNIGHT_SHIFT)
+#define KNIGHT_M		(KNIGHT_m | KNIGHT_SHIFT)
+#define KNIGHT_less		(KNIGHT_comma | KNIGHT_SHIFT)
+#define KNIGHT_greater		(KNIGHT_period | KNIGHT_SHIFT)
+#define KNIGHT_question		(KNIGHT_slash1 | KNIGHT_SHIFT)
+
+// Top
+
+#define KNIGHT_network		(KNIGHT_break | KNIGHT_TOP)
+#define KNIGHT_system		(KNIGHT_escape | KNIGHT_TOP)
+#define KNIGHT_abort		(KNIGHT_call | KNIGHT_TOP)
+#define KNIGHT_and_sign		(KNIGHT_q | KNIGHT_TOP)
+#define KNIGHT_or_sign		(KNIGHT_w | KNIGHT_TOP)
+#define KNIGHT_up_horseshoe	(KNIGHT_e | KNIGHT_TOP)
+#define KNIGHT_down_horseshoe	(KNIGHT_r | KNIGHT_TOP)
+#define KNIGHT_left_horseshoe	(KNIGHT_t | KNIGHT_TOP)
+#define KNIGHT_right_horseshoe	(KNIGHT_y | KNIGHT_TOP)
+#define KNIGHT_not_sign		(KNIGHT_u | KNIGHT_TOP)
+#define KNIGHT_circle_x		(KNIGHT_i | KNIGHT_TOP)
+#define KNIGHT_down_arrow	(KNIGHT_o | KNIGHT_TOP)
+#define KNIGHT_up_arrow		(KNIGHT_p | KNIGHT_TOP)
+#define KNIGHT_less_or_equal	(KNIGHT_a | KNIGHT_TOP)
+#define KNIGHT_greater_or_equal	(KNIGHT_s | KNIGHT_TOP)
+#define KNIGHT_equivalence	(KNIGHT_d | KNIGHT_TOP)
+#define KNIGHT_partial_delta	(KNIGHT_f | KNIGHT_TOP)
+#define KNIGHT_not_equal	(KNIGHT_g | KNIGHT_TOP)
+#define KNIGHT_help		(KNIGHT_h | KNIGHT_TOP)
+#define KNIGHT_left_arrow	(KNIGHT_j | KNIGHT_TOP)
+#define KNIGHT_right_arrow	(KNIGHT_k | KNIGHT_TOP)
+#define KNIGHT_double_arrow	(KNIGHT_l | KNIGHT_TOP)
+#define KNIGHT_end		(KNIGHT_cr | KNIGHT_TOP)
+#define KNIGHT_alpha		(KNIGHT_z | KNIGHT_TOP)
+#define KNIGHT_beta		(KNIGHT_x | KNIGHT_TOP)
+#define KNIGHT_epsilon		(KNIGHT_c | KNIGHT_TOP)
+#define KNIGHT_lambda		(KNIGHT_v | KNIGHT_TOP)
+#define KNIGHT_pi		(KNIGHT_b | KNIGHT_TOP)
+#define KNIGHT_universal_quantifier (KNIGHT_n | KNIGHT_TOP)
+#define KNIGHT_existential_quantifier (KNIGHT_m | KNIGHT_TOP)
 
 #endif

@@ -63,19 +63,19 @@ process_key(XEvent *e, int keydown)
 	extra = 0;
 
 	if (e->xkey.state & meta_mask) // Meta key
-		extra |= 3 << 12;
+		extra |= KNIGHT_META;
 
 	if (e->xkey.state & super_mask) // Top key
-		extra |= 3 << 8;
+		extra |= KNIGHT_TOP;
 
 	if (e->xkey.state & ShiftMask) // Shift key
-		extra |= 3 << 6;
+		extra |= KNIGHT_SHIFT;
 
 	if (e->xkey.state & LockMask) // Shift Lock
-		extra ^= 3 << 6;
+		extra ^= KNIGHT_SHIFT;
 
 	if (e->xkey.state & ControlMask) // Control
-		extra |= 3 << 10;
+		extra |= KNIGHT_SHIFT;
 
 	if (keydown) {
 		XLookupString(&e->xkey, (char *) buffer, 5, &keysym, &status);
@@ -91,38 +91,101 @@ process_key(XEvent *e, int keydown)
 			return;
 
 		switch (keysym) {
-		case XK_F1:        lmcode = 1;             break; // Terminal.
-		case XK_F2:        lmcode = 1 | (3 << 8);  break; // System.
-		case XK_F3:        lmcode = 0 | (3 << 8);  break; // Network.
-		case XK_F4:        lmcode = 16 | (3 << 8); break; // Abort.
-		case XK_F5:        lmcode = 17;		   break; // Clear.
-		case XK_F6:        lmcode = 44 | (3 << 8); break; // Help.
-		case XK_F11:       lmcode = 50 | (3 << 8); break; // End.
-		case XK_F7:        lmcode = 16;		   break; // Call.
-		case XK_F12:       lmcode = 0;             break; // Break.
-		case XK_Break:     lmcode = 0;             break; // Break.
-		case XK_BackSpace: lmcode = 046;           break; // Rubout.
-		case XK_Return:    lmcode = 50;            break; // Return.
-		case XK_Tab:       lmcode = 18;            break; // Tab
-		case XK_Escape:    lmcode = 1;             break; // Escape
+		case XK_Escape:		lmcode = KNIGHT_escape;		break;
+		case XK_F1:		lmcode = KNIGHT_escape;		break;
+		case XK_F2:		lmcode = KNIGHT_system;		break;
+		case XK_F3:		lmcode = KNIGHT_network;	break;
+		case XK_F4:		lmcode = KNIGHT_abort;		break;
+		case XK_F5:		lmcode = KNIGHT_clear;		break;
+		case XK_F6:		lmcode = KNIGHT_help;		break;
+		case XK_F7:		lmcode = KNIGHT_call;		break;
+		case XK_F11:		lmcode = KNIGHT_end;		break;
+		case XK_F12:		lmcode = KNIGHT_break;		break;
+		case XK_Break:		lmcode = KNIGHT_break;		break;
+
+		// Modify mapping to match present-day US keyboard layout.
+		case XK_grave:		lmcode = KNIGHT_grave;		break;
+		case XK_asciitilde:	lmcode = KNIGHT_asciitilde;	break;
+		case XK_exclam:		lmcode = KNIGHT_exclam;		break;
+		case XK_at:		lmcode = KNIGHT_at;		break;
+		case XK_numbersign:	lmcode = KNIGHT_numbersign;	break;
+		case XK_dollar:		lmcode = KNIGHT_dollar;		break;
+		case XK_percent:	lmcode = KNIGHT_percent;	break;
+		case XK_asciicircum:	lmcode = KNIGHT_asciicircum;	break;
+		case XK_ampersand:	lmcode = KNIGHT_ampersand;	break;
+		case XK_asterisk:	lmcode = KNIGHT_asterisk;	break;
+		case XK_parenleft:	lmcode = KNIGHT_parenleft;	break;
+		case XK_parenright:	lmcode = KNIGHT_parenright;	break;
+		case XK_minus:		lmcode = KNIGHT_minus;		break;
+		case XK_underscore:	lmcode = KNIGHT_underscore;	break;
+		case XK_equal:		lmcode = KNIGHT_equal;		break;
+		case XK_plus:		lmcode = KNIGHT_plus;		break;
+		case XK_BackSpace:	lmcode = KNIGHT_rubout;		break;
+
+		case XK_Tab:		lmcode = KNIGHT_tab;		break;
+		case XK_Q:		lmcode = KNIGHT_Q;		break;
+		case XK_W:		lmcode = KNIGHT_W;		break;
+		case XK_E:		lmcode = KNIGHT_E;		break;
+		case XK_R:		lmcode = KNIGHT_R;		break;
+		case XK_T:		lmcode = KNIGHT_T;		break;
+		case XK_Y:		lmcode = KNIGHT_Y;		break;
+		case XK_U:		lmcode = KNIGHT_U;		break;
+		case XK_I:		lmcode = KNIGHT_I;		break;
+		case XK_O:		lmcode = KNIGHT_O;		break;
+		case XK_P:		lmcode = KNIGHT_P;		break;
+		case XK_braceleft:	lmcode = KNIGHT_braceleft;	break;
+		case XK_braceright:	lmcode = KNIGHT_braceright;	break;
+
+		case XK_A:		lmcode = KNIGHT_A;		break;
+		case XK_S:		lmcode = KNIGHT_S;		break;
+		case XK_D:		lmcode = KNIGHT_D;		break;
+		case XK_F:		lmcode = KNIGHT_F;		break;
+		case XK_G:		lmcode = KNIGHT_G;		break;
+		case XK_H:		lmcode = KNIGHT_H;		break;
+		case XK_J:		lmcode = KNIGHT_J;		break;
+		case XK_K:		lmcode = KNIGHT_K;		break;
+		case XK_L:		lmcode = KNIGHT_L;		break;
+		case XK_semicolon:	lmcode = KNIGHT_semicolon;	break;
+		case XK_colon:		lmcode = KNIGHT_colon;		break;
+		case XK_quotedbl:	lmcode = KNIGHT_quotedbl;	break;
+		case XK_apostrophe:	lmcode = KNIGHT_apostrophe;	break;
+		case XK_backslash:	lmcode = KNIGHT_backslash;	break;
+		case XK_bar:		lmcode = KNIGHT_bar;		break;
+
+		case XK_Return:		lmcode = KNIGHT_cr;		break;
+
+		case XK_Z:		lmcode = KNIGHT_Z;		break;
+		case XK_X:		lmcode = KNIGHT_X;		break;
+		case XK_C:		lmcode = KNIGHT_C;		break;
+		case XK_V:		lmcode = KNIGHT_V;		break;
+		case XK_B:		lmcode = KNIGHT_B;		break;
+		case XK_N:		lmcode = KNIGHT_N;		break;
+		case XK_M:		lmcode = KNIGHT_M;		break;
+		case XK_comma:		lmcode = KNIGHT_comma;		break;
+		case XK_less:		lmcode = KNIGHT_less;		break;
+		case XK_period:		lmcode = KNIGHT_period;		break;
+		case XK_greater:	lmcode = KNIGHT_greater;	break;
+		case XK_slash:		lmcode = KNIGHT_slash;		break;
+		case XK_question:	lmcode = KNIGHT_question;	break;
+
 		default:
 			if (keysym > 255) {
 				WARNING(TRACE_MISC, "unknown keycode: %lu", keysym);
 				return;
 			}
 
-			lmshift = 0; // Vanilla.
-			if (extra & (3 << 6))
+			lmshift = KNIGHT_VANILLA; // Vanilla.
+			if (extra & KNIGHT_SHIFT)
 				lmshift = 1;  // Shift.
-			else if (extra & (3 << 8))
+			else if (extra & KNIGHT_TOP)
 				lmshift = 2; // Top.
 
-			lmcode = kbd_translate_table[lmshift][keysym];
+			lmcode = knight_translate_table[lmshift][keysym];
 			break;
 		}
 
 		// Keep Control and Meta bits, Shift is in the scancode table.
-		lmcode |= extra & ~(3 << 6);
+		lmcode |= extra & ~KNIGHT_SHIFT;
 		// ... but if Control or Meta, add in Shift.
 		if (extra & (17 << 10))
 			lmcode |= extra;
