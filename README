@@ -168,22 +168,32 @@ for the reader, you need to do the following steps:
 
 * Keyboard bindings
 
-Keys are mapped in the following manner by default:
-|-----------+-------------------------|
-| Keyboard  | Emulator                |
-|-----------+-------------------------|
-| Esc       | Terminal                |
-| F2        | System                  |
-| F3        | Network                 |
-| F4        | Abort                   |
-| F5        | Clear Input             |
-| F6        | Help                    |
-| PgUp      | Break                   |
-| PgDn      | (Appears to crash usim) |
-| Home      | Call                    |
-| End       | End                     |
-| Backspace | Rub Out                 |
-|-----------+-------------------------|
+All keys have been mapped so that they work as advertised on a
+standard US keyboard.  Some additional keys that are hard to type on
+the Knight keyboard, and have a dedicated key on the Space Cadet
+keyboard, have been mapped as well since they are useful in daily
+work.
+
+|--------------+------------|
+| Keyboard     | Emulator   |
+|--------------+------------|
+| Meta / Mod2  | Meta       |
+| Control      | Control    |
+| Super / Mod4 | Top        |
+| Shift        | Shift      |
+|--------------|------------|
+| Escape       | Escape     |
+| F1           | Escape     |
+| F2           | System     |
+| F3           | Network    |
+| F4           | Abort      |
+| F5           | Clear      |
+| F6           | Help       |
+| F7           | Call       |
+| F11          | End        |
+| F12          | Break      |
+| Break        | Break      |
+|-------------+------------ |
 
 * The diskmaker Utility
 ---------------------
