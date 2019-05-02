@@ -36,16 +36,6 @@ static XImage *ximage;
 
 #define USIM_EVENT_MASK ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | KeyPressMask | KeyReleaseMask
 
-#define MOUSE_EVENT_LBUTTON 1
-#define MOUSE_EVENT_MBUTTON 2
-#define MOUSE_EVENT_RBUTTON 4
-
-#define X_SHIFT 1
-#define X_CAPS 2
-#define X_CTRL 4
-#define X_ALT 8
-#define X_META 16
-
 static unsigned long Black;
 static unsigned long White;
 
@@ -53,10 +43,11 @@ static int old_run_state;
 
 static XComposeStatus status;
 
-// Store modifier bitmasks for Alt and Meta: Shift, Caps Lock, and
-// Control are all constant, so they don't need to be stored.
-static unsigned int x_alt = X_ALT;
-static unsigned int x_meta = X_META;
+// Store modifier bitmasks: Shift, Caps Lock, and Control are all
+// constant, so they don't need to be stored.
+static unsigned int alt_mask = Mod1Mask;
+static unsigned int meta_mask = Mod2Mask;
+static unsigned int super_mask = Mod4Mask;
 
 // Takes E, converts it into a LM (hardware) keycode and sends it to
 // the IOB KBD.
@@ -67,21 +58,23 @@ process_key(XEvent *e, int keydown)
 	unsigned char buffer[5];
 	int extra;
 	int lmcode;
+	int lmshift;
 
 	extra = 0;
-	if (e->xkey.state & x_meta)
+
+	if (e->xkey.state & meta_mask) // Meta key
 		extra |= 3 << 12;
 
-	if (e->xkey.state & x_alt)
-		extra |= 3 << 12;
+	if (e->xkey.state & super_mask) // Top key
+		extra |= 3 << 8;
 
-	if (e->xkey.state & X_SHIFT)
+	if (e->xkey.state & ShiftMask) // Shift key
 		extra |= 3 << 6;
 
-	if (e->xkey.state & X_CAPS)
+	if (e->xkey.state & LockMask) // Shift Lock
 		extra ^= 3 << 6;
 
-	if (e->xkey.state & X_CTRL)
+	if (e->xkey.state & ControlMask) // Control
 		extra |= 3 << 10;
 
 	if (keydown) {
@@ -92,7 +85,9 @@ process_key(XEvent *e, int keydown)
 		    keysym == XK_Control_L ||
 		    keysym == XK_Control_R ||
 		    keysym == XK_Alt_L ||
-		    keysym == XK_Alt_R)
+		    keysym == XK_Alt_R ||
+		    keysym == XK_Meta_L ||
+		    keysym == XK_Meta_R)
 			return;
 
 		switch (keysym) {
@@ -115,7 +110,14 @@ process_key(XEvent *e, int keydown)
 				WARNING(TRACE_MISC, "unknown keycode: %lu", keysym);
 				return;
 			}
-			lmcode = kbd_translate_table[(extra & (3 << 6)) ? 1 : 0][keysym];
+
+			lmshift = 0; // Vanilla.
+			if (extra & (3 << 6))
+				lmshift = 1;  // Shift.
+			else if (extra & (3 << 8))
+				lmshift = 2; // Top.
+
+			lmcode = kbd_translate_table[lmshift][keysym];
 			break;
 		}
 
@@ -220,9 +222,11 @@ init_mod_map(void)
 	for (int mod = 3; mod < 8; mod++) {
 		bool is_alt;
 		bool is_meta;
+		bool is_super;
 
 		is_alt = false;
 		is_meta = false;
+		is_super = false;
 
 		// Get the keysyms matching this modifier.
 		for (int i = 0; i < max_mod; i++) {
@@ -243,11 +247,14 @@ init_mod_map(void)
 
 			for (int j = 0; j < keysyms_per_code; j++){
 				switch(syms[j]){
+				case XK_Alt_L: case XK_Alt_R:
+					is_alt = true;
+					break;
 				case XK_Meta_L: case XK_Meta_R:
 					is_meta = true;
 					break;
-				case XK_Alt_L: case XK_Alt_R:
-					is_alt = true;
+				case XK_Super_L: case XK_Super_R:
+					is_super = true;
 					break;
 				case NoSymbol:
 					break;
@@ -261,17 +268,15 @@ init_mod_map(void)
 		// Assign the modifer masks corresponding to this
 		// modifier.
 		if (is_alt)
-			x_alt = 1 << mod;
+			alt_mask = 1 << mod;
 		if (is_meta)
-			x_meta = 1 << mod;
-
-		// If both modifiers have already been found, then
-		// we're done.
-		if (x_alt && x_meta) {
-			NOTICE(TRACE_MISC, "Found x_alt = %d, x_meta = %d\n", x_alt, x_meta);
-			return;
-		}
+			meta_mask = 1 << mod;
+		if (is_super)
+			super_mask = 1 << mod;
 	}
+
+	NOTICE(TRACE_MISC, "Modifier mapping is alt_mask = %d, meta_mask = %d, super_mask = %d\n",
+	       alt_mask, meta_mask, super_mask);
 }
 
 void

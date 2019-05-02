@@ -108,8 +108,10 @@ kbd_old_init(void)
 		kbd_translate_table[0][(int) k] = i;
 	}
 
-	for (int i = 0; i < 255; i++)
+	for (int i = 0; i < 255; i++) {
 		kbd_translate_table[1][i] = kbd_translate_table[0][i] | (3 << 6);
+		kbd_translate_table[2][i] = kbd_translate_table[0][i] | (3 << 8);
+	}
 
 	// Modify mapping to match present-day US keyboard layout.
 	kbd_translate_table[0]['`'] = 015 | (3 << 6);
