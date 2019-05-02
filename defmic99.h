@@ -1,127 +1,12 @@
-#ifndef USIM_DEFMIC_H
-#define USIM_DEFMIC_H
+#ifndef USIM_DEFMIC99_H
+#define USIM_DEFMIC99_H
 
 // See SYS;COLD:DEFMIC LISP for the canonical definition.
-
-char *op_names[16] = {
-	"CALL",
-	"CALL0",
-	"MOVE",
-	"CAR",
-	"CDR",
-	"CADR",
-	"CDDR",
-	"CDAR",
-	"CAAR",
-	"ND1",
-	"ND2",
-	"ND3",
-	"BRANCH",
-	"MISC",
-	"ND4",
-	"17 UNUSED",
-	"AREFI"
-};
-
-char *reg_names[] = {
-	"FEF",
-	"FEF+100",
-	"FEF+200",
-	"FEF+300",
-	"CONSTANTS PAGE",
-	"LOCAL",
-	"ARG POINTER",
-	"PDL"
-};
-
-char *dest_names[] = {
-	"D-IGNORE",
-	"D-PDL",
-	"D-NEXT",
-	"D-LAST",
-	"D-RETURN",
-	"D-NEXT-Q",
-	"D-LAST-Q",
-	"D-NEXT-LIST",
-	"D-MICRO, POPJ",
-	"illegal",
-	"illegal",
-	"illegal",
-	"illegal",
-	"illegal",
-	"illegal",
-	"illegal"
-};
-
-char *branch_names[] = {
-	"BR",
-	"BR-NIL",
-	"BR-NOT-NIL",
-	"BR-NIL-POP",
-	"BR-NOT-NIL-POP",
-	"BR-ATOM",
-	"BR-NOT-ATOM",
-	"BR-ILL-7"
-};
-
-char *nd1_names[] = {
-	"ND1-UNUSED",
-	"+",
-	"-",
-	"*",
-	"/",
-	"LOGAND",
-	"LOGXOR",
-	"LOGIOR"
-};
-
-char *nd2_names[] = {
-	"=",
-	">",
-	"<",
-	"EQ",
-	"SETE-CDR",
-	"SETE-CDDR",
-	"SETE-1+",
-	"SETE-1-"
-};
-
-char *nd3_names[] = {
-	"BIND-OBSOLETE?",
-	"BIND-NIL",
-	"BIND-POP",
-	"SET-NIL",
-	"SET-ZERO",
-	"PUSH-E",
-	"MOVEM",
-	"POP"
-};
-
-char *nd4_names[] = {
-	"STACK-CLOSURE-DISCONNECT",
-	"STACK-CLOSURE-UNSHARE",
-	"MAKE-STACK-CLOSURE",
-	"PUSH-NUMBER",
-	"STACK-CLOSURE-DISCONNECT-FIRST",
-	"PUSH-CDR-IF-CAR-EQUAL",
-	"PUSH-CDR-STORE-CAR-IF-CONS"
-};
-
-char *arefi_names[] = {
-	"AR-1",
-	"ARRAY-LEADER",
-	"%%INSTANCE-REF",
-	"COMMON-LISP-AR-1",
-	"SET-AR-1",
-	"SET-ARRAY-LEADER",
-	"SET-%%INSTANCE-REF",
-	"UNUSED-AREFI"
-};
 
 struct {
 	char *name;
 	int value;
-} misc_inst[] = {
+} defmics[] = {
 	{ "", 0 },
 	//240 241 FREE
 	{ "(CAR . M-CAR)", 0242 },
@@ -579,7 +464,7 @@ struct {
 	{ "POPPDL-17", 0237 },
 	{ (char *)0, 0 }
 };
-
+
 char *call_names[] = {
 	"CALL",
 	"CALL0",
@@ -590,6 +475,86 @@ char *call_names[] = {
 	"CDDR",
 	"CDAR",
 	"CAAR"
+};
+
+char *dest_names[] = {
+	"D-IGNORE",
+	"D-PDL",
+	"D-RETURN",
+	"D-LAST"
+};
+
+char *branch_names[] = {
+	"BR",
+	"BR-NIL",
+	"BR-NOT-NIL",
+	"BR-NIL-POP",
+	"BR-NOT-NIL-POP",
+	"BR-ATOM",
+	"BR-NOT-ATOM",
+	"BR-ILL-7"
+};
+
+char *nd1_names[] = {
+	"ND1-UNUSED",
+	"+",
+	"-",
+	"*",
+	"//",
+	"LOGAND",
+	"LOGXOR",
+	"LOGIOR"
+};
+
+char *nd2_names[] = {
+	"=",
+	">",
+	"<",
+	"EQ",
+	"SETE-CDR",
+	"SETE-CDDR",
+	"SETE-1+",
+	"SETE-1-"
+};
+
+char *nd3_names[] = {
+	"BIND-OBSOLETE?",
+	"BIND-NIL",
+	"BIND-POP",
+	"SET-NIL",
+	"SET-ZERO",
+	"PUSH-E",
+	"MOVEM",
+	"POP"
+};
+
+char *arefi_names[] = {
+	"AR-1",
+	"ARRAY-LEADER",
+	"%%INSTANCE-REF",
+	"COMMON-LISP-AR-1",
+	"SET-AR-1",
+	"SET-ARRAY-LEADER",
+	"SET-%%INSTANCE-REF",
+	"UNUSED-AREFI"
+};
+
+char *arefi2_names[] = {
+	"AR-1",
+	"ARRAY-LEADER",
+	"%INSTANCE-REF",
+	"UNUSED-AREFI-3",
+	"AS-1",
+	"STORE-ARRAY-LEADER",
+	"%INSTANCE-SET",
+	"UNUSED-AREFI-7"
+};
+
+char *ifloor_names[] = {
+	"FLOOR",
+	"CEILING",
+	"TRUNCATE",
+	"ROUND"
 };
 
 #endif

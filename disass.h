@@ -4,6 +4,6 @@
 #include "syms.h"
 
 extern char *uinst_desc(uint64_t u, symtab_t *symtab);
-extern void disassemble_instruction(uint32_t fefptr, uint32_t loc, int even, uint32_t inst);
+extern char *disassemble_instruction(uint32_t fef, uint32_t pc, uint32_t wd, uint32_t second_word);
 
 #endif

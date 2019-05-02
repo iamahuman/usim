@@ -18,7 +18,13 @@
 #include "syms.h"
 #include "misc.h"
 
-#include "defmic.h"
+#define SYS78 1
+
+#if SYS78
+#include "defmic78.h"
+#else
+#include "defmic99.h"
+#endif
 
 // This micro-assembler disassembler is based on SYS: CC; CADLD LISP.
 
@@ -592,146 +598,34 @@ uinst_desc(uint64_t u, symtab_t *symtab)
 
 	return uinstbuf;
 }
+
+#undef PRIN1
+#undef PRIN1SP
 
-static int misc_inst_vector[1024];
-static int misc_inst_size = sizeof misc_inst / sizeof misc_inst[0];
-static bool misc_inst_vector_setup = false;
+static int defmics_vector[1024];
+static int defmics_size = sizeof defmics / sizeof defmics[0];
+static bool defmics_vector_setup = false;
 
-void
-disassemble_instruction(uint32_t fefptr, uint32_t loc, int even, uint32_t inst)
+static void
+defmics_init(void)
 {
-	int op;
-	int subop;
-	int dest;
-	int reg;
-	int disp;
-	int adr;
-	int to;
-	uint32_t nlc;
+	if (defmics_vector_setup == true)
+		return;
 
-	op = ldb(01104, inst);
-	subop = ldb(01503, inst);
-	dest = ldb(01602, inst);
-	disp = ldb(00011, inst);
-	reg = ldb(00603, inst);
+	for (int i = 0; i < defmics_size; i++) {
+		int index;
 
-	printf("%011o%c %06o ", loc, even ? 'e' : 'o', inst);
+		if (defmics[i].name == NULL)
+			break;
 
-	if (misc_inst_vector_setup == false) {
-		for (int i = 0; i < misc_inst_size; i++) {
-			int index;
-
-			if (misc_inst[i].name == NULL)
-				break;
-			index = misc_inst[i].value;
-			misc_inst_vector[index] = i;
-		}
-		misc_inst_vector_setup = true;
+		index = defmics[i].value;
+		defmics_vector[index] = i;
 	}
-
-	switch (op) {
-	case 00:		// DEST/ADDR
-	case 01:
-	case 02:
-	case 03:
-	case 04:
-	case 05:
-	case 06:
-	case 07:
-	case 010:
-		printf("%s ", op_names[op]);
-		printf("%s ", dest_names[dest]);
-		if (reg < 4)
-			printf("FEF|%d", disp);
-		else if (reg == 4)
-			//---!!! Decode value at DISP.
-			printf("'%d", disp);
-		else if (reg == 5)
-			printf("LOCAL|%d", disp);
-		else if (reg == 6)
-			printf("ARG|%d", disp);
-		else
-			printf("PDL|%d (undefined)", disp);
-		break;
-	case 011:		// ND1.
-		printf("%s ", op_names[op]);
-		printf("%s ", nd1_names[subop]);
-		break;
-	case 012:		// ND2.
-		printf("%s ", op_names[op]);
-		printf("%s ", nd2_names[subop]);
-		break;
-	case 013:		// ND3.
-		printf("%s ", op_names[op]);
-		printf("%s ", nd3_names[subop]);
-		break;
-	case 014:		// BRANCH.
-		printf("%s ", branch_names[subop]);
-
-		to = (inst & 03777) << 1;
-		to |= (inst & 0x8000) ? 1 : 0;
-
-		if (inst & 0400) {
-			to = inst & 01777;
-			to |= 03000;
-			to |= ~01777;
-		}
-
-		nlc = (loc * 2 + (even ? 0 : 1)) + to;
-
-		if (to > 0) {
-			printf("+%o;\t%o%c ", to, nlc / 2, (nlc & 1) ? 'o' : 'e');
-		} else {
-			printf("-%o;\t%o%c ", -to, nlc / 2, (nlc & 1) ? 'o' : 'e');
-		}
-		break;
-	case 015:		// MISC.
-		printf("(%s) ", op_names[op]);
-		adr = inst & 0777;
-		if (adr < 1024 && misc_inst_vector[adr]) {
-			printf("%s ", misc_inst[misc_inst_vector[adr]].name);
-		} else {
-			printf("%o ", adr);
-		}
-		printf("%s ", dest_names[dest]);
-		break;
-	case 016:		// ND4.
-		switch (subop) {
-		case 0:		// STACK-CLOSURE-DISCONNECT
-		case 2:		// MAKE-STACK-CLOSURE
-		case 4:		// STACK-CLOSURE-DISCONNECT-FIRST
-			printf("%s", nd4_names[subop]);
-			printf("  local slot %d", disp);
-			break;
-		case 1:		// STACK-CLOSURE-UNSHARE
-		case 5:		// PUSH-CDR-IF-CAR-EQUAL
-		case 6:		// PUSH-CDR-STORE-CAR-IF-CONS
-			printf("%s", nd4_names[subop]);
-			printf(" %d", disp);
-			break;
-		case 3:		// PUSH-NUMBER
-			printf("%s", nd4_names[subop]);
-			printf(" %d", disp);
-			break;
-		default:
-			printf("UNDEF-ND4-%d %d", subop, disp);
-			break;
-		}
-		break;
-	case 020:		// AREFI
-		switch (reg) {
-		case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
-			printf("%s (?)", arefi_names[reg]);
-			printf(" %s ", dest_names[dest]);
-			break;
-		default:
-			printf("UNDEF-AREFI-%d", reg);
-			break;
-		}
-		break;
-	default:
-		printf("UNDEF-%d", op);
-		break;
-	}
-	printf("\n");
+	defmics_vector_setup = true;
 }
+
+#if SYS78
+#include "disass78.c"
+#else
+#include "disass99.c"
+#endif
