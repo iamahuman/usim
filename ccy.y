@@ -21,7 +21,7 @@ extern int yyerror(const char *);
 %%                              // Rules section.
 
 input:
-  %empty
+  /* empty */
 | input line
 ;
 
