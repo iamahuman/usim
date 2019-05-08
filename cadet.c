@@ -1,6 +1,7 @@
 // cadet.c --- Space Cadet (aka new) keyboard translation
 
 #include <stdint.h>
+#include <err.h>
 
 #include "lmch.h"
 #include "cadet.h"
