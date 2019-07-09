@@ -364,7 +364,7 @@ disk_init(int unit, char *filename)
 
 	INFO(TRACE_DISK, "disk: opening %s\n", filename);
 
-	disks[unit].fd = open(filename, O_RDWR);
+	disks[unit].fd = open(filename, O_RDWR | O_BINARY);
 	if (disks[unit].fd < 0) {
 		disks[unit].fd = 0;
 		perror(filename);
