@@ -357,9 +357,6 @@ main(int argc, char *argv[])
 	mem_addr = 0;
 	mflg = 0;
 
-	printf("Dumping load band using using System %d%d.%d%d definitions.\n",
-	       lispm_major, lispm_major1, lispm_minor, lispm_minor1);
-
 	disassemble_object_output_fun = &disassemble_object_output;
 
 	while ((c = getopt(argc, argv, "p:m:wh")) != -1) {
@@ -386,6 +383,9 @@ main(int argc, char *argv[])
 		usage();
 		exit(1);
 	}
+
+	printf("Dumping load band using using System %d%d.%d%d definitions.\n",
+	       lispm_major, lispm_major1, lispm_minor, lispm_minor1);
 
 	lodfd = open(argv[0], O_RDONLY);
 	if (lodfd < 0) {
