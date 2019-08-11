@@ -40,9 +40,9 @@ byte_field_out(uint64_t u, int val, bool always_reflect_mrot, bool length_is_min
 	PRIN1("(Byte-field ");
 
 	if (length_is_minus_one == true)
-		PRIN1SP("%lo", load_byte(val, 005, 005) + 1);
+		PRIN1SP("%" PRIo64, load_byte(val, 005, 005) + 1);
 	else
-		PRIN1SP("%lo", load_byte(val, 005, 005));
+		PRIN1SP("%" PRIo64, load_byte(val, 005, 005));
 
 	tem = load_byte(val, 000, 005);
 	if (tem == 0) {
