@@ -25,6 +25,7 @@ extern int write_block(int fd, int block_no, unsigned char *buf);
 
 extern uint64_t load_byte(uint64_t w, int p, int s);
 extern uint64_t deposit_byte(uint64_t w, int p, int s, uint64_t v);
+
 extern uint32_t ldb(int ppss, uint32_t w);
 extern uint32_t dpb(uint32_t v, int ppss, uint32_t w);
 

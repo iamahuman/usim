@@ -165,14 +165,14 @@ write_block(int fd, int block_no, unsigned char *buf)
 uint64_t
 load_byte(uint64_t w, int p, int s)
 {
-	return (w >> p & (1 << s) - 1);
+	return w >> p & ((1 << s) - 1);
 }
 
 uint64_t
 deposit_byte(uint64_t w, int p, int s, uint64_t v)
 {
-	uint64_t m = ((1 << s) - 1 << p);
-	return (w & ~m | v << p & m);
+	uint64_t m = ((1 << s) - 1) << p;
+	return ((w & ~m) | (v << p & m));
 }
 
 uint32_t
