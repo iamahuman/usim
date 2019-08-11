@@ -373,6 +373,7 @@ type_jump_condition(int number)
 		case 13: tem = "-IF-NO-PAGE-FAULT-OR-INTERRUPT"; break;
 		case 14: tem = "-IF-NO-SEQUENCE-BREAK"; break;
 		case 15: tem = "-NEVER"; break;
+		default: tem = NULL; break;
 		}
 
 		if (strcmp(tem, "T") == 0) {
