@@ -23,6 +23,11 @@
 #include "syms.h"
 #include "disass.h"
 
+static int lispm_major = (LISPM_SYSTEM / 1000U) % 10;
+static int lispm_major1 = (LISPM_SYSTEM / 100U) % 10;
+static int lispm_minor = (LISPM_SYSTEM / 10U) % 10;
+static int lispm_minor1 = (LISPM_SYSTEM / 10U) % 10;
+
 static char *config_filename;
 bool dump_state_flag = false;
 bool warm_boot_flag = false;
@@ -53,7 +58,8 @@ main(int argc, char *argv[])
 {
 	int c;
 
-	printf("CADR emulator v" VERSION "\n");
+	printf("CADR emulator v" VERSION "; using System %d%d.%d%d definitions.\n",
+	       lispm_major, lispm_major1, lispm_minor, lispm_minor1);
 
 	config_filename = "usim.ini";
 	warm_boot_flag = false;
