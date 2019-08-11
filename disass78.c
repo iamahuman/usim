@@ -14,7 +14,7 @@ char *(*disassemble_object_output_fun)(uint32_t, uint32_t) = NULL;
 static char *constant_page[] = { "NIL", "T", "0", "1", "2" };
 static int constant_page_size = sizeof(constant_page) / sizeof(constant_page[0]);
 
-static int
+static void
 constants_area(int addr)
 {
 	assert(addr < constant_page_size);
