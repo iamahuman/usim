@@ -1,4 +1,4 @@
-// lod --- dump a load band (LOD) file
+// lod --- describe a load band (LOD) file
 
 #include <assert.h>
 #include <stdio.h>
@@ -339,6 +339,7 @@ static void
 usage(void)
 {
 	fprintf(stderr, "usage: lod [OPTION]... FILE\n");
+	fprintf(stderr, "describe a load band (LOD) file");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -p ADDR        disassemble function at address ADDR (default: A-INITIAL-FEF)\n");
 	fprintf(stderr, "  -m ADDR        dump surrounding memory at address ADDR\n");
