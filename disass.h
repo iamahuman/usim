@@ -6,4 +6,6 @@
 extern char *uinst_desc(uint64_t u, symtab_t *symtab);
 extern char *disassemble_instruction(uint32_t fef, uint32_t pc, uint32_t wd, uint32_t second_word);
 
+extern char *(*disassemble_object_output_fun)(uint32_t, uint32_t);
+
 #endif

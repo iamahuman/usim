@@ -6,22 +6,35 @@
 static char dissbuf[DISASSBUFSZ];
 static void *dissbufp;
 
+char *(*disassemble_object_output_fun)(uint32_t, uint32_t) = NULL;
+
 #define PRIN1(args...) do { dissbufp += sprintf(dissbufp, args); } while (0)
 #define PRIN1SP(args...) do { PRIN1(args); PRIN1(" "); } while (0)
+
+static char *constant_page[] = { "NIL", "T", "0", "1", "2" };
+static int constant_page_size = sizeof(constant_page) / sizeof(constant_page[0]);
 
 static int
 constants_area(int addr)
 {
-	PRIN1("%o", addr);
+	assert(addr < constant_page_size);
+	PRIN1("%s", constant_page[addr]);
 }
 
 static void
-disassemble_address(unsigned int fef, unsigned int reg, unsigned int disp)
+disassemble_address(uint32_t fef, uint32_t reg, uint32_t disp)
 {
 	PRIN1(" ");
 
 	if (reg < 4) {
 		PRIN1("FEF|%d", disp);
+		if (disassemble_object_output_fun != NULL) {
+			char *s;
+
+			s = disassemble_object_output_fun(fef, disp);
+			if (s != NULL)
+				PRIN1("\t\t; %s", s);
+		}
 	} else if (reg == 4) {
 		PRIN1("'");
 		constants_area(077 & disp);

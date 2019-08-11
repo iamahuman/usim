@@ -1,5 +1,6 @@
 // disass.c --- macrocode/microcode disassembler routines
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -18,13 +19,7 @@
 #include "syms.h"
 #include "misc.h"
 
-#define SYS78 1
-
-#if SYS78
-#include "defmic78.h"
-#else
-#include "defmic99.h"
-#endif
+#include "defmic.h"
 
 // This micro-assembler disassembler is based on SYS: CC; CADLD LISP.
 
@@ -624,8 +619,8 @@ defmics_init(void)
 	defmics_vector_setup = true;
 }
 
-#if SYS78
+#if LISPM_SYSTEM <= 7800L
 #include "disass78.c"
-#else
+#elif LISPM_SYSTEM >= 9900L
 #include "disass99.c"
 #endif

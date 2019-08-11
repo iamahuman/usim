@@ -1,7 +1,7 @@
 #ifndef USIM_DEFMIC78_H
 #define USIM_DEFMIC78_H
 
-// See SYS;COLD:DEFMIC LISP for the canonical definition.
+// See SYS;SYS:DEFMIC LISP for the canonical definition.
 
 struct {
 	char *name;
