@@ -440,7 +440,7 @@ chaos_poll(void)
 
 		// Toss it...
 		ret = read(chaos_fd, (char *) chaos_rcv_buffer_toss, len);
-		if (ret != len)
+		if (ret != (ssize_t) len)
 			perror("read");
 		return -1;
 	}
