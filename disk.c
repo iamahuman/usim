@@ -367,28 +367,19 @@ disk_init(int unit, char *filename)
 	disks[unit].fd = open(filename, O_RDWR | O_BINARY);
 	if (disks[unit].fd < 0) {
 		disks[unit].fd = 0;
-		perror(filename);
-		exit(1);
+		err(1, "%s", filename);
 	}
 
 	struct stat st;
-	if(fstat(disks[unit].fd, &st) < 0) {
-		fprintf(stderr, "fstat: ");
-		perror(filename);
-		exit(1);
-	}
+	if (fstat(disks[unit].fd, &st) < 0)
+		err(1, "fstat");
 	INFO(TRACE_DISK, "disk: size: %zd bytes\n", st.st_size);
-	if(st.st_size == 0) {
-		fprintf(stderr, "%s: Can't mmap an empty file!", filename);
-		exit(1);
-	}
+	if (st.st_size == 0)
+		errx(1, "%s: Can't mmap an empty file!", filename);
 	disks[unit].mm = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, disks[unit].fd, 0);
 	
-	if(disks[unit].mm == MAP_FAILED) {
-		fprintf(stderr, "mmap: ");
-		perror(filename);
-		exit(1);
-	}
+	if (disks[unit].mm == MAP_FAILED)
+		err(1, "mmap");
 
 	ret = disk_read(unit, 0, label);
 	if (ret < 0 || label[0] != LABEL_LABL) {
