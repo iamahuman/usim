@@ -75,7 +75,7 @@ process_key(XEvent *e, int keydown)
 		extra ^= KNIGHT_SHIFT;
 
 	if (e->xkey.state & ControlMask) // Control
-		extra |= KNIGHT_SHIFT;
+		extra |= KNIGHT_CONTROL;
 
 	if (keydown) {
 		XLookupString(&e->xkey, (char *) buffer, 5, &keysym, &status);
